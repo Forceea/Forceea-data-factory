@@ -8,7 +8,7 @@ global class FObject {
 	/* CONSTANTS */
 	private static final Integer DEFAULT_RECORDS = 201;
 	// true if under Development mode
-	private static final Boolean DEVELOPMENT_MODE = true;
+	private static final Boolean DEVELOPMENT_MODE = false;
 
 	/* ENUMS */
 	private enum ValueType {
