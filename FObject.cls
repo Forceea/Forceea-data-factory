@@ -1,7 +1,6 @@
-/* Forceea Data Factory
+/* Forceea Data Factory Framework
  * v1.0
  * Developer: Nikos Mitrakis
- * PLEASE DO NOT MAKE ANY AMENDMENTS
  */
 
 global class FObject {
