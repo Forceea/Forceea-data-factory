@@ -1,12 +1,12 @@
 /* Forceea Data Factory Framework
- * v1.0
+ * v1.0.1.4
  * Developer: Nikos Mitrakis
  */
 
 global class FObject {
 	/* CONSTANTS */
 	private static final Integer DEFAULT_RECORDS = 201;
-	// true if under Development mode
+	// if TRUE does not post any messages to Debug Log
 	private static final Boolean DEVELOPMENT_MODE = false;
 
 	/* ENUMS */
@@ -123,20 +123,6 @@ global class FObject {
 		List<Schema.PicklistEntry> picklistValues = new List<Schema.PicklistEntry>();
 	}
 
-	/* scope    declares a record type object
-	 * notes
-	 * usage		*/
-	private class RecordTypeObject {
-		Id Id {get; set;}
-		Schema.SObjectType SObjectType {get; set;}
-		String DeveloperName {get; set;}
-		private RecordTypeObject(Id Id, Schema.SObjectType SObjectType, String DeveloperName) {
-			this.Id = Id;
-			this.SObjectType = SObjectType;
-			this.DeveloperName = DeveloperName;
-		}
-	}
-
 	/* scope    declares a variable object
 	 * notes    this object is not used
 	 * usage    */
@@ -247,8 +233,8 @@ global class FObject {
 		// get record types
 		try {
 			recordTypesQueryResults = Database.query(soql);
-		} catch (QueryException e) {
-			postDebug('error', 'Error in registering record types:' + e.getMessage());
+		} catch (QueryException ex) {
+			postDebug('error', 'Error in registering record types:' + ex.getMessage());
 		}
 
 		// declare properties
@@ -309,8 +295,8 @@ global class FObject {
 		} else { // get fields details
 			// set SObject fields
 			postDebug('info', 'Will retrieve field definitions');
-			for (Schema.sObjectField f: this.sObjType.getDescribe().fields.getMap().values()) {
-				Schema.DescribeFieldResult dfr = f.getDescribe(); // describe field
+			for (Schema.sObjectField sof: this.sObjType.getDescribe().fields.getMap().values()) {
+				Schema.DescribeFieldResult dfr = sof.getDescribe(); // describe field
 				// create a Field object and populate it
 				Field objectField = new Field();
 				objectField.fieldName = dfr.getName().toLowerCase();
@@ -340,7 +326,7 @@ global class FObject {
 
 				// if the field is picklist, get its values
 				try {objectField.picklistValues = dfr.getPicklistValues();}
-				catch (System.exception e) {
+				catch (System.exception ex) {
 					objectField.picklistValues = null;
 				}
 
@@ -360,14 +346,14 @@ global class FObject {
 
 	/* METHODS */
 
-	/* scope    add an error message to Errors list
+	/* scope    add an error message to Errors list and post message to Debug Log
 	 * input    text: the error reference (e.g. the field or parameter which created the error)
 	 * input    errorMessage: the error message
 	 * output   - */
 	private void addError(String text, String errorMessage) {
 		this.errors.add(new Error(text, errorMessage));
 		processIsValid = false;
-		System.debug(logginglevel.ERROR, 'FORCEEA ' + errorMessage);
+		postDebug('error', 'FORCEEA ' + errorMessage);
 	}
 
 	/* scope    add field values to Field Values Matrix
@@ -376,8 +362,8 @@ global class FObject {
 	 * output   - */
 	private void addToFieldValuesMatrix(String fieldName, List<String> fieldValues) {
 		Integer i = 0;
-		for (String f: this.fieldSet) { // for each defined field
-			if (f == fieldName) { // when field name matches
+		for (String fd: this.fieldSet) { // for each defined field
+			if (fd == fieldName) { // when field name matches
 				// for each value in field's value list
 				for (Integer j = 0; j < this.records; j++) {
 					// append new value to existing value
@@ -386,6 +372,27 @@ global class FObject {
 				break; // and then exit loop
 			}
 			i++;
+		}
+	}
+
+
+	/* scope    batch insert records - doesn't run in Testing mode
+	 * input    object name
+	 * output   - */
+	@future
+	global static void batchInsertRecords(String objectName) {
+		List<SObject> recordsToInsert = globalRecordsMap.get(objectName);
+
+		// exit when is a Test
+		if (Test.isRunningTest()) {return;}
+
+		try { // insert data
+			insert recordsToInsert;
+		} catch (DmlException ex) {
+			String errorMessage = 'FORCEEA ' + 'An error has occurred: ' +
+					ex.getMessage();	
+			System.debug(logginglevel.ERROR, errorMessage);
+			processIsValid = false;
 		}
 	}
 
@@ -430,8 +437,8 @@ global class FObject {
 	 * input    command
 	 * output   TRUE if command is valid */
 	private Boolean commandIsValid(String command) {
-		for (String c: commands) {
-			if (c == command) {return true;}
+		for (String cmd: commands) {
+			if (cmd == command) {return true;}
 		}
 		return false;
 	}
@@ -491,16 +498,16 @@ global class FObject {
 
 		// validate definitions
 		postDebug('info', 'Will validate field definitions');
-		for (Definition d: definitions) { // for every defined field
-			postDebug('debug', 'Validating definition [' + d.definitionString +
-					'] of field [' + d.fieldName + ']');
+		for (Definition def: definitions) { // for every defined field
+			postDebug('debug', 'Validating definition [' + def.definitionString +
+					'] of field [' + def.fieldName + ']');
 			// check if field is valid
-			if (!objectFieldsMap.containsKey(d.fieldName)) {
-				addError(d.fieldName, 'Invalid field [' + d.fieldName +
-						'] on definition [' + d.definitionString + ']');
-			} else if (!definitionIsValid(d)) { //check if definition is valid
-				addError(d.definitionString, 'Invalid definition [' + d.definitionString + '] of field [' +
-						d.fieldName + ']');
+			if (!objectFieldsMap.containsKey(def.fieldName)) {
+				addError(def.fieldName, 'Invalid field [' + def.fieldName +
+						'] on definition [' + def.definitionString + ']');
+			} else if (!definitionIsValid(def)) { //check if definition is valid
+				addError(def.definitionString, 'Invalid definition [' + def.definitionString + '] of field [' +
+						def.fieldName + ']');
 			}
 		}
 		if (processMustTerminate()) {return;}
@@ -515,10 +522,10 @@ global class FObject {
 		// populate the Field Values Matrix
 		if (processMustTerminate()) {return;}
 		postDebug('info', 'Will populate the Field Values Matrix');
-		for (Definition d: definitions) {
-			List<String> fieldValues = getFieldValues(d); // get field values from definition
-			addToFieldValuesMatrix(d.fieldName, fieldValues);
-			postDebug('debug', 'Populated [' + d.fieldName + '] on definition [' + d.definitionString + ']'); 
+		for (Definition def: definitions) {
+			List<String> fieldValues = getFieldValues(def); // get field values from definition
+			addToFieldValuesMatrix(def.fieldName, fieldValues);
+			postDebug('debug', 'Populated [' + def.fieldName + '] on definition [' + def.definitionString + ']'); 
 		}
 		if (processMustTerminate()) {return;}
 		resetModuleTimer('Populated Field Values Matrix');
@@ -544,36 +551,29 @@ global class FObject {
 	global Database.DeleteResult[] deleteRecords(String whereClause) {
 		if (processMustTerminate()) {return null;}
 
-		List<Database.DeleteResult> deleteResults = new List<Database.DeleteResult>();
 		List<SObject> recordsToDelete = new List<SObject>();
+		Set<Id> deletedRecordsSet = new Set<Id>();
 		Integer numRecordsDeleted = 0;
 
-		postDebug('info','Will delete records of SObject [' +
-				this.objectName + ']');
+		postDebug('info','Will delete records of SObject [' + this.objectName + ']');
 
 		// set SOQL query
-		String soql = 'SELECT Id FROM ' + this.objectName + ' WHERE ' + whereClause;
+		String soql = 'SELECT Id FROM ' + this.objectName + ' WHERE ' + whereClause + ' LIMIT 10000';
 
 		try { // get records
 			recordsToDelete = Database.query(soql);
-		} catch (QueryException e) {
-			addError(soql, 'error selecting records of SObject [' +
-					this.objectName + ']: ' + e.getMessage());
+		} catch (QueryException ex) {
+			addError(soql, 'Found errors selecting records of SObject [' +
+					this.objectName + ']: ' + ex.getMessage());
 		}
 
 		// if there are no records to delete, just exit
 		if (recordsToDelete.isEmpty()) {return null;}
 
-		try { // delete records
-			postDebug('warn', 'Will delete records of SObject [' + this.objectName + ']');
-			deleteResults = Database.delete(recordsToDelete, false);
-		} catch (DmlException e) {
-			addError(objectName, 'error deleting records of SObject [' +
-					this.objectName + ']: ' + e.getMessage());
-		}
+		//delete records
+		List<Database.DeleteResult> deleteResults = Database.delete(recordsToDelete, false);
 
-		// iterate through eachIDeturned result
-		Set<Id> deletedRecordsSet = new Set<Id>();
+		// iterate through each returned result
 		for (Database.DeleteResult dr: deleteResults) {
 			if (dr.isSuccess()) {
 				// add record ID into deleted records set
@@ -583,8 +583,8 @@ global class FObject {
 			else {
 				// Operation failed, so get all errors                
 				for (Database.Error err : dr.getErrors()) {
-					addError(dr.getId(), err.getMessage() + '. ' +
-							'Fields that affected this error: ' + err.getFields());
+					addError(dr.getId(), err.getMessage() +
+							'. Fields that affected this error: ' + err.getFields());
 				}
 			}
 		}
@@ -601,14 +601,15 @@ global class FObject {
 
 		// remove deleted records from createdRecords
 		List<SObject> createdRecordsAfterDelete = new List<SObject>();
-		for (SObject cr: createdRecords) {
-			if (deletedRecordsSet.contains(cr.Id)) {
+		for (SObject cr: this.createdRecords) {
+			if (!deletedRecordsSet.contains(cr.Id)) {
 				createdRecordsAfterDelete.add(cr);
 			}
 		}
 
 		// amend created records list
-		createdRecords = createdRecordsAfterDelete;
+		this.createdRecords = createdRecordsAfterDelete;
+
 		// add records to global records map
 		globalRecordsMap.put(this.objectName, this.createdRecords);
 
@@ -738,9 +739,7 @@ global class FObject {
 			postDebug('fine', '  validating cluster type [' + ct.parameter + '] [' + ct.value + ']');
 			if (clusterTypeIsValid(ct, definition)) {
 				numValidClusterTypes++;
-			} else {
-				return false;
-			}
+			} else {return false;}
 		}
 
 		postDebug('fine', 'number of valid Cluster Types: ' + numValidClusterTypes);
@@ -763,8 +762,8 @@ global class FObject {
 	 * input    clusters: a list of definition clusters
 	 * output   the cluster having the parameter */
 	private Cluster getCluster(String parameter, List<Cluster> clusters) {
-		for (Cluster c: clusters) {
-			if (parameter == c.parameter) {return c;}
+		for (Cluster clr: clusters) {
+			if (parameter == clr.parameter) {return clr;}
 		}
 		return null;
 	}
@@ -775,8 +774,8 @@ global class FObject {
 	 * output   the first value item of the cluster
 	 */
 	private String getClusterValue(String parameter, List<Cluster> clusters) {
-		for (Cluster c: clusters) {
-			if (parameter == c.parameter) {return c.value[0];}
+		for (Cluster clr: clusters) {
+			if (parameter == clr.parameter) {return clr.value[0];}
 		}
 		return null;
 	}
@@ -786,8 +785,8 @@ global class FObject {
 	 * input    clusters: a list of definition clusters
 	 * output   the value list of the cluster */
 	private List<String> getClusterValueList(String parameter, List<Cluster> clusters) {
-		for (Cluster c: clusters) {
-			if (parameter == c.parameter) {return c.value;}
+		for (Cluster clr: clusters) {
+			if (parameter == clr.parameter) {return clr.value;}
 		}
 		return null;
 	}
@@ -834,58 +833,58 @@ global class FObject {
 	private List<String> getFieldValues(Definition definition) {
 		List<String> fieldValues = new List<String>();
 		List<Cluster> clusters = definition.clusters;
-		DefinitionTypeId defId = definition.type.id;
+		DefinitionTypeId defID = definition.type.id;
 
-		postDebug('fine', 'Definition Type Id: ' + defId);
+		postDebug('fine', 'Definition Type Id: ' + defID);
 
-		if (defId == DefinitionTypeId.fRandomNumber) {
+		if (defID == DefinitionTypeId.fRandomNumber) {
 			// get the first value item of the cluster containing parameter 'from'
-			Decimal f = Decimal.valueOf(getClusterValue('from', clusters));
+			Decimal fromArgm = Decimal.valueOf(getClusterValue('from', clusters));
 			// do the same for parameter 'to'
-			Decimal t = Decimal.valueOf(getClusterValue('to', clusters));
+			Decimal toArgm = Decimal.valueOf(getClusterValue('to', clusters));
 			// do the same for parameter 'scale'
-			Integer s = Integer.valueOf(getClusterValue('scale', clusters));
+			Integer scaleArgm = Integer.valueOf(getClusterValue('scale', clusters));
 			// create random values
-			fieldValues = getRandomNumbers(f, t, s);
-		}  else if (defId == DefinitionTypeId.fRandomDate) {
+			fieldValues = getRandomNumbers(fromArgm, toArgm, scaleArgm);
+		}  else if (defID == DefinitionTypeId.fRandomDate) {
 			// get the first value item of the cluster containing parameter 'from'
-			Date f = Date.valueOf(getClusterValue('from', clusters));
+			Date fromArgm = Date.valueOf(getClusterValue('from', clusters));
 			// do the same for parameter 'to'
-			Date t = Date.valueOf(getClusterValue('to', clusters));
+			Date toArgm = Date.valueOf(getClusterValue('to', clusters));
 			// create random values
-			fieldValues = getRandomDates(f, t);
-		} else if (defId == DefinitionTypeId.fRandomPicklist) {
+			fieldValues = getRandomDates(fromArgm, toArgm);
+		} else if (defID == DefinitionTypeId.fRandomPicklist) {
 			fieldValues = getRandomPicklistItems(definition.fieldName);
-		} else if (defId == DefinitionTypeId.fRandomPicklistExcept) {
+		} else if (defID == DefinitionTypeId.fRandomPicklistExcept) {
 			// get the first value item of the cluster containing parameter 'except'
 			Set<String> exceptions = new Set<String>(getClusterValueList('except', clusters));
 			fieldValues = getRandomPicklistItemsExcept(definition.fieldName, exceptions);
-		} else if (defId == DefinitionTypeId.fRandomList) {
+		} else if (defID == DefinitionTypeId.fRandomList) {
 			fieldValues = getRandomListItems(definition);
-		} else if (defId == DefinitionTypeId.fRandomEmail) { // email
+		} else if (defID == DefinitionTypeId.fRandomEmail) { // email
 			String label = getClusterValue('value', clusters);
 			fieldValues = getRandomEmails();
-		} else if (defId == DefinitionTypeId.fRandomURL) { // URL
+		} else if (defID == DefinitionTypeId.fRandomURL) { // URL
 			String label = getClusterValue('value', clusters);
 			fieldValues = getRandomURLs();
-		} else if (defId == DefinitionTypeId.fRandomBoolean) { // boolean
+		} else if (defID == DefinitionTypeId.fRandomBoolean) { // boolean
 			String label = getClusterValue('value', clusters);
 			fieldValues = getRandomBooleans();
-		} else if (defId == DefinitionTypeId.fRandomFirstName) { // first name
+		} else if (defID == DefinitionTypeId.fRandomFirstName) { // first name
 			String label = getClusterValue('value', clusters);
 			fieldValues = getRandomFirstNames();
-		} else if (defId == DefinitionTypeId.fRandomLastName) { // last name
+		} else if (defID == DefinitionTypeId.fRandomLastName) { // last name
 			String label = getClusterValue('value', clusters);
 			fieldValues = getRandomLastNames();
-		} else if (defId == DefinitionTypeId.fRandomString) { // string
+		} else if (defID == DefinitionTypeId.fRandomString) { // string
 			Integer length = Integer.valueOf(getClusterValue('length', clusters));
 			String startsWith = getClusterValue('startwith', clusters);
 			List<String> includes = getClusterValueList('include', clusters);
 			fieldValues = getRandomStrings(length, startsWith, includes);
-		} else if (defId == DefinitionTypeId.fRandomText) { // text
+		} else if (defID == DefinitionTypeId.fRandomText) { // text
 			Integer words = Integer.valueOf(getClusterValue('words', clusters));
 			fieldValues = getRandomTexts(words);
-		} else if (defId == DefinitionTypeId.fRandomLookup) { // random lookup
+		} else if (defID == DefinitionTypeId.fRandomLookup) { // random lookup
 			String source = getClusterValue('source', clusters);
 			String lookupObject = getClusterValue('lookup', clusters);          
 			String lookupField = getClusterValue('field', clusters);
@@ -893,24 +892,24 @@ global class FObject {
 			List<String> lookupExcept = getClusterValueList('except', clusters);
 			fieldValues = getLookupItems('random', source, lookupObject, lookupField,
 					lookupValue, null, lookupExcept);
-		} else if (defId == DefinitionTypeId.fStaticLookup) { // static lookup
+		} else if (defID == DefinitionTypeId.fStaticLookup) { // static lookup
 			String source = getClusterValue('source', clusters);
 			String lookupObject = getClusterValue('lookup', clusters);          
 			String lookupField = getClusterValue('field', clusters);
 			String lookupValue = getClusterValue('value', clusters);
 			fieldValues = getLookupItems('static', source, lookupObject, lookupField,
 					null, lookupValue, null);
-		}   else if (defId == DefinitionTypeId.fSerial) { //serial
+		}   else if (defID == DefinitionTypeId.fSerial) { //serial
 			// get the first value item of the cluster containing parameter 'from'
 			// and convert it to long
-			Decimal f = long.valueOf(getClusterValue('from', clusters));
+			Decimal fromArgm = long.valueOf(getClusterValue('from', clusters));
 			// do the same for parameter 'step'
-			Decimal s = long.valueOf(getClusterValue('step', clusters));
+			Decimal stepArgm = long.valueOf(getClusterValue('step', clusters));
 			// do the same for parameter 'scale'
-			Integer sc = Integer.valueOf(getClusterValue('scale', clusters));
+			Integer scaleArgm = Integer.valueOf(getClusterValue('scale', clusters));
 			// create serial values
-			fieldValues = getSerialNumbers(f, s, sc);
-		} else if (defId == DefinitionTypeId.fStatic) { // static
+			fieldValues = getSerialNumbers(fromArgm, stepArgm, scaleArgm);
+		} else if (defID == DefinitionTypeId.fStatic) { // static
 			String label = getClusterValue('value', clusters);
 			fieldValues = getLabels(definition.fieldName, label);
 		} else {
@@ -962,6 +961,7 @@ global class FObject {
 			if (Math.random() > 0.5) {values.add('true');}
 			else {values.add('false');}
 		}
+
 		return values;
 	}
 
@@ -974,17 +974,17 @@ global class FObject {
 		Datetime fromDatetime = fromDate;
 		Datetime toDatetime = toDate;
 		Long randomTime; // in ms
-		Date d; // temp date
 
 		Long fromTime = fromDatetime.getTime(); // ms from 1/1/1970
 		Long toTime = toDatetime.getTime();
 
 		if (fromDate > toDate) { // check if 'from' is less than 'to'
-			d = fromDate;
+			Date temp = fromDate;
 			fromDate= toDate;
-			toDate = d;
+			toDate = temp;
 		}
-		if (ToDate > Date.today()) // do not allow 'to' to be in the future
+
+		if (ToDate > Date.today()) // do not allow 'to' in the future
 			ToDate = Date.today();
 
 		// get the values
@@ -993,6 +993,7 @@ global class FObject {
 			randomTime = fromTime + (Math.random() * range).longValue();
 			values.add(String.valueOf(Datetime.newInstance(randomTime)));
 		}
+
 		return values;
 	}
 
@@ -1018,6 +1019,7 @@ global class FObject {
 			}
 			values.add(domain + '.com');
 		}
+
 		return values;
 	}
 
@@ -1034,6 +1036,7 @@ global class FObject {
 		for (Integer i = 0; i < this.records; i++) {
 			values.add(names[i] + '@' + domains[i]);
 		}
+
 		return values;
 	}
 
@@ -1049,6 +1052,7 @@ global class FObject {
 			String firstName = 'Firstname' + i;
 			values.add(firstName);
 		}
+
 		return values;
 	}
 
@@ -1064,6 +1068,7 @@ global class FObject {
 			String lastName = 'Lastname' + i;
 			values.add(lastName);
 		}
+
 		return values;
 	}
 
@@ -1072,15 +1077,19 @@ global class FObject {
 	 * output   a list of (string) values */
 	private List<String> getRandomListItems(Definition definition) {
 		List<String> values = new List<String>();
+
 		// get list items
 		List<String> listItems = getClusterValueList('value', definition.clusters);
+
 		// get the size of the items list
 		Integer count = listItems.size();
+
 		// get the random values
 		for (Integer i = 0; i < this.records; i++) {
 			Integer v = (Math.floor(Math.random() * count)).intValue();
 			values.add(listItems[v]);
 		}
+
 		return values;
 	}
 
@@ -1131,8 +1140,8 @@ global class FObject {
 				newObject.records = getDefaultRecords(this.records);		
 				// set lookup field's definition
 				if (lookupField != null) {
-					Field f = objectFieldsMap.get(lookupField);
-					setDefinitionFromField(f);
+					Field fld = objectFieldsMap.get(lookupField);
+					setDefinitionFromField(fld);
 				}
 				// insert records
 				saveResults = newObject.insertRecords();
@@ -1146,13 +1155,12 @@ global class FObject {
 			//query the database and get the Ids
 			if (lookupField == null) {soql = 'SELECT Id';}
 			else {soql = 'SELECT Id, ' + lookupField;}
-			soql += ' FROM ' + lookupSObject;
-
+			soql += ' FROM ' + lookupSObject + ' LIMIT 10000';
 			try {
 				lookupRecords = Database.query(soql);
-			} catch (QueryException e) {
+			} catch (QueryException ex) {
 				addError(soql, 'Selecting lookup SObject [' + lookupSObject +
-						'] for SObject [' + this.objectName + ']: ' + e.getMessage());
+						'] for SObject [' + this.objectName + ']: ' + ex.getMessage());
 			}
 		}
 
@@ -1178,18 +1186,18 @@ global class FObject {
 				}
 			} else if ((lookupValues != null) && (lookupExcept == null)) {
 				// random lookup() field() value() source()
-				for (String s: lookupValues) {
+				for (String str: lookupValues) {
 					for (SObject sobj: lookupRecords) {
-						if (sobj.get(lookupField) == s) { // if value is found
+						if (sobj.get(lookupField) == str) { // if value is found
 							lookupIds.add(sobj.Id); //add Id to list
 						}
 					}
 				}
 			} else if ((lookupValues == null) && (lookupExcept != null)) {
 				// random lookup() field() except() source()
-				for (String s: lookupExcept) {
+				for (String str: lookupExcept) {
 					for (SObject sobj: lookupRecords) {
-						if (sobj.get(lookupField) != s) { // if value is not found
+						if (sobj.get(lookupField) != str) { // if value is not found
 							lookupIds.add(sobj.Id); //add Id to list
 						}
 					}
@@ -1205,7 +1213,7 @@ global class FObject {
 				// add the Id to the output list
 				values.add(lookupIds[v]);
 			}
-		}
+		} // else if: random
 
 		return values;
 	}
@@ -1235,6 +1243,7 @@ global class FObject {
 			v = v.setScale(scale);
 			values.add(v.toPlainString());
 		}
+
 		return values;
 	}
 
@@ -1256,6 +1265,7 @@ global class FObject {
 				Integer v = (Math.floor(Math.random() * count)).intValue();
 				values.add(recordTypeIDs.get(v));
 			}
+
 			return values;
 		}
 
@@ -1271,6 +1281,7 @@ global class FObject {
 			Integer v = (Math.floor(Math.random() * count)).intValue();
 			values.add(picklistItems[v]);
 		}
+
 		return values;
 	}
 
@@ -1286,9 +1297,9 @@ global class FObject {
 		if (fieldName == 'RecordTypeId') {
 			// create a new list with record type values, excluding exceptions
 			List<Id> recordTypeIDs = new List<Id>();
-			for (String s: this.recordTypesMap.keySet()) {
+			for (String rt: this.recordTypesMap.keySet()) {
 				for (String ex: exceptions) {
-					if (s == ex) {recordTypeIDs.add(this.recordTypesMap.get(ex));}
+					if (rt == ex) {recordTypeIDs.add(this.recordTypesMap.get(ex));}
 				}
 			}
 			// count how many record types exist
@@ -1298,15 +1309,16 @@ global class FObject {
 				Integer v = (Math.floor(Math.random() * count)).intValue();
 				values.add(recordTypeIDs.get(v));
 			}
+
 			return values;
 		}
 
 		// if the field is not a record type, get the picklist items
 		List<Schema.PicklistEntry> picklistValues = this.objectFieldsMap.get(fieldName).pickListValues;
-		for (Schema.PicklistEntry e: picklistValues) {
-			String s = e.getLabel();
-			if (!exceptions.contains(s)) { // exclude exceptions
-				picklistItems.add(s);
+		for (Schema.PicklistEntry ple: picklistValues) {
+			String label = ple.getLabel();
+			if (!exceptions.contains(label)) { // exclude exceptions
+				picklistItems.add(label);
 			}
 		}
 
@@ -1316,6 +1328,7 @@ global class FObject {
 			Integer v = (Math.floor(Math.random() * count)).intValue();
 			values.add(picklistItems[v]);
 		}
+
 		return values;
 	}
 
@@ -1382,14 +1395,15 @@ global class FObject {
 
 			// get the values
 			for (Integer i = 0; i < this.records; i++) {
-				String s = '';
+				String txt = '';
 				for (Integer j = 0; j < words; j++) {
 					Integer v = (Math.floor(Math.random() * count)).intValue();
-					s += wordList[v] + ' ';
+					txt += wordList[v] + ' ';
 				}
-				s = s.trim();
-				values.add(s.capitalize());
+				txt = txt.trim();
+				values.add(txt.capitalize());
 			}
+
 			return values;
 	}
 
@@ -1405,6 +1419,7 @@ global class FObject {
 		for (Integer i = 0; i < this.records; i++) {
 			values.add('http://www.' + domains[i]);
 		}
+
 		return values;
 	}
 
@@ -1413,10 +1428,15 @@ global class FObject {
 	 * output   a list of SObject records */
 	global List<SObject> getRecords() {
 		// if no records have been created, do it
-		if (this.createdRecords.isEmpty()) {createRecords();}
+		if (this.createdRecords.isEmpty()) {
+			createRecords();
+		}
 
-		if (processIsValid) {return this.createdRecords;}
-		else {return null;}
+		if (processIsValid) {
+			return this.createdRecords;
+		} else {
+			return null;
+		}
 	}
 
 	/* scope    returns a list of serial numbers
@@ -1434,6 +1454,7 @@ global class FObject {
 			values.add(v.toPlainString());
 			v += stepNumber;
 		}
+
 		return values;
 	}
 
@@ -1474,8 +1495,9 @@ global class FObject {
 
 		// iterate through each returned result
 		for (Database.SaveResult sr: saveResults) {
-			if (sr.isSuccess()) {numRecordsInserted++;}
-			else {
+			if (sr.isSuccess()) {
+				numRecordsInserted++;
+			} else {
 				// Operation failed, so get all errors                
 				for (Database.Error err : sr.getErrors()) {
 					addError(this.objectName, err.getMessage() + '. ' +
@@ -1489,7 +1511,7 @@ global class FObject {
 			postDebug('info', 'Successfully inserted ' + this.createdRecords.size() +
 					' [' + this.objectName + '] records');
 		} else { // there are errors
-			Integer numErrorsFound = createdRecords.size() - numRecordsInserted;
+			Integer numErrorsFound = this.createdRecords.size() - numRecordsInserted;
 			addError(this.objectName, 'Found ' + numErrorsFound + ' errors inserting [' +
 					+ this.objectName + '] records');
 		}
@@ -1505,15 +1527,20 @@ global class FObject {
 			SObject sObj = Schema.getGlobalDescribe().get(objectName).newSObject();
 			objects.add(this.objectName); // add this object to list
 			return true;
-		} catch (Exception e) {return false;}
+		} catch (Exception ex) {
+			return false;
+		}
 	}
 
 	/* scope    check if a cluster parameter is valid
 	 * input    parameter: the parameter of the cluster
 	 * output   true if parameter is valid */
 	private Boolean parameterIsValid(String parameter) {
-		if (parametersSet.contains(parameter)) {return true;}
-		else {return false;}
+		if (parametersSet.contains(parameter)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	/* scope    posts a System.debug message
@@ -1615,9 +1642,9 @@ global class FObject {
 		} else if ((field.type == Schema.DisplayType.Picklist) ||
 				(field.type == Schema.DisplayType.MultiPicklist)) { // Picklist or MultiPicklist
 			setDefinition(field.fieldName, 'random type(picklist)');
-			//		}else if (field.type == Schema.DisplayType.Address) { // Address
-			//			setDefinition(field.fieldName, 'static value(' + field.label + ')');
-			//			setDefinition(field.fieldName, 'serial from(1) step(1) scale(0)');
+		} else if (field.type == Schema.DisplayType.Address) { // Address
+			//setDefinition(field.fieldName, 'static value(' + field.label + ')');
+			//setDefinition(field.fieldName, 'serial from(1) step(1) scale(0)');
 		} else if (field.type == Schema.DisplayType.String) { // String
 			setDefinition(field.fieldName, 'static value(' + field.fieldName + ')');
 			setDefinition(field.fieldName, 'serial from(1) step(1) scale(0)');
@@ -1631,8 +1658,8 @@ global class FObject {
 			setDefinition(field.fieldName, 'random type(boolean)');
 		} else if (field.type == Schema.DisplayType.Email) { // Email
 			setDefinition(field.fieldName, 'random type(email)');
-			// } else if (field.type == Schema.DisplayType.Phone) { // Phone
-			//	setDefinition(field.fieldName, 'random type(phone)');
+		} else if (field.type == Schema.DisplayType.Phone) { // Phone
+			//setDefinition(field.fieldName, 'random type(phone)');
 		} else if (field.type == Schema.DisplayType.URL) { // URL
 			setDefinition(field.fieldName, 'random type(url)');
 		}
@@ -1674,10 +1701,10 @@ global class FObject {
 			}          
 		} else { // SObject is anything else
 			// for each Field in the fields map
-			for (Field f: this.objectFieldsMap.values()) {
+			for (Field fld: this.objectFieldsMap.values()) {
 				// if field is required and is not defined yet
-				if (f.isRequired && (!fieldSet.contains(f.fieldName))) {
-					setDefinitionFromField(f);  // set a new definition for this Field  
+				if (fld.isRequired && (!fieldSet.contains(fld.fieldName))) {
+					setDefinitionFromField(fld);  // set a new definition for this Field  
 				}       
 			}
 		}
@@ -1883,8 +1910,8 @@ global class FObject {
 	 * input    definition
 	 * output   - */
 	private void setVariable(String type, String name, String definition) {
-		Variable v = new Variable(type, name, definition);
-		this.variables.add(v);
+		Variable var = new Variable(type, name, definition);
+		this.variables.add(var);
 	}
 
 	/* scope    dispays Field Value Matrix values
@@ -1895,17 +1922,18 @@ global class FObject {
 		Integer i = 0;
 		Integer count;
 
-		for (String f: fieldSet) { // for each field
-			String s = '';
+		for (String fld: fieldSet) { // for each field
+			String str = '';
 
-			if (this.records < 100) {count = this.records;}
+			// display up to 100 records
+			if (this.records < 101) {count = this.records;}
 			else {count = 100;}
 
 			for (Integer j = 0; j < count; j++) { // for each record
-				s += this.fieldValuesMatrix[i][j] + ' | ';
+				str += this.fieldValuesMatrix[i][j] + ' | ';
 			}
 			i++;
-			postDebug('debug', 'Created sample data for field [' + f + ']: ' + s.removeEnd('| '));
+			postDebug('debug', 'Created sample data for field [' + fld + ']: ' + str.removeEnd('| '));
 		}
 	}
 
@@ -1924,14 +1952,14 @@ global class FObject {
 		postDebug('fine', 'value is [' + remainingValue +']');
 
 		// seperate Value to items
-		Integer i = 0; // a counter
+		Integer count = 0; // a counter
 		do {
 			String valueItem = remainingValue.substringBefore(','); // get the Value item
 			//valueItem = valueItem.trim();
 			valueItems.add(valueItem); // add item to the list
 			remainingValue = remainingValue.removeStart(valueItem + ','); // get remaining text
-			postDebug('fine', 'value item (' + i + ') is [' + valueItem + ']');
-			i++;
+			postDebug('fine', 'value item (' + count + ') is [' + valueItem + ']');
+			count++;
 		} while (String.isNotEmpty(remainingValue));
 
 		// if Value must have only 1 item but it has more
@@ -1946,28 +1974,27 @@ global class FObject {
 
 		if ((clusterType.value != null) && (clusterType.value!= valueText)) {
 			// this is not an error
-			postDebug('fine', 'parameter [type] has not the correct value');
+			postDebug('fine', 'parameter [type] has not a correct value');
 			return false;
 		}
 
 		// check Value type (e.g. number, text) of all Value items
-		for (String v: cluster.value) {     
+		for (String cv: cluster.value) {     
 			if (clusterType.valueType == valueType.fInt) { // is Integer
 				Integer intValue;
-				try {intValue = Integer.valueOf(v);}
-				catch (System.TypeException e) {return false;}
+				try {intValue = Integer.valueOf(cv);}
+				catch (System.TypeException ex) {return false;}
 			} else if (clusterType.valueType == valueType.fDec) { // is Decimal
 				Decimal decValue;
-				try {decValue = Decimal.valueOf(v);}
-				catch (System.TypeException e) {return false;}
+				try {decValue = Decimal.valueOf(cv);}
+				catch (System.TypeException ex) {return false;}
 			} else if (clusterType.valueType == valueType.fDate) { // is Date
 				Date dateValue;
-				try {dateValue = Date.valueOf(v);}
-				catch (System.TypeException e) {return false;}
-			} else { // is Text
-				// do nothing
+				try {dateValue = Date.valueOf(cv);}
+				catch (System.TypeException ex) {return false;}
 			}
 		}
+
 		return true;
 	}
 }
