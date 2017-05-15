@@ -1,4 +1,4 @@
-# Forceea #
+# Forceea v1.0.1 #
 Forceea (forˈsēa) is the Data Factory Framework for Salesforce.
 
 It creates sample data for Salesforce SObjects using the Sample Data Definition Language and it offers the following functionality:
