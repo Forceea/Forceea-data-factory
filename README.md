@@ -10,4 +10,6 @@ It creates sample data for Salesforce objects using the Sample Data Definition L
 *	Can be used for mass data population in demos and User Acceptance Testing (UAT).
 *	Is easy to be used by both developers and administrators.
 
-Download the user manual from [here](http://bit.ly/Forceea11_UserManual)
+The upcoming release 1.2 will support Dependent Picklists, validation of the definitions based on their field data type, wider coverage in test class, and more examples of usage.
+
+Download the [User Guide](http://bit.ly/Forceea11_UserManual)
