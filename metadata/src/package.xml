@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>FObject</members>
+        <members>FObjectTest</members>
+        <members>ForceeaExamples</members>
+        <members>ForceeaException</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>ForceeaSetting.Default</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>FObjectFour__c</members>
+        <members>FObjectOne__c</members>
+        <members>FObjectThree__c</members>
+        <members>FObjectTwo__c</members>
+        <members>ForceeaSetting__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>FObjectFour__c</members>
+        <members>FObjectOne__c</members>
+        <members>FObjectThree__c</members>
+        <members>FObjectTwo__c</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>FObjectFour__c-FObjectFour Layout</members>
+        <members>FObjectOne__c-FObjectOne Layout</members>
+        <members>FObjectThree__c-FObjectThree Layout</members>
+        <members>FObjectTwo__c-FObjectTwo Layout</members>
+        <members>ForceeaSetting__mdt-Forceea Setting Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>Admin</members>
+        <name>Profile</name>
+    </types>
+    <version>41.0</version>
+</Package>

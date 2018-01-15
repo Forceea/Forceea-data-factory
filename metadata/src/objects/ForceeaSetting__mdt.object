@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <fullName>MaxErrorRecordsToDisplay__c</fullName>
+        <defaultValue>20</defaultValue>
+        <description>The maximum number of error records to display.</description>
+        <externalId>false</externalId>
+        <fieldManageability>SubscriberControlled</fieldManageability>
+        <inlineHelpText>The maximum number of error records to display.</inlineHelpText>
+        <label>Max error records to display</label>
+        <precision>3</precision>
+        <required>true</required>
+        <scale>0</scale>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>RecordsToCreate__c</fullName>
+        <defaultValue>201</defaultValue>
+        <description>The default number of records to create.</description>
+        <externalId>false</externalId>
+        <fieldManageability>SubscriberControlled</fieldManageability>
+        <inlineHelpText>The default number of records to create.</inlineHelpText>
+        <label>Records to create</label>
+        <precision>5</precision>
+        <required>true</required>
+        <scale>0</scale>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>RecordsToDisplay__c</fullName>
+        <defaultValue>10</defaultValue>
+        <description>The number of created records to display.</description>
+        <externalId>false</externalId>
+        <fieldManageability>SubscriberControlled</fieldManageability>
+        <inlineHelpText>The number of created records to display.</inlineHelpText>
+        <label>Records to display</label>
+        <precision>3</precision>
+        <required>true</required>
+        <scale>0</scale>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>ShowDebugLog__c</fullName>
+        <defaultValue>true</defaultValue>
+        <description>Display messages in Debug Log.</description>
+        <externalId>false</externalId>
+        <fieldManageability>SubscriberControlled</fieldManageability>
+        <inlineHelpText>Display messages in Debug Log.</inlineHelpText>
+        <label>Show debug log</label>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>UserMessage__c</fullName>
+        <defaultValue>&quot;Forceea data factory framework - Developer&quot;</defaultValue>
+        <description>The message to display when initializing the FObject.</description>
+        <externalId>false</externalId>
+        <fieldManageability>SubscriberControlled</fieldManageability>
+        <inlineHelpText>The message to display when initializing the FObject.</inlineHelpText>
+        <label>User message</label>
+        <length>255</length>
+        <required>false</required>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>Forceea Setting</label>
+    <pluralLabel>Forceea Settings</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>
