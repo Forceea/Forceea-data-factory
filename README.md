@@ -9,7 +9,7 @@ In a few words, it creates data using a "language" to describe the nature of the
 *	Handles record types and field dependencies (dependent picklists).
 *	Supports record groups for inserting and deleting records.
 *	Validates the definitions based on the field data type.
-*	Can be used for in test methods or for populating Salesforce orgs with sample data for demos and User Acceptance Testing (UAT).
+*	Can be used in test methods or for populating your Orgs with sample data for demos and User Acceptance Testing (UAT).
 *	Has an extended error messaging system.
 
 Download the [User Guide](http://bit.ly/Forceea12_UserGuide)
