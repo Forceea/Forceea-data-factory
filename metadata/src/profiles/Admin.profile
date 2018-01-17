@@ -23,6 +23,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectFour__c.TestLookupUser__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FObjectOne__c.TestAutoNumber__c</field>
         <readable>true</readable>

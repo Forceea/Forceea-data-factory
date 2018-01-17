@@ -42,11 +42,11 @@ global class FObject {
     RANDOM_DATE, RANDOM_DATETIME,
     RANDOM_PICKLIST, RANDOM_PICKLIST_EXCEPT,
     RANDOM_LIST_INTEGER, RANDOM_LIST_DECIMAL, RANDOM_LIST_STRING,
-    RANDOM_LIST_DATE, RANDOM_LIST_DATETIME, RANDOM_LIST_TIME,
+    RANDOM_LIST_DATE, RANDOM_LIST_DATETIME, RANDOM_LIST_TIME, 
     RANDOM_STREET, RANDOM_CITY, RANDOM_STATE, RANDOM_POSTALCODE, RANDOM_COUNTRY,
     RANDOM_EMAIL, RANDOM_BOOLEAN, RANDOM_URL, RANDOM_FIRSTNAME, RANDOM_LASTNAME,
     RANDOM_LOOKUP, RANDOM_LOOKUP_WHERE,
-    STATIC_INTEGER, STATIC_DECIMAL, STATIC_DATE, STATIC_DATETIME, STATIC_TIME, STATIC_STRING, STATIC_LOOKUP,
+    STATIC_INTEGER, STATIC_DECIMAL, STATIC_DATE, STATIC_DATETIME, STATIC_TIME, STATIC_STRING, STATIC_LOOKUP, 
     SERIAL_NUMBER_DEPRECATED, SERIAL_NUMBER, SERIAL_DATE, SERIAL_DATETIME,
     COPY_FIELD }
   private enum DetailedErrorLevel { LEVEL_DEBUG, LEVEL_FINE }
@@ -386,7 +386,7 @@ global class FObject {
   static {
     // get Forceea settings
     List<ForceeaSetting__mdt> forceeaSettings = [
-      SELECT DeveloperName, RecordsToCreate__c, RecordsToDisplay__c,
+      SELECT DeveloperName, RecordsToCreate__c, RecordsToDisplay__c, 
         MaxErrorRecordsToDisplay__c, ShowDebugLog__c, UserMessage__c
       FROM ForceeaSetting__mdt];
 
@@ -478,7 +478,7 @@ global class FObject {
     this.objectName = thisObjectName.toLowerCase();
 
     // check the number of records
-    if (records < 0) {
+    if (records < 0) { 
       addError(objectApiName, 'Invalid number of records for object [' + objectApiName + ']');
       if (processMustTerminate()) {
         return;
@@ -515,7 +515,7 @@ global class FObject {
       FObject.setSObject(this.objectApiName); // store object's field details to global fields map
     }
     this.objectFieldsMap = FObject.globalObjectFieldsMap.get(this.objectApiName.toLowerCase()); // get stored fields details
-
+   
     // reset milestone timer
     FObject.forceeaStaticDebug(INFO, '>> Initialized settings for object [' + this.objectApiName + '] in ' +
     this.milestoneDuration +  ' ms. Transaction duration: ' + Limits.getCpuTime() + ' ms', true);
@@ -690,7 +690,7 @@ global class FObject {
     }
 
     resetMilestoneTimer('Validated definitions');
-
+    
     this.fields = new List<String>(this.fieldsSet);
 
     // populate the Field Values Matrix
@@ -899,7 +899,7 @@ global class FObject {
       result = true;
     } else if (fieldType == Schema.DisplayType.Url && (
         typeId == DefinitionTypeId.STATIC_INTEGER ||
-        typeId == DefinitionTypeId.STATIC_STRING ||
+        typeId == DefinitionTypeId.STATIC_STRING || 
         typeId == DefinitionTypeId.RANDOM_LIST_INTEGER ||
         typeId == DefinitionTypeId.RANDOM_LIST_STRING ||
         typeId == DefinitionTypeId.RANDOM_NUMBER ||
@@ -951,7 +951,7 @@ global class FObject {
       definition.IsValid = false;
       return false;
     }
-
+    
     // assess each Cluster Type of the Definition Type
     Integer numValidClusterTypes = 0;
     for (ClusterType ct : definitionType.clusterTypes) { // for every Cluster ype
@@ -1429,7 +1429,7 @@ global class FObject {
   global List<String> getFieldDefinitions(String fieldApiName) {
     validateDefinitions();
     String thisFieldApiName = fieldApiName.trim();
-
+    
     thisFieldApiName = thisFieldApiName.toLowerCase();
 
     List<String> values = new List<String>();
@@ -1504,16 +1504,16 @@ global class FObject {
           results.get(controllingValues[baseCount + 0].getValue()).add(currDependentValue.getValue());
         }
         if ((val & 4) == 4) {
-          results.get(controllingValues[baseCount + 1].getValue()).add(currDependentValue.getValue());
+          results.get(controllingValues[baseCount + 1].getValue()).add(currDependentValue.getValue());                    
         }
         if ((val & 2) == 2) {
-          results.get(controllingValues[baseCount + 2].getValue()).add(currDependentValue.getValue());
+          results.get(controllingValues[baseCount + 2].getValue()).add(currDependentValue.getValue());                    
         }
         if ((val & 1) == 1) {
-          results.get(controllingValues[baseCount + 3].getValue()).add(currDependentValue.getValue());
+          results.get(controllingValues[baseCount + 3].getValue()).add(currDependentValue.getValue());                    
         }
         baseCount += 4;
-      }
+      }            
     }
 
     return results;
@@ -1696,7 +1696,7 @@ global class FObject {
     if (FObject.globalInsertedRecordsMap.containsKey(mapKey)) {
       results = FObject.globalInsertedRecordsMap.get(mapKey);
     }
-
+    
     return results;
   }
 
@@ -1704,7 +1704,7 @@ global class FObject {
    * @description Retrieves all inserted records of an object.
    * @param objectApiName The object API name.
    * @return Returns a list of sObject records.
-   */
+   */ 
   global static List<SObject> getInsertedRecords(String objectApiName) {
     List<SObject> results = new List<SObject>();
     Set<String> objectApiNamesSet = new Set<String>(FObject.sObjectApiNames);
@@ -1870,13 +1870,13 @@ global class FObject {
         } else { // no records have been inserted
           noInsertedRecords = true;
         }
-      }
+      } 
 
       if (noInsertedRecords && !definition.isSystemDeclared) {
         forceeaDebug(WARN, 'The required records of lookup object [' + lookupObjectApiName +
           '] have not been created by Forceea and will be created now');
         // create records for the lookup object
-        lookupRecords = getLookupRecords(lookupObjectApiName, lookupFieldApiName, groupName);
+        lookupRecords = getLookupRecords(lookupObjectApiName, lookupFieldApiName, groupName); 
       }
     }
 
@@ -1899,8 +1899,8 @@ global class FObject {
           soqlQuery += ' AND IsActive = true';
         }
       }
-      soqlQuery += ' LIMIT 50000';
-
+      soqlQuery += ' LIMIT 10000';
+      system.debug('soqlQuery='+soqlQuery);
       try { //query the database and get the IDs
         lookupRecords = Database.query(soqlQuery);
       } catch (QueryException ex) {
@@ -2038,7 +2038,7 @@ global class FObject {
     }
 
     // get the created values of controlling field
-    List<String> ctrlFieldValues = this.fieldValuesMatrix[ctrlFieldPosition];
+    List<String> ctrlFieldValues = this.fieldValuesMatrix[ctrlFieldPosition]; 
     List<String> depFieldValues = new List<String>();
 
     // the dependent field's values mapped to the controlling field's value
@@ -2217,7 +2217,7 @@ global class FObject {
     Boolean toIsDate = false;
     if (fromDatetime.hour() == 0 && fromDatetime.minute() == 0 && fromDatetime.second() == 0 ) {
       fromIsDate = true;
-    }
+    }   
     if (toDatetime.hour() == 0 && toDatetime.minute() == 0 && toDatetime.second() == 0 ) {
       toIsDate = true;
     }
@@ -2388,12 +2388,12 @@ global class FObject {
     }
 
     if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
+        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) { 
       values = getPicklistValuesWithoutRespect(arguments);
     } else { // there is a controlling field
       values = getPicklistValuesWithRespect(fieldApiName, ctrlFieldApiName, arguments, null);
     }
-
+    
     return values;
   }
 
@@ -2413,7 +2413,7 @@ global class FObject {
       // get the list of record type IDs
       List<Id> recordTypeIds = new List<Id>();
       for (String argument : argumentsSet) {
-        if (this.recordTypesMap.containsKey(argument.toLowerCase())) { // if the argument is a valid record type
+        if (this.recordTypesMap.containsKey(argument.toLowerCase())) { // if the argument is a valid record type 
           recordTypeIds.add(this.recordTypesMap.get(argument.toLowerCase())); // add the argument's ID to a list
         } else {
           addError(fieldApiName, 'Invalid record type [' + argument + '] for definition [' +
@@ -2555,7 +2555,7 @@ global class FObject {
     String ctrlFieldApiName = dependentField.controllingFieldApiName;
 
     if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
+        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) { 
       // get all picklist values
       List<String> picklistValues = new List<String>(); // the picklist items
       for (Schema.PicklistEntry picklistEntry : this.objectFieldsMap.get(fieldApiName.toLowerCase()).pickListValues) {
@@ -2611,9 +2611,9 @@ global class FObject {
     // get dependent and controlling fields
     Field depField = this.objectFieldsMap.get(fieldApiName.toLowerCase());
     String ctrlFieldApiName = depField.controllingFieldApiName;
-
+ 
     if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
+        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) { 
       // get all picklist items
       List<String> picklistValues = new List<String>(); // the picklist items
       for (Schema.PicklistEntry picklistEntry : this.objectFieldsMap.get(fieldApiName.toLowerCase()).pickListValues) {
@@ -2913,7 +2913,7 @@ global class FObject {
         result.put(fieldApiName, fieldValue);
       }
     }
-
+        
     return result;
   }
 
@@ -3013,7 +3013,7 @@ global class FObject {
     List<String> values = new List<String>();
     String fieldApiName = definition.fieldApiName;
     String argumentToLowercase = argument.toLowerCase();
-
+    
     // get field object
     Field depField = this.objectFieldsMap.get(fieldApiName.toLowerCase());
 
@@ -3077,7 +3077,7 @@ global class FObject {
   }
 
   /**
-   * @description Inserts the created records.
+   * @description Inserts the created records. 
    * @param allOrNone Specifies whether the operation allows partial success. If you specify false
    *   for this parameter and a record fails, the remainder of the DML operation can still succeed.
    * @param groupName The group name of the inserted records.
@@ -3136,7 +3136,7 @@ global class FObject {
       addError(this.objectApiName, 'Found ' + errors + ' errors inserting ' +
         this.recordsToInsert.size() + ' records for object [' + this.objectApiName + ']');
     }
-
+    
     // add the inserted records to global records map
     List<SObject> objectRecords = new List<SObject>();
     if (FObject.globalInsertedRecordsMap.containsKey(this.objectApiName.toLowerCase())) { // if there are inserted records
@@ -3144,7 +3144,7 @@ global class FObject {
     }
     objectRecords.addAll(insertedRecords);
     FObject.globalInsertedRecordsMap.put(this.objectApiName.toLowerCase(), objectRecords);
-
+    
     // add the inserted group records to global records map
     List<SObject> objectRecordsPerGroup = new List<SObject>();
     groupName = (groupName == null) ? '' : groupName; // set group name to an empty string if it is null
@@ -3162,12 +3162,12 @@ global class FObject {
     } else {
       resetMilestoneTimer('Inserted ' + numRecordsInserted + ' records of group [' + groupName.trim() + ']');
     }
-
+    
     return results;
   }
 
   /**
-   * @description Inserts the created records.
+   * @description Inserts the created records. 
    * @param allOrNone Specifies whether the operation allows partial success. If you specify false
    *   for this parameter and a record fails, the remainder of the DML operation can still succeed.
    * @return A list of Database.SaveResult objects.
@@ -3598,7 +3598,7 @@ global class FObject {
           }
           arguments.add(argument); // add argument to a list
         }
-
+        
         chr = result.left(1); // get next char - it should be , or )
         if (chr == ')') { // found (
           result = result.removeStart(chr).trim(); // remove the )
@@ -3916,7 +3916,7 @@ global class FObject {
       requiredFieldNames.add('EmailEncodingKey');
       requiredDefinitions.add('static value(UTF-8)');
       requiredFieldNames.add('TimeZonesIdKey');
-      requiredDefinitions.add('static value(GMT)');
+      requiredDefinitions.add('static value(GMT)'); 
       requiredFieldNames.add('LocalesIdKey');
       requiredDefinitions.add('static value(en_US)');
       requiredFieldNames.add('LanguageLocaleKey');
@@ -4347,7 +4347,7 @@ global class FObject {
       Field field = FObject.getDetailsFromSObjectField(sof); // get the field object
       fieldsMap.put(field.fieldApiName.toLowerCase(), field); // add field to map
     }
-
+    
     FObject.globalObjectFieldsMap.put(objectApiName.toLowerCase(), fieldsMap); // add object fields to global map
   }
 

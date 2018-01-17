@@ -15,6 +15,10 @@
                 <behavior>Edit</behavior>
                 <field>TestDecimal__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>TestLookupUser__c</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns/>
         <style>TwoColumnsTopToBottom</style>

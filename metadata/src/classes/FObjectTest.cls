@@ -39,7 +39,7 @@ public class FObjectTest {
 
     Integer errors = 0;
     Set<Id> recordIdsSet = (new Map<Id, SObject>(records)).keySet();
-    for (FObjectOne__c objRecord : [SELECT Id FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT Id FROM FObjectOne__c LIMIT 1000]) {
       if (!recordIdsSet.contains(objRecord.Id)) {
         errors++;
       }
@@ -62,7 +62,7 @@ public class FObjectTest {
 
     Integer errors = 0;
     Set<Id> recordIdsSet = (new Map<Id, SObject>(records)).keySet();
-    for (FObjectOne__c objRecord : [SELECT Id FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT Id FROM FObjectOne__c LIMIT 1000]) {
       if (!recordIdsSet.contains(objRecord.Id)) {
         errors++;
       }
@@ -89,7 +89,7 @@ public class FObjectTest {
     List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c];
+    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
     Integer errors = 0;
     if (insertedRecords.size() != size1) {
       errors += 1;
@@ -124,7 +124,7 @@ public class FObjectTest {
     List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c];
+    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
     Integer errors = 0;
     if (saveResults1.size() != size1) {
       errors += 1;
@@ -1340,7 +1340,7 @@ public class FObjectTest {
     Database.DeleteResult[] deleteResults = obj.deleteRecords('TestPicklistA__c = \'a1\'');
     Test.stopTest();
 
-    List<FObjectOne__c> recordsAfterDelete = [SELECT Id FROM FObjectOne__c];
+    List<FObjectOne__c> recordsAfterDelete = [SELECT Id FROM FObjectOne__c LIMIT 1000];
     Set<Id> recordIdsAfterDeleteSet = (new Map<Id, FObjectOne__c>(recordsAfterDelete)).keySet();
     Integer errors = 0;
     for (FObjectOne__c objRecord : (List<FObjectOne__c>)obj.getInsertedRecords()) {
@@ -1363,7 +1363,7 @@ public class FObjectTest {
     obj.deleteRecords('TestPicklistA__c = \'a1\'');
     Test.stopTest();
 
-    List<FObjectOne__c> recordsAfterDelete1 = [SELECT Id FROM FObjectOne__c];
+    List<FObjectOne__c> recordsAfterDelete1 = [SELECT Id FROM FObjectOne__c LIMIT 1000];
     Set<Id> recordIdsAfterDelete1Set = (new Map<Id, FObjectOne__c>(recordsAfterDelete1)).keySet();
     Integer hash1 = recordIdsAfterDelete1Set.hashCode();
     List<FObjectOne__c> recordsAfterDelete2 = obj.getInsertedRecords();
@@ -1404,7 +1404,7 @@ public class FObjectTest {
     obj.deleteRecords('TestPicklistA__c = \'a5\'');
     Test.stopTest();
 
-    List<FObjectOne__c> recordsAfterDelete1 = [SELECT Id FROM FObjectOne__c];
+    List<FObjectOne__c> recordsAfterDelete1 = [SELECT Id FROM FObjectOne__c LIMIT 1000];
     Set<Id> recordIdsAfterDelete1Set = (new Map<Id, FObjectOne__c>(recordsAfterDelete1)).keySet();
     Integer hash1 = recordIdsAfterDelete1Set.hashCode();
     List<FObjectOne__c> recordsAfterDelete2 = obj.getInsertedRecords();
@@ -1581,7 +1581,7 @@ public class FObjectTest {
     List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c];
+    List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c LIMIT 1000];
     Integer expectedResult = 10;
     Integer actualResult = lookupRecords.size();
     System.assertEquals(expectedResult, actualResult, 'getDefaultRecords - errors found');
@@ -1595,7 +1595,7 @@ public class FObjectTest {
     List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c];
+    List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c LIMIT 1000];
     Integer expectedResult = 12;
     Integer actualResult = lookupRecords.size();
     System.assertEquals(expectedResult, actualResult, 'getDefaultRecords - errors found');
@@ -1798,7 +1798,7 @@ public class FObjectTest {
 
     List<FObjectTwo__c> lookupRecords = (List<FObjectTwo__c>)FObject.getInsertedRecords('FObjectTwo__c');
     Integer expectedResult = lookupRecords.hashCode();
-    Integer actualResult = [SELECT TestPicklistDRequired__c FROM FObjectTwo__c].hashCode();
+    Integer actualResult = [SELECT TestPicklistDRequired__c FROM FObjectTwo__c LIMIT 1000].hashCode();
     System.assertEquals(expectedResult, actualResult, 'getInsertedRecords - errors found');
   }
 
@@ -1853,7 +1853,7 @@ public class FObjectTest {
     obj.insertRecords();
     Test.stopTest();
 
-    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c];
+    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
     Integer errors = 0;
     if (records1.size() + records2.size() != insertedRecords.size()) {
       errors++;
@@ -1878,7 +1878,7 @@ public class FObjectTest {
 
     Integer errors = 0;
     Set<Id> recordIdsSet = (new Map<Id, SObject>(records)).keySet();
-    for (FObjectOne__c objRecord : [SELECT Id FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT Id FROM FObjectOne__c LIMIT 1000]) {
       if (!recordIdsSet.contains(objRecord.Id)) {
         errors++;
       }
@@ -1905,7 +1905,7 @@ public class FObjectTest {
     List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c];
+    List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
     Integer errors = 0;
     if (records1.size() + records2.size() != insertedRecords.size()) {
       errors++;
@@ -1930,7 +1930,7 @@ public class FObjectTest {
     Test.stopTest();
 
     Boolean condition1 = true;
-    for (FObjectOne__c objRecord : [SELECT TestText__c FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT TestText__c FROM FObjectOne__c LIMIT 1000]) {
       if (objRecord.TestText__c == 'v1') {
         condition1 = false;
         break;
@@ -1985,28 +1985,17 @@ public class FObjectTest {
   @isTest
   private static void insertRecords_attachments_expectSuccess() {
     Test.startTest();
-    // create emails
-    FObject obj1 = new FObject('EmailMessage');
-    obj1.setDefinition('Subject', 'static value(Email)');
-    obj1.setDefinition('Subject', 'serial type(number) from(1) step(1) scale(0)');
-    obj1.setDefinition('TextBody', 'copy field(Subject)');
-    obj1.setDefinition('Incoming', 'static value(true)');
-    obj1.setDefinition('Status', 'static value(0)');
-    obj1.setDefinition('ParentId', 'random lookup(Case) source(forceea)');
-    obj1.insertRecords(true);
-    // create attachments
-    FObject obj2 = new FObject('Attachment');
-    obj2.setDefinition('Name', 'static value(Attachment)');
-    obj2.setDefinition('Name', 'serial type(number) from(1) step(1) scale(0)');
-    obj2.setDefinition('Body', 'random type(number) from(1) to(100) scale(2)');
-    obj2.setDefinition('ParentId', 'random lookup(EmailMessage) source(forceea)');
-    obj2.insertRecords(true);
-    List<Attachment> attachments = (List<Attachment>)obj2.getRecords();
+    FObject obj = new FObject('Attachment');
+    obj.setDefinition('Name', 'static value(Attachment)');
+    obj.setDefinition('Name', 'serial type(number) from(1) step(1) scale(0)');
+    obj.setDefinition('Body', 'random type(number) from(1) to(100) scale(2)');
+    obj.insertRecords(true);
+    List<Attachment> attachments = (List<Attachment>)obj.getRecords();
     Test.stopTest();
 
     Decimal value = 0;
     Integer errors = 0;
-    for (Attachment objRecord : [SELECT Body FROM Attachment]) {
+    for (Attachment objRecord : [SELECT Body FROM Attachment LIMIT 1000]) {
       value = Decimal.valueOf(objRecord.Body.toString());
       if (value < 1 || value > 100) {
         errors++;
@@ -2280,7 +2269,7 @@ public class FObjectTest {
 
     Integer errors = 0;
     Set<Id> refObjectIdsSet =
-      (new Map<Id, FObjectTwo__c>([SELECT Id FROM FObjectTwo__c])).keySet();
+      (new Map<Id, FObjectTwo__c>([SELECT Id FROM FObjectTwo__c LIMIT 1000])).keySet();
     for (FObjectOne__c objRecord : records) {
       if (!refObjectIdsSet.contains(objRecord.TestLookup__c)) {
         errors++;
@@ -2288,6 +2277,33 @@ public class FObjectTest {
     }
     if (!FObject.processIsValid) {
       errors++;
+    }
+    System.assertEquals(0, errors, 'random lookup forceea - errors found');
+  }
+
+   @isTest
+  private static void sddlRandomLookupForceea_isActiveUser_expectSuccess() {
+    Test.startTest();
+    FObject obj = new FObject('FObjectFour__c');
+    obj.setDefinition('TestLookupUser__c', 'random lookup(User) source(forceea)');
+    obj.insertRecords(true);
+    List<User> users = obj.getInsertedRecords();
+    Test.stopTest();
+
+    Integer errors = 0;
+    Set<Id> recordIdsSet = (new Map<Id, User>(users)).keySet();
+    List<FObjectFour__c> records = [
+      SELECT TestLookupUser__r.IsActive
+      FROM FObjectFour__c
+      WHERE Id IN :recordIdsSet LIMIT 100];
+    for (FObjectFour__c objRecord : records) {
+      if (objRecord.TestLookupUser__r.IsActive == false) {
+        errors += 1;
+        break;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors += 2;
     }
     System.assertEquals(0, errors, 'random lookup forceea - errors found');
   }
@@ -2364,16 +2380,21 @@ public class FObjectTest {
   }
 
   @isTest
-  private static void sddlRandomLookupSalesforce_isInactive_expectSuccess() {
+  private static void sddlRandomLookupSalesforce_isActiveUser_expectSuccess() {
+    FObject.setGlobalVerbose('debug');
     Test.startTest();
-    FObject obj = new FObject('Case');
-    obj.setDefinition('BusinessHoursId', 'random lookup(BusinessHours) source(salesforce)');
-    obj.insertRecords(true);
+    FObject obj1 = new FObject('User', 10);
+    obj1.setDefinition('IsActive', 'random type(boolean)');
+    obj1.insertRecords(true);
+
+    FObject obj2 = new FObject('FObjectFour__c');
+    obj2.setDefinition('TestLookupUser__c', 'random lookup(User) source(salesforce)');
+    obj2.insertRecords(true);
     Test.stopTest();
 
     Integer errors = 0;
-    for (Case objRecord : [SELECT BusinessHours.IsActive FROM Case]) {
-      if (objRecord.BusinessHours.IsActive == false) {
+    for (FObjectFour__c objRecord : [SELECT TestLookupUser__r.IsActive FROM FObjectFour__c LIMIT 1000]) {
+      if (objRecord.TestLookupUser__r.IsActive == false) {
         errors += 1;
         break;
       }
@@ -2579,7 +2600,8 @@ public class FObjectTest {
     // get the set of FObjectTwo__c IDs
     List<FObjectTwo__c> lookupObjectRecords = new List<FObjectTwo__c>([
       SELECT Id, testPicklistA__c FROM FObjectTwo__c
-      WHERE Id IN :lookupFieldIdsSet]);
+      WHERE Id IN :lookupFieldIdsSet
+      LIMIT 1000]);
 
     Integer errors = 0;
     for (FObjectTwo__c objRecord : lookupObjectRecords) {
@@ -2611,7 +2633,8 @@ public class FObjectTest {
     // get the set of FObjectTwo__c IDs
     List<FObjectTwo__c> lookupObjectRecords = new List<FObjectTwo__c>([
       SELECT Id, testPicklistA__c FROM FObjectTwo__c
-      WHERE Id IN :lookupFieldIdsSet]);
+      WHERE Id IN :lookupFieldIdsSet
+      LIMIT 1000]);
 
     Integer errors = 0;
     for (FObjectTwo__c objRecord : lookupObjectRecords) {
@@ -2644,7 +2667,7 @@ public class FObjectTest {
     Test.stopTest();
 
     Integer errors = 0;
-    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c LIMIT 1000]) {
       if (objRecord.TestLookup__r.TestPicklistA__c != 'a0') {
         errors++;
       }
@@ -2671,7 +2694,7 @@ public class FObjectTest {
 
     Integer errors = 0;
     Set<Id> refObjectIdsSet = (new Map<Id, FObjectTwo__c>(
-      [SELECT Id FROM FObjectTwo__c WHERE TestPicklistB__c = 'b3'])).keySet();
+      [SELECT Id FROM FObjectTwo__c WHERE TestPicklistB__c = 'b3' LIMIT 1000])).keySet();
 
     for (FObjectOne__c objRecord : records) {
       if (!refObjectIdsSet.contains(objRecord.TestLookup__c)) {
@@ -2742,7 +2765,8 @@ public class FObjectTest {
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
         SELECT Id FROM FObjectTwo__c
-        WHERE TestPicklistDRequired__c NOT IN :exclusions])).keySet();
+        WHERE TestPicklistDRequired__c NOT IN :exclusions
+        LIMIT 1000])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2776,7 +2800,8 @@ public class FObjectTest {
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
         SELECT Id FROM FObjectTwo__c
-        WHERE TestPicklistDRequired__c NOT IN :exclusions])).keySet();
+        WHERE TestPicklistDRequired__c NOT IN :exclusions
+        LIMIT 1000])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2806,7 +2831,7 @@ public class FObjectTest {
       lookupIdsSet.add(objRecord.TestLookup__c);
     }
     // get FObjectTwo__c IDs
-    Set<Id> lookupObjectIdsSet = (new Map<Id, FObjectTwo__c>([SELECT Id FROM FObjectTwo__c])).keySet();
+    Set<Id> lookupObjectIdsSet = (new Map<Id, FObjectTwo__c>([SELECT Id FROM FObjectTwo__c LIMIT 1000])).keySet();
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
       if (!lookupObjectIdsSet.contains(lookupId)) {
@@ -2844,7 +2869,8 @@ public class FObjectTest {
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
         SELECT Id FROM FObjectTwo__c
-        WHERE TestPicklistA__c NOT IN :exclusions])).keySet();
+        WHERE TestPicklistA__c NOT IN :exclusions
+        LIMIT 1000])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2883,7 +2909,8 @@ public class FObjectTest {
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
         SELECT Id FROM FObjectTwo__c
-        WHERE TestPicklistA__c NOT IN :exclusions])).keySet();
+        WHERE TestPicklistA__c NOT IN :exclusions
+        LIMIT 1000])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2918,7 +2945,7 @@ public class FObjectTest {
       lookupIdsSet.add(objRecord.TestLookup__c);
     }
     // get FObjectTwo__c IDs
-    Set<Id> lookupObjectIdsSet = (new Map<Id, FObjectTwo__c>([SELECT Id FROM FObjectTwo__c])).keySet();
+    Set<Id> lookupObjectIdsSet = (new Map<Id, FObjectTwo__c>([SELECT Id FROM FObjectTwo__c LIMIT 1000])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2959,7 +2986,7 @@ public class FObjectTest {
         errors += 1;
       }
     }
-    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c LIMIT 1000]) {
       if (objRecord.TestLookup__r.TestPicklistA__c != 'a3') {
         errors += 2;
         break;
@@ -3030,7 +3057,7 @@ public class FObjectTest {
         break;
       }
     }
-    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c LIMIT 1000]) {
       if (objRecord.TestLookup__r.TestPicklistA__c != 'a0') {
         errors += 2;
         break;
@@ -3053,7 +3080,7 @@ public class FObjectTest {
     Test.stopTest();
 
     Integer errors = 0;
-    List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c];
+    List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c LIMIT 1000];
     if (!lookupRecords.isEmpty()) {
       errors += 1;
     }
@@ -3096,7 +3123,8 @@ public class FObjectTest {
     List<FObjectTwo__c> lookupRecords = [
       SELECT TestPicklistDRequired__c, TestPicklistEUnrestricted__c
       FROM FObjectTwo__c
-      WHERE Id IN :lookupIds];
+      WHERE Id IN :lookupIds
+      LIMIT 1000];
 
     Integer errors = 0;
     if (!obj2.getErrors().isEmpty()) {
@@ -3147,7 +3175,8 @@ public class FObjectTest {
     List<FObjectTwo__c> lookupRecords = [
       SELECT TestPicklistDRequired__c, TestPicklistEUnrestricted__c
       FROM FObjectTwo__c
-      WHERE Id IN :lookupIds];
+      WHERE Id IN :lookupIds
+      LIMIT 1000];
 
     Integer errors = 0;
     for (FObjectTwo__c objRecord : lookupRecords) {
@@ -4188,7 +4217,7 @@ public class FObjectTest {
     obj.insertRecords(true);
     Test.stopTest();
 
-    List<FObjectOne__c> records = [SELECT TestText__c FROM FObjectOne__c];
+    List<FObjectOne__c> records = [SELECT TestText__c FROM FObjectOne__c LIMIT 1000];
     Boolean expectedResult = true;
     Boolean actualResult = isValidDistribution('TestText__c', arguments, records);
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
@@ -4477,7 +4506,7 @@ public class FObjectTest {
     }
 
     List<RecordType> recordTypes = [
-      SELECT Id FROM RecordType WHERE sObjectType = 'FObjectOne__c' AND IsActive = true];
+      SELECT Id FROM RecordType WHERE sObjectType = 'FObjectOne__c' AND IsActive = true LIMIT 1000];
     Set<Id> valuesSet = (new Map<Id, RecordType>(recordTypes)).keySet();
     List<Id> values = new List<Id>(valuesSet);
     if (!isValidDistribution('RecordTypeId', values, records)) {
@@ -5526,7 +5555,7 @@ public class FObjectTest {
     Test.stopTest();
 
     Integer errors = 0;
-    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c]) {
+    for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c LIMIT 1000]) {
       if (objRecord.TestLookup__r.TestPicklistA__c != 'a0') {
         errors++;
       }
