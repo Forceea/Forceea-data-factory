@@ -165,7 +165,7 @@ public class ForceeaExamples {
   private static void createChatterFeeds() {
     FObject obj = new FObject('FeedItem');
     obj.setDefinition('Body', 'random type(text) minlength(50) maxlength(500)');
-    obj.setDefinition('ParentId', 'random lookup(Contact) source(salesforce)');
+    obj.setDefinition('ParentId', 'random lookup(Contact) source(forceea)');
     obj.setDefinition('Status', 'random type(picklist)');
     obj.setDefinition('type', 'static value(TextPost)');
     obj.insertRecords(true);
@@ -173,16 +173,10 @@ public class ForceeaExamples {
 
   @isTest
   private static void createtUsers() {
-    FObject obj1 = new FObject('User', 1);
-    obj1.setDefinition('ProfileId', 'static lookup(Profile) field(Name) value(System Administrator) source(salesforce)');
-    obj1.setDefinition('UserRoleId', 'static lookup(UserRole) field(Name) value(CLS LATAM Nice Guys) source(salesforce)');
-
-    List<User> users1 = (List<User>) obj1.getRecords();
-    Database.SaveResult[] saveResults = obj1.insertRecords(false);
-
-    FObject obj2 = new FObject('User', 1);
-    obj2.setDefinition('ProfileId', 'static lookup(profile) field(Name) value(Standard User) source(salesforce)');
-    List<User> users2 = (List<User>) obj2.getRecords();
+    FObject obj = new FObject('User', 1);
+    obj.setDefinition('ProfileId', 'static lookup(Profile) field(Name) value(System Administrator) source(salesforce)');
+    //obj.setDefinition('UserRoleId', 'static lookup(UserRole) field(Name) value(CEO) source(salesforce)');
+    obj.insertRecords(false);
   }
 
   @isTest
