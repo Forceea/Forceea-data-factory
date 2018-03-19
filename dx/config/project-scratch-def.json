@@ -1,0 +1,8 @@
+{
+    "orgName": "Forceea Data Factory Co.",
+    "edition": "Enterprise",
+    "hasSampleData": "true",
+    "orgPreferences" : {
+        "enabled": ["S1DesktopEnabled"]
+    }
+}

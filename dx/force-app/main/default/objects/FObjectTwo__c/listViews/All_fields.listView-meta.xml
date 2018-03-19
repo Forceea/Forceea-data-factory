@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All_fields</fullName>
+    <columns>NAME</columns>
+    <columns>RECORDTYPE</columns>
+    <columns>TestText__c</columns>
+    <columns>TestPicklistA__c</columns>
+    <columns>TestPicklistB__c</columns>
+    <columns>TestPicklistC__c</columns>
+    <columns>TestPicklistDRequired__c</columns>
+    <columns>TestPicklistEUnrestricted__c</columns>
+    <columns>TestPicklistFUnrestricted__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All fields</label>
+    <language>en_US</language>
+</ListView>

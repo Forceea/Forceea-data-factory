@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TestPicklistA__c</fullName>
+    <description>This field doesn't have a controlling field and its values are restricted.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>This field doesn't have a controlling field and its values are restricted.</inlineHelpText>
+    <label>TestPicklistA</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>a0</fullName>
+                <default>false</default>
+                <label>a0</label>
+            </value>
+            <value>
+                <fullName>a1</fullName>
+                <default>false</default>
+                <label>a1</label>
+            </value>
+            <value>
+                <fullName>a2</fullName>
+                <default>false</default>
+                <label>a2</label>
+            </value>
+            <value>
+                <fullName>a3</fullName>
+                <default>false</default>
+                <label>a3</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

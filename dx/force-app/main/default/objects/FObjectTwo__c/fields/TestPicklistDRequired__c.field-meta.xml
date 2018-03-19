@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TestPicklistDRequired__c</fullName>
+    <externalId>false</externalId>
+    <label>TestPicklistDRequired</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>d0</fullName>
+                <default>false</default>
+                <label>d0</label>
+            </value>
+            <value>
+                <fullName>d1</fullName>
+                <default>false</default>
+                <label>d1</label>
+            </value>
+            <value>
+                <fullName>d2</fullName>
+                <default>false</default>
+                <label>d2</label>
+            </value>
+            <value>
+                <fullName>d3</fullName>
+                <default>false</default>
+                <label>d3</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
