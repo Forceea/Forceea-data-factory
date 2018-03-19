@@ -22,6 +22,8 @@ The following list describes the main capabilities of the framework. I encourage
 *	Has an extended error messaging system.
 * Includes a Test Class with more than 300 test methods and a 99% test coverage.
 
+For the Salesforce DX enthusiasts, the dx folder includes all Salesforce DX components.
+
 The upcoming release 1.3 (April 2018) will provide the following new features:
 * Support for the data population of Salesforce DX scratch orgs, producing the same random records for each scratch org
 * Creation of random phone numbers
