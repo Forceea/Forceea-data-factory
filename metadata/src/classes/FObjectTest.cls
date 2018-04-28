@@ -1,5 +1,5 @@
 /*
-  FORCEEA data factory framework (version 1.2)
+  FORCEEA data factory framework (version 1.2.1)
   Copyright (C) 2018 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -16,7 +16,7 @@
 
 /**
  * @description FObject Test Class
- * @version 1.2
+ * @version 1.2.1
  */
 @isTest
 public class FObjectTest {
@@ -1278,21 +1278,34 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'deleteFieldDefinitions - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void deleteFieldDefinitions_declareSomeDefinitions_expectSuccess() {
     Test.startTest();
+
     FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestText__c', 'static value(TestName_)');
     obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
-    obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.setDefinition('TestPicklistB__c', 'random type(picklist)');
     obj.deleteFieldDefinitions('TestText__c');
+
     Test.stopTest();
 
-    List<String> fieldDefinitions = obj.getFieldDefinitions('TestText__c');
-    Map<String, List<String>> allDefinitions = obj.getAllDefinitions();
-    System.assertEquals(true, fieldDefinitions.isEmpty(), 'deleteFieldDefinitions - errors found');
+    Integer errors = 0;
+    if (!obj.getFieldDefinitions('TestText__c').isEmpty()) {
+      errors += 1;
+    }
+    if (obj.getFieldDefinitions('TestDecimal__c').size() != 1) {
+      errors += 2;
+    }
+    if (obj.getFieldDefinitions('TestPicklistA__c').size() != 1) {
+      errors += 4;
+    }
+    if (obj.getFieldDefinitions('TestPicklistB__c').size() != 1) {
+      errors += 8;
+    }
+    System.assertEquals(0, errors, 'deleteFieldDefinitions - errors found');
   }
 
   @isTest

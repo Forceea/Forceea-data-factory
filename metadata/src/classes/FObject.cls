@@ -1,5 +1,5 @@
 /*
-  FORCEEA data factory framework (version 1.2)
+  FORCEEA data factory framework (version 1.2.1)
   Copyright (C) 2018 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -16,7 +16,7 @@
 
 /**
  * @description Forceea data factory framework
- * @version 1.2
+ * @version 1.2.1
  */
 global class FObject {
 
@@ -988,7 +988,7 @@ global class FObject {
     this.willValidateFieldDefinitionsMessageIsDisplayed = true;
   }
 
-  /**
+ /**
    * @description Deletes all definitions of a field.
    * @param fieldName The user-defined name of the field.
    * @return None.
@@ -1008,23 +1008,23 @@ global class FObject {
       return;
     }
 
-    // delete field definitions
     forceeaDebug(INFO, 'Deleting the definitions of field [' + fieldApiName + ']');
     Integer index = 0;
-    List<Integer> indexList = new List<Integer>();
+    List<Integer> indexesToRemove = new List<Integer>();
+
     for (Definition def : this.definitions) { // for each definition
       if (def.fieldApiName == fieldApiName) { // if field is found
-        indexList.add(index); // store the index of this field
+        indexesToRemove.add(index); // store the index of this field
       }
       index++;
     }
 
-    for (Integer count = indexList.size() - 1; count >= 0; count--) {
-      this.definitions.remove(count); // remove definition
+    for (Integer count = indexesToRemove.size() - 1; count >= 0; count--) {
+      this.definitions.remove(indexesToRemove.get(count)); // remove definition
     }
 
-    // delete field from object lists
-    this.fieldsSet.removeAll(new List<String>{ fieldApiName });
+    // delete field from other collections
+    this.fieldsSet.removeAll(new List<String>{fieldApiName});
     this.fields = new List<String>(this.fieldsSet);
   }
 

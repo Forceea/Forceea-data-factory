@@ -1,5 +1,5 @@
 /*
-  FORCEEA data factory framework (version 1.2)
+  FORCEEA data factory framework (version 1.2.1)
   Copyright (C) 2018 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -40,11 +40,6 @@ public class ForceeaExamples {
     obj.setDefinition('ShippingCity', 'random type(city) group(shipping)');
     obj.setDefinition('ShippingState', 'random type(state) group(shipping)');
     obj.setDefinition('ShippingCountry', 'random type(country) group(shipping)');
-    obj.setDefinition('BillingStreet', 'random type(street) group(billing)');
-    obj.setDefinition('BillingPostalCode', 'random type(postalcode) group(billing)');
-    obj.setDefinition('BillingCity', 'random type(city) group(billing)');
-    obj.setDefinition('BillingState', 'random type(state) group(billing)');
-    obj.setDefinition('BillingCountry', 'random type(country) group(billing)');
     //obj.setDefinition('CreatedDate', 'random type(datetime) from(2010-01-01) to(2015-12-31)');
     //obj.setDefinition('CreatedById', 'random lookup(User) source(salesforce)');
     obj.insertRecords(true);
@@ -74,12 +69,7 @@ public class ForceeaExamples {
     obj.setDefinition('Birthdate', 'random type(date) from(1950-1-1) to(1982-12-31)');
     obj.setDefinition('Title', 'random type(list) value(Developer, CFO, Account Manager, CEO, Logistics Manager)');
     obj.setDefinition('Department', 'random type(list) value(Sales, Marketing, Accounting, Management)');
-    obj.setDefinition('AccountId', 'random lookup(Account) source(forceea)');
-    obj.setDefinition('OtherStreet', 'random type(street) group(other)');
-    obj.setDefinition('OtherPostalCode', 'random type(postalcode) group(other)');
-    obj.setDefinition('OtherCity', 'random type(city) group(other)');
-    obj.setDefinition('OtherState', 'random type(state) group(other)');
-    obj.setDefinition('OtherCountry', 'random type(country) group(other)');
+    obj.setDefinition('AccountId', 'random lookup(Account) source(salesforce)');
     obj.setDefinition('MailingStreet', 'random type(street) group(mailing)');
     obj.setDefinition('MailingPostalCode', 'random type(postalcode) group(mailing)');
     obj.setDefinition('MailingCity', 'random type(city) group(mailing)');
@@ -96,7 +86,7 @@ public class ForceeaExamples {
     obj.setDefinition('TextBody', 'copy field(Subject)');
     obj.setDefinition('Incoming', 'static value(true)');
     obj.setDefinition('Status', 'static value(0)');
-    obj.setDefinition('ParentId', 'random lookup(Case) source(forceea)');
+    obj.setDefinition('ParentId', 'random lookup(Case) source(salesforce)');
     obj.insertRecords(true);
   }
 
@@ -158,7 +148,7 @@ public class ForceeaExamples {
   private static void createChatterFeeds() {
     FObject obj = new FObject('FeedItem');
     obj.setDefinition('Body', 'random type(text) minlength(50) maxlength(500)');
-    obj.setDefinition('ParentId', 'random lookup(Contact) source(forceea)');
+    obj.setDefinition('ParentId', 'random lookup(Contact) source(salesforce)');
     obj.setDefinition('Status', 'static value(Published)');
     obj.setDefinition('Type', 'static value(TextPost)');
     obj.setDefinition('Title', 'random type(text) minlength(50) maxlength(250)');

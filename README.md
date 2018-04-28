@@ -1,4 +1,4 @@
-# Forceea 1.2 #
+# Forceea 1.2.1 #
 Forceea (forˈsēa) is a data factory framework for Salesforce. The framework creates data using a descriptive language called Sample Data Definition Language (SDDL) to define the nature of the data.
 
 Forceea was created with a double objective:
@@ -22,14 +22,6 @@ The following list describes the main capabilities of the framework. I encourage
 *	Has an extended error messaging system.
 * Includes a Test Class with more than 300 test methods and a 99% test coverage.
 
-For the Salesforce DX enthusiasts, the dx folder includes all Salesforce DX components.
+The dx folder includes all Salesforce DX components.
 
-The upcoming release 1.3 will provide the following new features:
-* Asynchronous process to insert records of one or many SObjects with up to 50 concurrent queueable jobs.
-* Asynchronous process to delete records of one SObject with up to 50 concurrent queueable jobs, using an optional WHERE clause.
-* Asynchronous process to delete records of many SObjects with one queueable job, using an optional WHERE clause.
-* Support for the data population of Salesforce DX scratch orgs, producing the same random records for each scratch org.
-* Creation of random phone numbers.
-* Ability to copy a field of a lookup record, e.g. to include the account Name in the opportunity Name field.
-
-Your feedback is very important and always welcome. Please send your email to mitrakisn@gmail.com
+This version fixes the method deleteFieldDefinitions (bug #74)
