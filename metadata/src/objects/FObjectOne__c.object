@@ -116,6 +116,16 @@
         <unique>false</unique>
     </fields>
     <fields>
+        <fullName>TestExternalId__c</fullName>
+        <externalId>true</externalId>
+        <label>TestTextExternalId</label>
+        <length>50</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>TestFormulaNumber__c</fullName>
         <externalId>false</externalId>
         <formula>TestDecimal__c + 1</formula>
@@ -127,6 +137,16 @@
         <trackTrending>false</trackTrending>
         <type>Number</type>
         <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>TestGeolocation__c</fullName>
+        <displayLocationInDecimal>false</displayLocationInDecimal>
+        <externalId>false</externalId>
+        <label>TestGeolocation</label>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Location</type>
     </fields>
     <fields>
         <fullName>TestInteger__c</fullName>
@@ -195,7 +215,7 @@
         <fullName>TestPercent__c</fullName>
         <externalId>false</externalId>
         <label>TestPercent</label>
-        <precision>18</precision>
+        <precision>7</precision>
         <required>false</required>
         <scale>2</scale>
         <trackTrending>false</trackTrending>
@@ -505,17 +525,17 @@
         <fullName>Text_fields</fullName>
         <columns>NAME</columns>
         <columns>RECORDTYPE</columns>
-        <columns>TestTextRequired__c</columns>
         <columns>TestText__c</columns>
-        <columns>TestUrl__c</columns>
-        <columns>TestEmail__c</columns>
+        <columns>TestTextRequired__c</columns>
         <columns>TestTextArea__c</columns>
         <columns>TestTextAreaLong__c</columns>
         <columns>TestTextAreaRich__c</columns>
         <columns>TestPhone__c</columns>
+        <columns>TestEmail__c</columns>
+        <columns>TestUrl__c</columns>
+        <columns>TestExternalId__c</columns>
         <filterScope>Everything</filterScope>
         <label>Text fields</label>
-        <language>en_US</language>
     </listViews>
     <nameField>
         <displayFormat>FO1-{00000}</displayFormat>

@@ -1,5 +1,5 @@
 /*
-  FORCEEA data factory framework (version 1.2.1)
+  FORCEEA data factory framework (version 1.3)
   Copyright (C) 2018 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -16,9 +16,9 @@
 
 /**
  * @description FObject Test Class
- * @version 1.2.1
+ * @version 1.3
  */
-@isTest
+@IsTest
 public class FObjectTest {
   private static Set<String> femaleFirstNames;
   private static Set<String> femaleLastNames;
@@ -27,13 +27,13 @@ public class FObjectTest {
 
   /* createRecords */
 
-  @isTest
+  @IsTest
   private static void createRecords_getRecordsBeforeInsertRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
     obj.createRecords();
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
@@ -50,14 +50,14 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'createRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void createRecords_insertRecordsBeforeGetRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
     obj.createRecords();
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -73,10 +73,11 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'createRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void createRecords_callOnceAfterInsertRecords_expectSuccess() {
     Integer size1 = 201;
     Integer size2 = 100;
+    FObject.setGlobalVerbose('debug');
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', size1);
@@ -86,7 +87,7 @@ public class FObjectTest {
 
     obj.records = size2;
     obj.createRecords();
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
@@ -103,7 +104,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'createRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void createRecords_callTwiceAfterInsertRecords_expectSuccess() {
     Integer size1 = 201;
     Integer size2 = 100;
@@ -121,7 +122,7 @@ public class FObjectTest {
     obj.records = size3;
     obj.createRecords();
     Database.SaveResult[] saveResults2 = obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
@@ -144,7 +145,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'createRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void createRecords_discontinuousRecordNumber_expectSuccess() {
     Integer size1 = 201;
     Integer size2 = 100;
@@ -153,10 +154,10 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', size1);
     obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
     obj.createRecords();
-    List<FObjectOne__c> records1 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
     obj.records = size2;
     obj.createRecords(size1 + 2);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     records2.addAll(records1);
@@ -172,7 +173,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'createRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void createRecords_noDefinitions_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -192,7 +193,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void createRecords_validRecordNumber_expectSuccess() {
     Integer size1 = 201;
     Integer size2 = 100;
@@ -203,7 +204,7 @@ public class FObjectTest {
     obj.createRecords();
     obj.records = size2;
     obj.createRecords(size1 + 1);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -216,7 +217,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'createRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void createRecords_invalidRecordNumber_expectfailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -226,23 +227,26 @@ public class FObjectTest {
 
     String expectedResult = 'Invalid record number in method createRecords';
     String actualResult = obj.getErrors().get('FObjectOne__c').get(0);
+
     System.assertEquals(expectedResult, actualResult, 'createRecords - errors found');
   }
 
   /* definitionIsValidForFieldDataType */
 
-@isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_base64_expectFailure() {
     String fieldApiName = 'Body';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Boolean)');
     validDefinitions.add('Random Type(City) Group(one)');
     validDefinitions.add('Random Type(Country) Group(one)');
     validDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Email)');
+    validDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     validDefinitions.add('Random Type(FirstName) Group(one)');
     validDefinitions.add('Random Type(LastName) Group(one)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -284,12 +288,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_boolean_expectFailure() {
     String fieldApiName = 'TestCheckbox__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Boolean)');
     validDefinitions.add('Random Type(List) Value(One, Two, Three)');
     validDefinitions.add('Static Value(One)');
@@ -303,6 +308,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -337,7 +343,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_combobox_expectFailure() {
     String fieldApiName = 'Subject';
 
@@ -349,6 +355,7 @@ public class FObjectTest {
     validDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Email)');
+    validDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     validDefinitions.add('Random Type(FirstName) Group(one)');
     validDefinitions.add('Random Type(LastName) Group(one)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -390,12 +397,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_currency_expectFailure() {
     String fieldApiName = 'TestCurrency__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
     validDefinitions.add('Random Type(List) Value(1.1, 2.2, 3.3)');
     validDefinitions.add('Random Type(Number) From(1) To(100) Scale(0)');
@@ -413,6 +421,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(2017-01-01 01:01:01, 2017-02-02 02:02:02, 2017-03-03 03:03:03)');
@@ -443,12 +452,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_date_expectFailure() {
     String fieldApiName = 'TestDate__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(List) Value(2017-01-01, 2017-02-02, 2017-03-03)');
     validDefinitions.add('Serial Type(Date) From(2017-01-01) Step(2)');
@@ -463,6 +473,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Country) Group(one)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -496,12 +507,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_datetime_expectFailure() {
     String fieldApiName = 'TestDatetime__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(List) Value(2017-01-01 01:01:01, 2017-02-02 02:02:02, 2017-03-03 03:03:03)');
     validDefinitions.add('Random Type(List) Value(2017-01-01, 2017-02-02, 2017-03-03)');
@@ -518,6 +530,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Country) Group(one)');
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -549,12 +562,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_double_expectFailure() {
     String fieldApiName = 'TestDecimal__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
     validDefinitions.add('Random Type(List) Value(1.1, 2.2, 3.3)');
     validDefinitions.add('Random Type(Number) From(1) To(100) Scale(0)');
@@ -572,6 +586,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(2017-01-01 01:01:01, 2017-02-02 02:02:02, 2017-03-03 03:03:03)');
@@ -602,12 +617,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_email_expectFailure() {
     String fieldApiName = 'TestEmail__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Boolean)');
     validDefinitions.add('Random Type(Email)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -626,6 +642,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Country) Group(one)');
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1.1, 2.2, 3.3)');
@@ -655,18 +672,20 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_multiPicklist_expectFailure() {
     String fieldApiName = 'TestMultiPicklistA__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Boolean)');
     validDefinitions.add('Random Type(City) Group(one)');
     validDefinitions.add('Random Type(Country) Group(one)');
     validDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Email)');
+    validDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     validDefinitions.add('Random Type(FirstName) Group(one)');
     validDefinitions.add('Random Type(LastName) Group(one)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -708,12 +727,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_percent_expectFailure() {
     String fieldApiName = 'TestPercent__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
     validDefinitions.add('Random Type(List) Value(1.1, 2.2, 3.3)');
     validDefinitions.add('Random Type(Number) From(1) To(100) Scale(0)');
@@ -730,6 +750,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(2017-01-01 01:01:01, 2017-02-02 02:02:02, 2017-03-03 03:03:03)');
@@ -761,18 +782,20 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_picklist_expectFailure() {
     String fieldApiName = 'TestPicklistC__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Boolean)');
     validDefinitions.add('Random Type(City) Group(one)');
     validDefinitions.add('Random Type(Country) Group(one)');
     validDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Email)');
+    validDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     validDefinitions.add('Random Type(FirstName) Group(one)');
     validDefinitions.add('Random Type(LastName) Group(one)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -814,12 +837,14 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_phone_expectFailure() {
     String fieldApiName = 'TestPhone__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
+    validDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     validDefinitions.add('Random Type(List) Value(One, Two, Three)');
     validDefinitions.add('Random Type(Number) From(1) To(100) Scale(0)');
     validDefinitions.add('Serial Type(Number) From(10.2) Step(1.2) Scale(2)');
@@ -867,7 +892,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_recordType_expectFailure() {
     String fieldApiName = 'RecordTypeId';
 
@@ -878,6 +903,7 @@ public class FObjectTest {
     validDefinitions.add('Static Value(One)');
     List<String> invalidDefinitions = new List<String>();
     invalidDefinitions.add('Copy Field(TestPicklistD__c)');
+    invalidDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     invalidDefinitions.add('Random Lookup(Account) Field(FieldOne) Except(One,Two,Three) Source(Forceea)');
     invalidDefinitions.add('Random Lookup(Account) Field(FieldOne) Value(One,Two,Three) Source(Forceea)');
     invalidDefinitions.add('Random Lookup(Account) Source(Forceea)');
@@ -888,6 +914,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -920,7 +947,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_reference_expectFailure() {
     String fieldApiName = 'TestLookup__c';
 
@@ -932,12 +959,14 @@ public class FObjectTest {
     validDefinitions.add('Static Lookup(Account) Field(FieldOne) Value(One) Source(Forceea)');
     List<String> invalidDefinitions = new List<String>();
     invalidDefinitions.add('Copy Field(TestPicklistD__c)');
+    invalidDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     invalidDefinitions.add('Random Type(Boolean)');
     invalidDefinitions.add('Random Type(City) Group(one)');
     invalidDefinitions.add('Random Type(Country) Group(one)');
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -973,18 +1002,20 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_string_expectFailure() {
     String fieldApiName = 'TestText__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Boolean)');
     validDefinitions.add('Random Type(City) Group(one)');
     validDefinitions.add('Random Type(Country) Group(one)');
     validDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Email)');
+    validDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     validDefinitions.add('Random Type(FirstName) Group(one)');
     validDefinitions.add('Random Type(LastName) Group(one)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -1026,17 +1057,19 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_textArea_expectFailure() {
     String fieldApiName = 'TestText__c';
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(Boolean)');
     validDefinitions.add('Random Type(City) Group(one)');
     validDefinitions.add('Random Type(Country) Group(one)');
     validDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     validDefinitions.add('Random Type(Email)');
+    validDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     validDefinitions.add('Random Type(FirstName) Group(one)');
     validDefinitions.add('Random Type(LastName) Group(one)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -1078,13 +1111,17 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
-  private static void definitionIsValidForFieldDataType_time_expectFailure() {
+  @IsTest
+  private static void definitionIsValidForFieldDataType_time_expectSuccess() {
     String fieldApiName = 'TestTime__c';
+
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Static Value(01:01:01)');
+    validDefinitions.add('Random Type(List) Value(01:01:01, 02:02:02, 03:03:03)');
+    validDefinitions.add('Copy Field(TestPicklistD__c)');
+
     List<String> invalidDefinitions = new List<String>();
-    invalidDefinitions.add('Copy Field(TestPicklistD__c)');
+    invalidDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     invalidDefinitions.add('Random Lookup(Account) Field(FieldOne) Except(One,Two,Three) Source(Forceea)');
     invalidDefinitions.add('Random Lookup(Account) Field(FieldOne) Value(One,Two,Three) Source(Forceea)');
     invalidDefinitions.add('Random Lookup(Account) Source(Forceea)');
@@ -1095,6 +1132,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1, 2, 3)');
@@ -1130,12 +1168,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_url_expectFailure() {
     String fieldApiName = 'TestUrl__c';
 
     List<String> validDefinitions = new List<String>();
     validDefinitions.add('Copy Field(TestPicklistD__c)');
+    validDefinitions.add('Copy Field(TestLookup__c) From(FObjectTwo__c.TestText__c)');
     validDefinitions.add('Random Type(List) Value(1, 2, 3)');
     validDefinitions.add('Random Type(List) Value(One, Two, Three)');
     validDefinitions.add('Random Type(Number) From(1) To(100) Scale(0)');
@@ -1155,6 +1194,7 @@ public class FObjectTest {
     invalidDefinitions.add('Random Type(Date) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Datetime) From(2017-01-01) To(2017-12-31)');
     invalidDefinitions.add('Random Type(Email)');
+    invalidDefinitions.add('Random Type(Phone) Format(30 210 dD DD ddD)');
     invalidDefinitions.add('Random Type(FirstName) Group(one)');
     invalidDefinitions.add('Random Type(LastName) Group(one)');
     invalidDefinitions.add('Random Type(List) Value(1.1, 2.2, 3.3)');
@@ -1183,7 +1223,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'definitionIsValidForFieldDataType - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void definitionIsValidForFieldDataType_valid_expectSucccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1196,9 +1236,9 @@ public class FObjectTest {
     obj.setDefinition('TestLookup__c', 'Random lookup(FObjectTwo__c) source(Salesforce)');
     obj.setDefinition('TestMultiPicklistA__c', 'Random Type(Picklist)');
     obj.setDefinition('TestPercent__c', 'Random Type(Number) From(0) To(1) Scale(2)');
-    obj.setDefinition('TestPhone__c', 'Static Value(One)');
+    obj.setDefinition('TestPhone__c', 'Random Type(Phone) Format(30 210 dD DD ddD)');
     obj.setDefinition('TestPicklistC__c', 'Random type(Picklist)');
-    obj.setDefinition('TestText__c', 'Copy Field(TestPicklistD__c)');
+    obj.setDefinition('TestText__c', 'Copy Field(TestPicklistC__c)');
     obj.setDefinition('TestText__c', 'Random Type(String) Minlength(10) Maxlength(30) Startwith(Lower) Include(Lower,Upper,Digit)');
     obj.setDefinition('TestTextArea__c', 'Random Type(String) Minlength(10) Maxlength(30) Startwith(Lower) Include(Lower,Upper,Digit)');
     obj.setDefinition('TestTextAreaLong__c', 'Random Type(String) Minlength(10) Maxlength(30) Startwith(Lower) Include(Lower,Upper,Digit)');
@@ -1213,7 +1253,7 @@ public class FObjectTest {
 
   /* deleteAllDefinitions */
 
-  @isTest
+  @IsTest
   private static void deleteAllDefinitions_declareNoDefinitions_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1223,7 +1263,7 @@ public class FObjectTest {
     System.assertEquals(true, obj.getAllDefinitions().isEmpty(), 'deleteAllDefinitions - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void deleteAllDefinitions_declareSomeDefinitions_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1237,14 +1277,16 @@ public class FObjectTest {
     System.assertEquals(true, obj.getAllDefinitions().isEmpty(), 'deleteAllDefinitions - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void deleteAllDefinitions_recordsAreClearedAfterNewDefinition_expectSuccess() {
     Test.startTest();
+
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'static value(TestName_)');
     obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.setDefinition('TestPicklistB__c', 'random type(picklist)');
+
     List<FObjectOne__c> objRecords1 = obj.getRecords();
     Integer hash1 = objRecords1.hashCode();
 
@@ -1254,8 +1296,10 @@ public class FObjectTest {
     obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.setDefinition('TestPicklistB__c', 'random type(picklist)');
+
     List<FObjectOne__c> objRecords2 = obj.getRecords();
     Integer hash2 = objRecords2.hashCode();
+
     Test.stopTest();
 
     System.assertNotEquals(hash1, hash2, 'deleteAllDefinitions - errors found');
@@ -1263,14 +1307,16 @@ public class FObjectTest {
 
   /* deleteFieldDefinitions */
 
-  @isTest
+  @IsTest
   private static void deleteFieldDefinitions_declareNoDefinitions_expectSuccess() {
     Test.startTest();
+
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.setDefinition('TestPicklistB__c', 'random type(picklist)');
     obj.deleteFieldDefinitions('TestText__c');
+
     Test.stopTest();
 
     Boolean expectedResult = true;
@@ -1308,14 +1354,16 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'deleteFieldDefinitions - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void deleteFieldDefinitions_invalidField_expectFailure() {
     Test.startTest();
+
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'static value(TestName_)');
     obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
     obj.deleteFieldDefinitions('TestTextX__c');
+
     Test.stopTest();
 
     System.assertEquals('Invalid field [TestTextX__c] in method deleteFieldDefinitions',
@@ -1323,20 +1371,26 @@ public class FObjectTest {
       'deleteFieldDefinitions - wrong error message for invalid field');
   }
 
-  @isTest
+  @IsTest
   private static void deleteFieldDefinitions_recordsAreClearedAfterNewDefinition_expectSuccess() {
     Test.startTest();
+
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('TestText__c', 'static value(Hot)');
+    obj.setDefinition('TestText__c', 'static value(TestName_)');
+    obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
+    obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
+
     List<FObjectOne__c> objRecords1 = obj.getRecords();
     Integer hash1 = objRecords1.hashCode();
 
     obj.deleteFieldDefinitions('TestText__c');
 
-    obj.setDefinition('TestText__c',
-      'Random Type(String) Minlength(5) Maxlength(30) Startwith(Upper) Include(Lower,Upper,Digit)');
+    obj.setDefinition('TestText__c', 'static value(TestName_)');
+    obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
+
     List<FObjectOne__c> objRecords2 = obj.getRecords();
     Integer hash2 = objRecords2.hashCode();
+
     Test.stopTest();
 
     System.assertNotEquals(hash1, hash2, 'deleteFieldDefinitions - errors found');
@@ -1344,19 +1398,19 @@ public class FObjectTest {
 
   /* deleteRecords */
 
-  @isTest
-  private static void deleteRecords_whereClauseIsValid_expectSuccess() {
+  @IsTest
+  private static void deleteRecords_whereClauseIsBlank_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.insertRecords(true);
-    Database.DeleteResult[] deleteResults = obj.deleteRecords('TestPicklistA__c = \'a1\'');
+    obj.deleteRecords('');
     Test.stopTest();
 
     List<FObjectOne__c> recordsAfterDelete = [SELECT Id FROM FObjectOne__c LIMIT 1000];
     Set<Id> recordIdsAfterDeleteSet = (new Map<Id, FObjectOne__c>(recordsAfterDelete)).keySet();
     Integer errors = 0;
-    for (FObjectOne__c objRecord : (List<FObjectOne__c>)obj.getInsertedRecords()) {
+    for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getInsertedRecords()) {
       if (!recordIdsAfterDeleteSet.contains(objRecord.Id)) {
         errors++;
       }
@@ -1367,7 +1421,30 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'deleteRecords - errors found');
   }
 
-  @isTest
+  @IsTest
+  private static void deleteRecords_whereClauseIsValid_expectSuccess() {
+    Test.startTest();
+    FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
+    obj.insertRecords(true);
+    obj.deleteRecords('TestPicklistA__c = \'a1\'');
+    Test.stopTest();
+
+    List<FObjectOne__c> recordsAfterDelete = [SELECT Id FROM FObjectOne__c LIMIT 1000];
+    Set<Id> recordIdsAfterDeleteSet = (new Map<Id, FObjectOne__c>(recordsAfterDelete)).keySet();
+    Integer errors = 0;
+    for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getInsertedRecords()) {
+      if (!recordIdsAfterDeleteSet.contains(objRecord.Id)) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'deleteRecords - errors found');
+  }
+
+  @IsTest
   private static void deleteRecords_recordGroup_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1387,7 +1464,7 @@ public class FObjectTest {
     Integer hash3 = recordIdsAfterDelete3Set.hashCode();
 
     Integer errors = 0;
-    for (FObjectOne__c objRecord : (List<FObjectOne__c>)obj.getInsertedRecords()) {
+    for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getInsertedRecords()) {
       if (!recordIdsAfterDelete1Set.contains(objRecord.Id)) {
         errors += 1;
         break;
@@ -1405,7 +1482,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'deleteRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void deleteRecords_noRecordsFound_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1428,7 +1505,7 @@ public class FObjectTest {
     Integer hash3 = recordIdsAfterDelete3Set.hashCode();
 
     Integer errors = 0;
-    for (FObjectOne__c objRecord : (List<FObjectOne__c>)obj.getInsertedRecords()) {
+    for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getInsertedRecords()) {
       if (!recordIdsAfterDelete1Set.contains(objRecord.Id)) {
         errors += 1;
         break;
@@ -1449,21 +1526,22 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'deleteRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void deleteRecords_whereClauseIsInvalid_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.insertRecords(true);
-    Database.DeleteResult[] deleteResults = obj.deleteRecords('forceea__TestPicklistA__c == a1');
+    obj.deleteRecords('TestPicklistA__c == a1');
     Test.stopTest();
 
-    String expectedResult = 'Found errors selecting records of object [FObjectOne__c]:';
-    String actualResult = obj.getErrors().get('FObjectOne__c').get(0).left(57);
-    System.assertEquals(expectedResult, actualResult, 'deleteRecords - errors found');
+    String expectedResult = 'Found errors selecting records of object [FObjectOne__c]';
+    String actualResult = obj.getErrors().get('FObjectOne__c').get(0);
+    Boolean result = actualResult.startsWith(expectedResult);
+    System.assertEquals(true, result, 'deleteRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void deleteRecords_deleteException_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1487,7 +1565,7 @@ public class FObjectTest {
 
   /* FObject */
 
-  @isTest
+  @IsTest
   private static void fObject_invalidObject_expectFailure() {
     Test.startTest();
     FObject obj = new FObject(' FObjectOneX__c ');
@@ -1498,7 +1576,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'FObject constructor - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void fObject_blankObject_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('');
@@ -1509,23 +1587,23 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'FObject constructor - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void fObject_constructorWithDefaultRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject(' FObjectOne__c ');
     obj.setDefinition(' TestDecimal__c ', ' Random type(number ) from( 100) to(1000000 ) scale(3) ');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     System.assertEquals(201, records.size(), 'FObject constructor - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void fObject_constructorWithRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', 100);
     obj.setDefinition('TestDecimal__c', 'Random Type (number ) from( 100) to(1000000 ) scale(3)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     System.assertEquals(100, records.size(), 'FObject constructor - errors found');
@@ -1533,7 +1611,7 @@ public class FObjectTest {
 
   /* forceeaDebug */
 
-  @isTest
+  @IsTest
   private static void forceeaDebug_valid_expectSuccess() {
     FObject.showDebugLog = false;
 
@@ -1549,7 +1627,7 @@ public class FObjectTest {
 
   /* getAllDefinitions */
 
-  @isTest
+  @IsTest
   private static void getAllDefinitions_multipleChecks_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1562,8 +1640,6 @@ public class FObjectTest {
     Test.stopTest();
 
     List<String> fields = new List<String>(definitions.keySet());
-    List<List<String>> definitionValues = definitions.values();
-    List<String> definitionOfFieldName = definitionValues[1];
 
     Integer errors = 0;
     if (definitions.size() != 4 || definitions.get('TestText__c').size() != 2) {
@@ -1586,12 +1662,12 @@ public class FObjectTest {
 
   /* getDefaultRecords */
 
-  @isTest
+  @IsTest
   private static void getDefaultRecords_lessThan11Records_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', 10);
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    obj.insertRecords(true);
     Test.stopTest();
 
     List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c LIMIT 1000];
@@ -1600,12 +1676,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'getDefaultRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getDefaultRecords_moreThan10Records_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', 20);
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    obj.insertRecords(true);
     Test.stopTest();
 
     List<FObjectTwo__c> lookupRecords = [SELECT Id FROM FObjectTwo__c LIMIT 1000];
@@ -1616,28 +1692,24 @@ public class FObjectTest {
 
   /* getInsertedGroupRecords */
 
-  @isTest
+  @IsTest
   private static void getInsertedGroupRecords_instanceAndStatic_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(list) value(v1,v2)');
     obj.insertRecords(true, 'GroupA');
-    List<FObjectOne__c> recordsA = (List<FObjectOne__c>)obj.getRecords();
-
     obj.deleteFieldDefinitions('TestText__c');
-
     obj.setDefinition('TestText__c', 'random type(list) value(v3,v4)');
     obj.insertRecords(true, 'GroupB');
-    List<FObjectOne__c> recordsB = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    List<FObjectOne__c> recordsA1 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('GROUPA');
-    List<FObjectOne__c> recordsA2 = (List<FObjectOne__c>)FObject.getInsertedGroupRecords('fobjectone__c', 'GROUPA');
-    List<FObjectOne__c> recordsB1 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('GROUPB');
-    List<FObjectOne__c> recordsB2 = (List<FObjectOne__c>)FObject.getInsertedGroupRecords('fobjectone__c', 'GROUPB');
-    List<FObjectOne__c> recordsBlank1 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('');
-    List<FObjectOne__c> recordsBlank2 = (List<FObjectOne__c>)obj.getInsertedGroupRecords(' ');
-    List<FObjectOne__c> recordsBlank3 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('GroupC');
+    List<FObjectOne__c> recordsA1 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('GROUPA');
+    List<FObjectOne__c> recordsA2 = (List<FObjectOne__c>) FObject.getInsertedGroupRecords('FObjectOne__c', 'GROUPA');
+    List<FObjectOne__c> recordsB1 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('GROUPB');
+    List<FObjectOne__c> recordsB2 = (List<FObjectOne__c>) FObject.getInsertedGroupRecords('FObjectOne__c', 'GROUPB');
+    List<FObjectOne__c> recordsBlank1 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('');
+    List<FObjectOne__c> recordsBlank2 = (List<FObjectOne__c>) obj.getInsertedGroupRecords(' ');
+    List<FObjectOne__c> recordsBlank3 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('GroupC');
 
     Integer errors = 0;
     if (recordsA1.hashCode() != recordsA2.hashCode()) {
@@ -1658,7 +1730,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'getInsertedGroupRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getInsertedGroupRecords_insertSameGroupTwice_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1672,8 +1744,7 @@ public class FObjectTest {
     Integer errors = 0;
     Integer blankTexts = 0;
     Integer blankDecimals = 0;
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getInsertedGroupRecords('GROUPA');
-    for (FObjectOne__c objRecord : (List<FObjectOne__c>)obj.getInsertedGroupRecords('GROUPA')) {
+    for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getInsertedGroupRecords('GROUPA')) {
       if (String.isBlank(objRecord.TestText__c)) {
         blankTexts++;
       }
@@ -1693,28 +1764,24 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'getInsertedGroupRecords - errors found');
   }
 
-@isTest
+  @IsTest
   private static void getInsertedGroupRecordsStatic_valid_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(list) value(v1,v2)');
     obj.insertRecords(true, 'GroupA');
-    List<FObjectOne__c> recordsA = (List<FObjectOne__c>)obj.getRecords();
-
     obj.deleteFieldDefinitions('TestText__c');
-
     obj.setDefinition('TestText__c', 'random type(list) value(v3,v4)');
     obj.insertRecords(true, 'GroupB');
-    List<FObjectOne__c> recordsB = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    List<FObjectOne__c> recordsA1 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('GROUPA');
-    List<FObjectOne__c> recordsA2 = (List<FObjectOne__c>)FObject.getInsertedGroupRecords('fobjectone__c', 'GROUPA');
-    List<FObjectOne__c> recordsB1 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('GROUPB');
-    List<FObjectOne__c> recordsB2 = (List<FObjectOne__c>)FObject.getInsertedGroupRecords('fobjectone__c', 'GROUPB');
-    List<FObjectOne__c> recordsBlank1 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('');
-    List<FObjectOne__c> recordsBlank2 = (List<FObjectOne__c>)obj.getInsertedGroupRecords(' ');
-    List<FObjectOne__c> recordsBlank3 = (List<FObjectOne__c>)obj.getInsertedGroupRecords('GroupC');
+    List<FObjectOne__c> recordsA1 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('GROUPA');
+    List<FObjectOne__c> recordsA2 = (List<FObjectOne__c>) FObject.getInsertedGroupRecords('FObjectOne__c', 'GROUPA');
+    List<FObjectOne__c> recordsB1 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('GROUPB');
+    List<FObjectOne__c> recordsB2 = (List<FObjectOne__c>) FObject.getInsertedGroupRecords('FObjectOne__c', 'GROUPB');
+    List<FObjectOne__c> recordsBlank1 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('');
+    List<FObjectOne__c> recordsBlank2 = (List<FObjectOne__c>) obj.getInsertedGroupRecords(' ');
+    List<FObjectOne__c> recordsBlank3 = (List<FObjectOne__c>) obj.getInsertedGroupRecords('GroupC');
 
     Integer errors = 0;
     if (recordsA1.hashCode() != recordsA2.hashCode()) {
@@ -1735,7 +1802,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'getInsertedGroupRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getInsertedGroupRecordsStatic_invalidObject_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1743,7 +1810,7 @@ public class FObjectTest {
     obj.insertRecords(true, 'One');
     Test.stopTest();
 
-    List<FObjectTwo__c> lookupRecords = (List<FObjectTwo__c>)FObject.getInsertedGroupRecords('FObjectTwoX__c', 'One');
+    List<FObjectTwo__c> lookupRecords = (List<FObjectTwo__c>) FObject.getInsertedGroupRecords('FObjectTwoX__c', 'One');
     Boolean expectedResult = false;
     Boolean actualResult = FObject.processIsValid;
     System.assertEquals(expectedResult, actualResult, 'getInsertedGroupRecords - errors found');
@@ -1751,7 +1818,7 @@ public class FObjectTest {
 
   /* getInsertedRecords */
 
-  @isTest
+  @IsTest
   private static void getInsertedRecords_twoInsertionsAllOrNoneTrue_expectSuccess() {
     List<FObjectOne__c> records1 = new List<FObjectOne__c>();
     List<FObjectOne__c> records2 = new List<FObjectOne__c>();
@@ -1760,23 +1827,23 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 100);
     obj.setDefinition('TestText__c', 'static value(a1)');
     obj.insertRecords(true);
-    records1.addAll((List<FObjectOne__c>)obj.getRecords());
+    records1.addAll((List<FObjectOne__c>) obj.getRecords());
 
     obj.deleteAllDefinitions();
 
     obj.setDefinition('TestText__c', 'static value(a2)');
     obj.insertRecords(true);
-    records1.addAll((List<FObjectOne__c>)obj.getRecords());
+    records1.addAll((List<FObjectOne__c>) obj.getRecords());
     Test.stopTest();
 
-    records2 = (List<FObjectOne__c>)obj.getInsertedRecords();
+    records2 = (List<FObjectOne__c>) obj.getInsertedRecords();
 
     Integer hash1 = records1.hashCode();
     Integer hash2 = records2.hashCode();
     System.assertEquals(hash1, hash2, 'getInsertedRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getInsertedRecords_twoInsertionsAllOrNoneFalse_expectSuccess() {
     List<FObjectOne__c> records1 = new List<FObjectOne__c>();
     List<FObjectOne__c> records2 = new List<FObjectOne__c>();
@@ -1785,23 +1852,23 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 100);
     obj.setDefinition('TestText__c', 'static value(a1)');
     obj.insertRecords(false);
-    records1.addAll((List<FObjectOne__c>)obj.getRecords());
+    records1.addAll((List<FObjectOne__c>) obj.getRecords());
 
     obj.deleteAllDefinitions();
 
     obj.setDefinition('TestText__c', 'static value(a2)');
     obj.insertRecords(false);
-    records1.addAll((List<FObjectOne__c>)obj.getRecords());
+    records1.addAll((List<FObjectOne__c>) obj.getRecords());
     Test.stopTest();
 
-    records2 = (List<FObjectOne__c>)obj.getInsertedRecords();
+    records2 = (List<FObjectOne__c>) obj.getInsertedRecords();
 
     Integer hash1 = records1.hashCode();
     Integer hash2 = records2.hashCode();
     System.assertEquals(hash1, hash2, 'getInsertedRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getInsertedRecordsStatic_lookupRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1809,13 +1876,13 @@ public class FObjectTest {
     obj.insertRecords(true);
     Test.stopTest();
 
-    List<FObjectTwo__c> lookupRecords = (List<FObjectTwo__c>)FObject.getInsertedRecords('FObjectTwo__c');
+    List<FObjectTwo__c> lookupRecords = (List<FObjectTwo__c>) FObject.getInsertedRecords('FObjectTwo__c');
     Integer expectedResult = lookupRecords.hashCode();
     Integer actualResult = [SELECT TestPicklistDRequired__c FROM FObjectTwo__c LIMIT 1000].hashCode();
     System.assertEquals(expectedResult, actualResult, 'getInsertedRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getInsertedRecordsStatic_invalidObject_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1823,7 +1890,7 @@ public class FObjectTest {
     obj.insertRecords(true);
     Test.stopTest();
 
-    List<FObjectTwo__c> lookupRecords = (List<FObjectTwo__c>)FObject.getInsertedRecords('FObjectTwoX__c');
+    List<FObjectTwo__c> lookupRecords = (List<FObjectTwo__c>) FObject.getInsertedRecords('FObjectTwoX__c');
     Boolean expectedResult = false;
     Boolean actualResult = FObject.processIsValid;
     System.assertEquals(expectedResult, actualResult, 'getInsertedRecords - errors found');
@@ -1831,16 +1898,16 @@ public class FObjectTest {
 
   /* getRecords */
 
-  @isTest
+  @IsTest
   private static void getRecords_withoutNewDefinitions_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'static value(sample)');
-    List<FObjectOne__c> records1 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
     Integer hash1 = records1.hashCode();
 
     obj.records = 100;
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj.getRecords();
     Integer hash2 = records2.hashCode();
     Test.stopTest();
 
@@ -1849,7 +1916,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'getRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getRecords_insertRecordsAfterNewDefinitions_expectSuccess() {
     Integer size1 = 201;
     Integer size2 = 100;
@@ -1857,13 +1924,13 @@ public class FObjectTest {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', size1);
     obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
-    List<FObjectOne__c> records1 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
 
     obj.records = size2;
     obj.deleteFieldDefinitions('TestInteger__c');
     obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj.getRecords();
-    obj.insertRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj.getRecords();
+    obj.insertRecords(true);
     Test.stopTest();
 
     List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
@@ -1880,7 +1947,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'getRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getRecords_insertRecordsBeforeGetRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1902,7 +1969,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'getRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getRecords_insertRecordsTwice_expectSuccess() {
     Integer size1 = 201;
     Integer size2 = 100;
@@ -1910,12 +1977,12 @@ public class FObjectTest {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', size1);
     obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
-    List<FObjectOne__c> records1 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
 
     obj.records = size2;
     obj.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     List<FObjectOne__c> insertedRecords = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
@@ -1932,12 +1999,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'getRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void getRecords_afterRecordsAreDeleted_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(list) value(v1,v2,v3)');
-    List<FObjectOne__c> records1 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     obj.deleteRecords('TestText__c = \'v1\'');
     Test.stopTest();
@@ -1949,16 +2016,44 @@ public class FObjectTest {
         break;
       }
     }
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj.getRecords();
     Boolean expectedResult = true;
     Boolean condition2 = (records1.size() == records2.size());
     Boolean actualResult = condition1 && condition2;
     System.assertEquals(expectedResult, actualResult, 'getRecords - errors found');
   }
 
+  @IsTest
+  private static void getRecords_amendFieldValues_expectSuccess() {
+    Test.startTest();
+    FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
+
+    for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
+      objRecord.TestDecimal__c = objRecord.TestDecimal__c * 0.1;
+    }
+    obj.createRecords();
+    for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
+      objRecord.TestDecimal__c = 100;
+    }
+    obj.insertRecords(true);
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (FObjectOne__c objRecord : [SELECT TestDecimal__c FROM FObjectOne__c LIMIT 1000]) {
+      if (objRecord.TestDecimal__c > 10 && objRecord.TestDecimal__c < 100) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'getRecords - errors found');
+  }
+
   /* insertRecords */
 
-  @isTest
+  @IsTest
   private static void insertRecords_allOrNoneTrue_expectFailure() {
     Boolean hasErrors = false;
 
@@ -1977,7 +2072,7 @@ public class FObjectTest {
     System.assertEquals(true, hasErrors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_allOrNoneFalse_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -1995,7 +2090,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_attachments_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('Attachment');
@@ -2003,7 +2098,6 @@ public class FObjectTest {
     obj.setDefinition('Name', 'serial type(number) from(1) step(1) scale(0)');
     obj.setDefinition('Body', 'random type(number) from(1) to(100) scale(2)');
     obj.insertRecords(true);
-    List<Attachment> attachments = (List<Attachment>)obj.getRecords();
     Test.stopTest();
 
     Decimal value = 0;
@@ -2020,7 +2114,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_createRecordsAsUser_expectSuccess() {
     Test.startTest();
     FObject userObj = new FObject('User', 1);
@@ -2029,7 +2123,7 @@ public class FObjectTest {
     Database.SaveResult[] saveResults = userObj.insertRecords(true);
 
     if (saveResults[0].isSuccess()) {
-      List<User> users = (List<User>)userObj.getRecords();
+      List<User> users = (List<User>) userObj.getRecords();
       System.runAs(users[0]) {
         FObject obj = new FObject('FObjectOne__c');
         saveResults = obj.insertRecords(false);
@@ -2049,7 +2143,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_negativeRecords_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', -1);
@@ -2061,7 +2155,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_userWithProfile_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('User', 1);
@@ -2082,7 +2176,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_noDefinitions_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -2101,7 +2195,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_missingRequiredFields_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -2118,7 +2212,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_comboboxWithSddlPicklist_expectSuccess() {
     FObject obj = new FObject('Event');
     obj.setDefinition('Subject', 'random type(picklist)');
@@ -2137,7 +2231,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_comboboxWithSddlPicklistExcept_expectSuccess() {
     FObject obj = new FObject('Event');
     obj.setDefinition('Subject', 'random type(picklist) except(Call, Email)');
@@ -2156,7 +2250,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_comboboxWithSddList_expectSuccess() {
     FObject obj = new FObject('Event');
     obj.setDefinition('Subject', 'random type(list) value(Call, Email)');
@@ -2175,7 +2269,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_comboboxWithSddStaticExistingValue_expectSuccess() {
     FObject obj = new FObject('Event');
     obj.setDefinition('Subject', 'static value(Call)');
@@ -2194,7 +2288,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void insertRecords_comboboxWithSddStaticNewValue_expectSuccess() {
     FObject obj = new FObject('Event');
     obj.setDefinition('Subject', 'static value(CallX)');
@@ -2213,16 +2307,47 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'insertRecords - errors found');
   }
 
+  /* Pseudo-random Number Generator */
+
+  @IsTest
+  private static void prng_checkGenerator_expectSuccess() {
+    Test.startTest();
+    FObject obj1 = new FObject('FObjectOne__c');
+    FObject.seed = 19660805;
+    obj1.setDefinition('TestInteger__c', 'random type(number) from(1) to(100) scale(0)');
+    obj1.createRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+
+    FObject obj2 = new FObject('FObjectOne__c');
+    FObject.seed = 19660805;
+    obj2.setDefinition('TestInteger__c', 'random type(number) from(1) to(100) scale(0)');
+    obj2.createRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < 100; counter++) {
+      if (records1.get(counter).TestInteger__c != records2.get(counter).TestInteger__c ||
+        records1.get(counter).TestTextRequired__c != records2.get(counter).TestTextRequired__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'PRNG - errors found');
+  }
+
   /* SDDL definitions */
 
-  @isTest
-  private static void sddlCopyField_fieldIsValid_expectSuccess() {
+  @IsTest
+  private static void sddlCopyField_valid_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDecimal__c', 'random type(number) from(" 1") to(" 100 ") scale(0)');
     obj.setDefinition('TestText__c', 'copy field(TestDecimal__c)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -2237,47 +2362,356 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'copy field - errors found');
   }
 
-  @isTest
-  private static void sddlCopyField_lookupFieldIsInvalid_expectFailure() {
+  @IsTest
+  private static void sddlCopyField_invalidField_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestText__c', 'copy field(TestDecimalX__c)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    Integer errors = 0;
-    String expectedResult = 'Invalid lookup field [TestDecimalX__c] in definition ' +
-        '[copy field(TestDecimalX__c)]';
+    String expectedResult = 'Invalid field [TestDecimalX__c] in definition ' +
+      '[copy field(TestDecimalX__c)]';
     String actualResult = obj.getErrors().get('TestText__c').get(0);
     System.assertEquals(expectedResult, actualResult, 'copy field - errors found');
   }
 
-  @isTest
-  private static void sddlCopyField_lookupFieldEqualsDefinitionField_expectFailure() {
+  @IsTest
+  private static void sddlCopyField_fieldEqualsDefinitionField_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
     obj.setDefinition('TestText__c', 'copy field(testText__c)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
     Test.stopTest();
 
-    Integer errors = 0;
-    String expectedResult = 'The lookup field [TestText__c] cannot be the same as the definition field ' +
+    String expectedResult = 'The field [TestText__c] cannot be the same as the definition field ' +
       'in definition [copy field(testText__c)]';
     String actualResult = obj.getErrors().get('TestText__c').get(0);
     System.assertEquals(expectedResult, actualResult, 'copy field - errors found');
   }
 
-  @isTest
+  @IsTest
+  private static void sddlCopyLookupField_fromText_expectSuccess() {
+    Test.startTest();
+    FObject obj2 = new FObject('FObjectTwo__c');
+    obj2.setDefinition('TestpicklistA__c', 'random type(picklist)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('Testtext__c', 'copy field(Testlookup__c) from(FObjectTwo__c.TestpicklistA__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      if (records1.get(counter).TestText__c != null &&
+        records1.get(counter).TestText__c != lookupRecordsMap.get(lookupId).TestPicklistA__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_fromDate_expectSuccess() {
+    Test.startTest();
+
+    FObject obj2 = new FObject('FObjectTwo__c');
+    obj2.setDefinition('Testdate__c', 'random type(date) from(2018-01-01) to(2018-12-31)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('Testdate__c', 'copy field(Testlookup__c) from(FObjectTwo__c.Testdate__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      if (records1.get(counter).TestDate__c != null &&
+        records1.get(counter).TestDate__c != lookupRecordsMap.get(lookupId).TestDate__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_fromDatetimeToDatetime_expectSuccess() {
+    FObject.setGlobalVerbose('debug');
+
+    Test.startTest();
+
+    FObject obj2 = new FObject('FObjectTwo__c');
+    obj2.setDefinition('Testdatetime__c', 'random type(datetime) from(2018-01-01) to(2018-12-31)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getInsertedRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('Testdatetime__c', 'copy field(Testlookup__c) from(FObjectTwo__c.Testdatetime__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      if (String.valueOf(lookupRecordsMap.get(lookupId).TestDatetime__c) !=
+        String.valueOf(records1.get(counter).TestDatetime__c)) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_fromDatetimeToText_expectSuccess() {
+    Test.startTest();
+
+    FObject obj2 = new FObject('FObjectTwo__c', 20);
+    obj2.setDefinition('Testdatetime__c', 'random type(datetime) from(2018-01-01) to(2018-12-31)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getInsertedRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('TestText__c', 'copy field(Testlookup__c) from(FObjectTwo__c.Testdatetime__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      Datetime dt = lookupRecordsMap.get(lookupId).TestDatetime__c;
+      if (String.valueOfGmt(dt) != records1.get(counter).TestText__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_fromTime_expectSuccess() {
+    Test.startTest();
+    FObject obj2 = new FObject('FObjectTwo__c');
+    obj2.setDefinition('Testtime__c', 'static value(23:59:59)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('Testtime__c', 'copy field(Testlookup__c) from(FObjectTwo__c.Testtime__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      if (records1.get(counter).TestTime__c != null &&
+        records1.get(counter).TestTime__c != lookupRecordsMap.get(lookupId).TestTime__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_fromCurrency_expectSuccess() {
+    Test.startTest();
+    FObject obj2 = new FObject('FObjectTwo__c');
+    obj2.setDefinition('TestCurrency__c', 'random type(number) from(1) to(100) scale(2)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('TestCurrency__c', 'copy field(Testlookup__c) from(FObjectTwo__c.TestCurrency__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      if (records1.get(counter).TestCurrency__c != null &&
+        records1.get(counter).TestCurrency__c != lookupRecordsMap.get(lookupId).TestCurrency__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_fromCheckbox_expectSuccess() {
+    Test.startTest();
+    FObject obj2 = new FObject('FObjectTwo__c');
+    obj2.setDefinition('TestCheckbox__c', 'random type(boolean)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('TestCheckbox__c', 'copy field(Testlookup__c) from(FObjectTwo__c.TestCheckbox__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      if (records1.get(counter).TestCheckbox__c != null &&
+        records1.get(counter).TestCheckbox__c != lookupRecordsMap.get(lookupId).TestCheckbox__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_fromUrl_expectSuccess() {
+    Test.startTest();
+    FObject obj2 = new FObject('FObjectTwo__c');
+    obj2.setDefinition('TestUrl__c', 'random type(url)');
+    obj2.insertRecords(true);
+    List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getRecords();
+    Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
+
+    FObject obj1 = new FObject('FObjectOne__c');
+    obj1.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj1.setDefinition('TestUrl__c', 'copy field(Testlookup__c) from(FObjectTwo__c.TestUrl__c)');
+    obj1.insertRecords(true);
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
+    Test.stopTest();
+
+    Integer errors = 0;
+    for (Integer counter = 0; counter < records1.size(); counter++) {
+      Id lookupId = records1.get(counter).TestLookup__c;
+      if (records1.get(counter).TestUrl__c != null &&
+        records1.get(counter).TestUrl__c != lookupRecordsMap.get(lookupId).TestUrl__c) {
+        errors++;
+      }
+    }
+    if (!FObject.processIsValid) {
+      errors++;
+    }
+    System.assertEquals(0, errors, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_invalidField_expectFailure() {
+    String definitionString = 'copy field(TestlookupX__c) from(FObjectTwo__c.TestpicklistA__c)';
+
+    Test.startTest();
+    FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj.setDefinition('Testtext__c', definitionString);
+    obj.insertRecords(true);
+    Test.stopTest();
+
+    String expectedResult = 'Invalid field [TestlookupX__c] in definition [' + definitionString + ']';
+    String actualResult = obj.getErrors().get('TestText__c').get(0);
+    System.assertEquals(expectedResult, actualResult, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_invalidLookupObject_expectFailure() {
+    String definitionString = 'copy field(Testlookup__c) from(FObjecttwoX__c.TestpicklistA__c)';
+
+    Test.startTest();
+    FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj.setDefinition('Testtext__c', definitionString);
+    obj.insertRecords(true);
+    Test.stopTest();
+
+    String expectedResult = 'Invalid lookup object [FObjecttwoX__c] in definition [' + definitionString + ']';
+    String actualResult = obj.getErrors().get('TestText__c').get(0);
+    System.assertEquals(expectedResult, actualResult, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_invalidLookupField_expectFailure() {
+    String definitionString = 'copy field(Testlookup__c) from(FObjectTwo__c.TestpicklistX__c)';
+
+    Test.startTest();
+    FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj.setDefinition('Testtext__c', definitionString);
+    obj.insertRecords(true);
+    Test.stopTest();
+
+    String expectedResult = 'Invalid lookup field [TestpicklistX__c] in definition [' + definitionString + ']';
+    String actualResult = obj.getErrors().get('TestText__c').get(0);
+    System.assertEquals(expectedResult, actualResult, 'copy lookup field - errors found');
+  }
+
+  @IsTest
+  private static void sddlCopyLookupField_lookupFieldEqualsDefinitionField_expectFailure() {
+    String definitionString = 'copy field(TestText__c) from(FObjectTwo__c.TestpicklistA__c)';
+
+    Test.startTest();
+    FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('Testlookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
+    obj.setDefinition('Testtext__c', definitionString);
+    obj.insertRecords(true);
+    Test.stopTest();
+
+    String expectedResult = 'The field [TestText__c] cannot be the same as the definition field ' +
+      'in definition [' + definitionString + ']';
+    String actualResult = obj.getErrors().get('TestText__c').get(0);
+    System.assertEquals(expectedResult, actualResult, 'copy lookup field - errors found');
+  }
+
+  @IsTest
   private static void sddlRandomLookupForceea_valid_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', 500);
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -2294,7 +2728,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup forceea - errors found');
   }
 
-   @isTest
+  @IsTest
   private static void sddlRandomLookupForceea_isActiveUser_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectFour__c');
@@ -2308,7 +2742,9 @@ public class FObjectTest {
     List<FObjectFour__c> records = [
       SELECT TestLookupUser__r.IsActive
       FROM FObjectFour__c
-      WHERE Id IN :recordIdsSet LIMIT 100];
+      WHERE Id IN :recordIdsSet
+      LIMIT 100
+    ];
     for (FObjectFour__c objRecord : records) {
       if (objRecord.TestLookupUser__r.IsActive == false) {
         errors += 1;
@@ -2321,13 +2757,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup forceea - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupSalesforce_noRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(Salesforce)');
     obj.insertRecords(false);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -2342,17 +2778,17 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup salesforce - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupSalesforce_oneRecord_expectSuccess() {
     Test.startTest();
     FObject obj1 = new FObject('FObjectTwo__c', 1);
     obj1.insertRecords(true);
-    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>)obj1.getRecords();
+    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>) obj1.getRecords();
 
     FObject obj2 = new FObject('FObjectOne__c');
     obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(Salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -2367,17 +2803,16 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup salesforce - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupSalesforce_manyRecords_expectSuccess() {
     Test.startTest();
     FObject obj1 = new FObject('FObjectTwo__c', 20);
     obj1.insertRecords(true);
-    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>)obj1.getRecords();
 
     FObject obj2 = new FObject('FObjectOne__c');
     obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(Salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -2392,7 +2827,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup salesforce - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupSalesforce_isActiveUser_expectSuccess() {
     FObject.setGlobalVerbose('debug');
     Test.startTest();
@@ -2418,12 +2853,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup salesforce - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookup_invalidObject_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup(InvalidObject) source(Forceea)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid lookup object [InvalidObject] in definition ' +
@@ -2432,12 +2867,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookup_nullObject_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup() source(Forceea)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid syntax in definition [random lookup() source(Forceea)] of field [TestLookup__c]';
@@ -2445,12 +2880,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookup_invalidSource_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(ForceeaX)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid definition [random lookup(FObjectTwo__c) source(ForceeaX)] of field [TestLookup__c]';
@@ -2458,12 +2893,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookup_nullSource_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source()');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid syntax in definition [random lookup(FObjectTwo__c) source()] of field [TestLookup__c]';
@@ -2471,24 +2906,24 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupGroupForceea_insertedGroupRecords_expectSuccess() {
     Test.startTest();
     // insert FObjectTwo__c records for group B
     FObject objB1 = new FObject('FObjectTwo__c', 5);
     objB1.insertRecords(true, 'B');
-    List<FObjectTwo__c> recordsB1 = (List<FObjectTwo__c>)objB1.getRecords();
+    List<FObjectTwo__c> recordsB1 = (List<FObjectTwo__c>) objB1.getRecords();
     Set<Id> recordIdsSetB1 = (new Map<Id, FObjectTwo__c>(recordsB1)).keySet();
     // insert FObjectTwo__c records without group
     FObject objB2 = new FObject('FObjectTwo__c', 5);
     objB2.insertRecords(true);
-    List<FObjectTwo__c> recordsB2 = (List<FObjectTwo__c>)objB2.getRecords();
+    List<FObjectTwo__c> recordsB2 = (List<FObjectTwo__c>) objB2.getRecords();
     Set<Id> recordIdsSetB2 = (new Map<Id, FObjectTwo__c>(recordsB2)).keySet();
     // insert FObjectOne__c records
     FObject objA = new FObject('FObjectOne__c', 300);
     objA.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(Forceea)');
     objA.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)objA.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) objA.getRecords();
     Test.stopTest();
 
     Set<Id> recordIdsSet = (new Map<Id, SObject>(FObject.getInsertedRecords('FObjectTwo__c'))).keySet();
@@ -2500,7 +2935,7 @@ public class FObjectTest {
       }
     }
     if (!isValidDistribution('TestLookup__c', new List<Id>(recordIdsSet), records)) {
-     errors += 2;
+      errors += 2;
     }
     if (!FObject.processIsValid) {
       errors += 4;
@@ -2508,13 +2943,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup forceea - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupGroupForceea_insertTwoGroupsValidGroupName_expectSuccess() {
     Test.startTest();
     // insert FObjectTwo__c records for group B1
     FObject objB1 = new FObject('FObjectTwo__c', 20);
     objB1.insertRecords(true, 'B1');
-    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>)objB1.getRecords();
+    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>) objB1.getRecords();
     Set<Id> recordIdsSet = (new Map<Id, FObjectTwo__c>(records1)).keySet();
     // insert FObjectTwo__c records for group B2
     FObject objB2 = new FObject('FObjectTwo__c', 30);
@@ -2526,7 +2961,7 @@ public class FObjectTest {
     FObject objA = new FObject('FObjectOne__c');
     objA.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) group(B1) source(Forceea)');
     objA.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)objA.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) objA.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -2541,13 +2976,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'sddlRandomLookupGroup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupGroupForceea_blankGroupName_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) group() source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid syntax in definition [random lookup(FObjectTwo__c) group() ' +
@@ -2556,7 +2991,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'sddlRandomLookupGroup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupGroupForceea_groupNotExists_expectSuccess() {
     Test.startTest();
     // insert FObjectTwo__c records
@@ -2566,12 +3001,12 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) group(One) source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
-    List<FObjectTwo__c> lookupRecords1 = (List<FObjectTwo__c>)FObject.getInsertedRecords('FObjectTwo__c');
+    List<FObjectTwo__c> lookupRecords1 = (List<FObjectTwo__c>) FObject.getInsertedRecords('FObjectTwo__c');
     Set<Id> recordIdsSet = (new Map<Id, FObjectTwo__c>(lookupRecords1)).keySet();
-    List<FObjectTwo__c> lookupRecords2 = (List<FObjectTwo__c>)FObject.getInsertedGroupRecords('FObjectTwo__c', 'One');
+    List<FObjectTwo__c> lookupRecords2 = (List<FObjectTwo__c>) FObject.getInsertedGroupRecords('FObjectTwo__c', 'One');
 
     Integer errors = 0;
     for (FObjectOne__c objRecord : records) {
@@ -2589,19 +3024,19 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'sddlRandomLookupGroup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupValueForceea_lookupRecordsExist_expectSuccess() {
     // Tests the creation of records with a lookup definition
     // when the lookup object has previously been created by Forceea
     Test.startTest();
     FObject obj1 = new FObject('FObjectTwo__c');
-    obj1.setDefinition('testPicklistA__c', 'random type(picklist)');
+    obj1.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj1.insertRecords(true);
 
     FObject obj2 = new FObject('FObjectOne__c');
-    obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) field(testPicklistA__c) value(A1) source(Forceea)');
+    obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) field(TestPicklistA__c) value(A1) source(Forceea)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
 
     // get the set of FObjectOne__c.TestLookup__c values
@@ -2612,9 +3047,11 @@ public class FObjectTest {
 
     // get the set of FObjectTwo__c IDs
     List<FObjectTwo__c> lookupObjectRecords = new List<FObjectTwo__c>([
-      SELECT Id, testPicklistA__c FROM FObjectTwo__c
+      SELECT Id, testPicklistA__c
+      FROM FObjectTwo__c
       WHERE Id IN :lookupFieldIdsSet
-      LIMIT 1000]);
+      LIMIT 1000
+    ]);
 
     Integer errors = 0;
     for (FObjectTwo__c objRecord : lookupObjectRecords) {
@@ -2628,13 +3065,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup forceea - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupValueForceea_lookupRecordsDontExist_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('TestLookup__c', 'random lookup(fobjectTwo__c) field(testpicklistA__c) value(a1) source(Forceea)');
+    obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) field(TestpicklistA__c) value(a1) source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // get the set of FObjectOne__c.TestLookup__c values
@@ -2645,9 +3082,11 @@ public class FObjectTest {
 
     // get the set of FObjectTwo__c IDs
     List<FObjectTwo__c> lookupObjectRecords = new List<FObjectTwo__c>([
-      SELECT Id, testPicklistA__c FROM FObjectTwo__c
+      SELECT Id, testPicklistA__c
+      FROM FObjectTwo__c
       WHERE Id IN :lookupFieldIdsSet
-      LIMIT 1000]);
+      LIMIT 1000
+    ]);
 
     Integer errors = 0;
     for (FObjectTwo__c objRecord : lookupObjectRecords) {
@@ -2661,7 +3100,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup forceea - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupValueForceea_insertedGroupRecords_expectSuccess() {
     Test.startTest();
     // insert FObjectTwo__c records for group B
@@ -2691,23 +3130,25 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup forceea - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupValueSalesforce_lookupRecordsExist_expectSuccess() {
     Test.startTest();
+    FObject.setGlobalVerbose('debug');
+
     FObject objB = new FObject('FObjectTwo__c');
     objB.setDefinition('testPicklistB__c', 'random type(picklist)');
     objB.insertRecords(true);
 
-    FObject objA = new FObject('fObjectOne__c');
+    FObject objA = new FObject('FObjectOne__c');
     objA.setDefinition('TestLookup__c',
-      'random lookup(fObjectTwo__c) field(testPicklistB__c) value(b3) source(Salesforce)');
+      'random lookup(FObjectTwo__c) field(TestPicklistB__c) value(b3) source(Salesforce)');
     objA.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)objA.getInsertedRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) objA.getInsertedRecords();
     Test.stopTest();
 
     Integer errors = 0;
     Set<Id> refObjectIdsSet = (new Map<Id, FObjectTwo__c>(
-      [SELECT Id FROM FObjectTwo__c WHERE TestPicklistB__c = 'b3' LIMIT 1000])).keySet();
+    [SELECT Id FROM FObjectTwo__c WHERE TestPicklistB__c = 'b3' LIMIT 1000])).keySet();
 
     for (FObjectOne__c objRecord : records) {
       if (!refObjectIdsSet.contains(objRecord.TestLookup__c)) {
@@ -2720,14 +3161,14 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup salesforce - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupValueSalesforce_lookupRecordsDontExist_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c',
       'random lookup(FObjectTwo__c) field(TestPicklistB__c) value(b3) source(Salesforce)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -2742,13 +3183,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup salesforce - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupValue_invalidField_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition(
       'TestLookup__c', 'random lookup(FObjectTwo__c) field(FieldX) value(Hot) source(Forceea)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid lookup field [FieldX] in definition ' +
@@ -2757,14 +3198,14 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptForceea_validPicklistArguments_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) ' +
       'field(TestPicklistDRequired__c) except(d0,d1) source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // get FObjectOne__c.TestLookup__c IDs
@@ -2774,12 +3215,16 @@ public class FObjectTest {
     }
 
     // get FObjectTwo__c IDs
-    List<String> exclusions = new List<String> { 'd0','d1' };
+    List<String> exclusions = new List<String>{
+      'd0', 'd1'
+    };
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
-        SELECT Id FROM FObjectTwo__c
+        SELECT Id
+        FROM FObjectTwo__c
         WHERE TestPicklistDRequired__c NOT IN :exclusions
-        LIMIT 1000])).keySet();
+        LIMIT 1000
+      ])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2793,7 +3238,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptForceea_validAndInvalidPicklistArguments_expectSuccess() {
     Test.startTest();
     // create FObjectOne records
@@ -2801,7 +3246,7 @@ public class FObjectTest {
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) ' +
       'field(TestPicklistDRequired__c) except(d0,d1,s1) source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
     // get FObjectOne__c.TestLookup__c IDs
     Set<Id> lookupIdsSet = new Set<Id>();
@@ -2809,12 +3254,16 @@ public class FObjectTest {
       lookupIdsSet.add(objRecord.TestLookup__c);
     }
     // get FObjectTwo__c IDs
-    List<String> exclusions = new List<String> { 'd0','d1' };
+    List<String> exclusions = new List<String>{
+      'd0', 'd1'
+    };
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
-        SELECT Id FROM FObjectTwo__c
+        SELECT Id
+        FROM FObjectTwo__c
         WHERE TestPicklistDRequired__c NOT IN :exclusions
-        LIMIT 1000])).keySet();
+        LIMIT 1000
+      ])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2828,7 +3277,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptForceea_invalidPicklistArguments_expectSuccess() {
     Test.startTest();
     // create FObjectOne records
@@ -2836,7 +3285,7 @@ public class FObjectTest {
     obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) ' +
       'field(TestPicklistDRequired__c) except(s1,s2) source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
     // get FObjectOne__c.TestLookup__c IDs
     Set<Id> lookupIdsSet = new Set<Id>();
@@ -2857,20 +3306,20 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptSalesforce_validPicklistArguments_expectSuccess() {
     Test.startTest();
     // create FObjectTwo records
     FObject obj1 = new FObject('FObjectTwo__c');
     obj1.setDefinition('TestPicklistA__c', 'random type(list) value(a2,a3)');
     obj1.insertRecords(true);
-    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>)obj1.getRecords();
+    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>) obj1.getRecords();
     // create FObjectOne records
     FObject obj2 = new FObject('FObjectOne__c');
     obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) ' +
       'field(TestPicklistA__c) except(a1,a2) source(Salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
     // get FObjectOne__c.TestLookup__c IDs
     Set<Id> lookupIdsSet = new Set<Id>();
@@ -2878,12 +3327,16 @@ public class FObjectTest {
       lookupIdsSet.add(objRecord.TestLookup__c);
     }
     // get FObjectTwo__c IDs
-    List<String> exclusions = new List<String> { 'a1','a2' };
+    List<String> exclusions = new List<String>{
+      'a1', 'a2'
+    };
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
-        SELECT Id FROM FObjectTwo__c
+        SELECT Id
+        FROM FObjectTwo__c
         WHERE TestPicklistA__c NOT IN :exclusions
-        LIMIT 1000])).keySet();
+        LIMIT 1000
+      ])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2897,20 +3350,20 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptSalesforce_validAndInvalidPicklistArguments_expectSuccess() {
     Test.startTest();
     // create FObjectTwo records
     FObject obj1 = new FObject('FObjectTwo__c');
     obj1.setDefinition('TestPicklistA__c', 'random type(list) value(a2,a3,s1)');
     obj1.insertRecords(true);
-    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>)obj1.getRecords();
+    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>) obj1.getRecords();
     // create FObjectOne records
     FObject obj2 = new FObject('FObjectOne__c');
     obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) ' +
       'field(TestPicklistA__c) except(a1,a2) source(Salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
     // get FObjectOne__c.TestLookup__c IDs
     Set<Id> lookupIdsSet = new Set<Id>();
@@ -2918,12 +3371,16 @@ public class FObjectTest {
       lookupIdsSet.add(objRecord.TestLookup__c);
     }
     // get FObjectTwo__c IDs
-    List<String> exclusions = new List<String> { 'a1','a2' };
+    List<String> exclusions = new List<String>{
+      'a1', 'a2'
+    };
     Set<Id> lookupObjectIdsSet =
       (new Map<Id, FObjectTwo__c>([
-        SELECT Id FROM FObjectTwo__c
+        SELECT Id
+        FROM FObjectTwo__c
         WHERE TestPicklistA__c NOT IN :exclusions
-        LIMIT 1000])).keySet();
+        LIMIT 1000
+      ])).keySet();
 
     Integer errors = 0;
     for (Id lookupId : lookupIdsSet) {
@@ -2937,20 +3394,20 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptSalesforce_createLookupRecordsWithBlankPicklistValues_expectSuccess() {
     Test.startTest();
     // create FObjectTwo records
     FObject obj1 = new FObject('FObjectTwo__c');
     obj1.setDefinition('TestPicklistA__c', 'random type(list) value(s1,s2)');
     obj1.insertRecords(true);
-    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>)obj1.getRecords();
+    List<FObjectTwo__c> records1 = (List<FObjectTwo__c>) obj1.getRecords();
     // create FObjectOne records
     FObject obj2 = new FObject('FObjectOne__c');
     obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) ' +
       'field(TestPicklistA__c) except(a1,a2) source(Salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
     // get FObjectOne__c.TestLookup__c IDs
     Set<Id> lookupIdsSet = new Set<Id>();
@@ -2972,7 +3429,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptGroup_insertedGroupRecords_expectSuccess() {
     Test.startTest();
     // insert FObjectTwo__c records for group B
@@ -2990,7 +3447,7 @@ public class FObjectTest {
     objA.setDefinition('TestLookup__c',
       'random lookup(FObjectTwo__c) field(TestPicklistA__c) except(a0, a1, a2) group(One) source(Forceea)');
     objA.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)objA.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) objA.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3006,7 +3463,7 @@ public class FObjectTest {
       }
     }
     List<FObjectTwo__c> lookupRecords1 =
-      (List<FObjectTwo__c>)FObject.getInsertedGroupRecords('fObjectTwo__c', 'ONE');
+      (List<FObjectTwo__c>) FObject.getInsertedGroupRecords('FObjectTwo__c', 'ONE');
     Set<Id> lookupRecordIdsSet1 = (new Map<Id, FObjectTwo__c>(lookupRecords1)).keySet();
     for (FObjectOne__c objRecord : records) {
       if (!lookupRecordIdsSet1.contains(objRecord.TestLookup__c)) {
@@ -3015,7 +3472,7 @@ public class FObjectTest {
       }
     }
     List<FObjectTwo__c> lookupRecords2 =
-      (List<FObjectTwo__c>)objB1.getInsertedGroupRecords('one');
+      (List<FObjectTwo__c>) objB1.getInsertedGroupRecords('one');
     Set<Id> lookupRecordIdsSet2 = (new Map<Id, FObjectTwo__c>(lookupRecords2)).keySet();
     if (lookupRecordIdsSet1.hashCode() != lookupRecordIdsSet2.hashCode()) {
       errors += 8;
@@ -3026,14 +3483,14 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except group - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptGroup_blankGroupName_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c',
       'random lookup(FObjectTwo__c) field(TestPicklistA__c) except(a1, a2, a3) group() source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid syntax in definition [random lookup(FObjectTwo__c) field(TestPicklistA__c) ' +
@@ -3042,7 +3499,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random lookup except group - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupExceptGroup_groupNotExists_expectSuccess() {
     Test.startTest();
     // insert FObjectTwo__c records for group B
@@ -3060,7 +3517,7 @@ public class FObjectTest {
     objA.setDefinition('TestLookup__c',
       'random lookup(FObjectTwo__c) field(TestPicklistA__c) except(a1, a2, a3) group(One) source(Forceea)');
     objA.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)objA.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) objA.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3082,7 +3539,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup except group - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupWhere_noLookupRecordsCreatedByForceeaOrUser_expectSuccess() {
     Test.startTest();
     // create FObjectOne records
@@ -3098,7 +3555,7 @@ public class FObjectTest {
       errors += 1;
     }
     for (SObject objRecord : obj.getRecords()) {
-      if (String.isNotBlank((String)objRecord.get('TestLookup__c'))) {
+      if (String.isNotBlank((String) objRecord.get('TestLookup__c'))) {
         errors += 2;
         break;
       }
@@ -3112,7 +3569,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup where - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupWhere_lookupRecordsAlreadyCreatedByForceea_expectSuccess() {
     Test.startTest();
     // create FObjectTwo records
@@ -3125,7 +3582,7 @@ public class FObjectTest {
     String whereClause = 'TestPicklistDRequired__c = \'d1\' AND TestPicklistEUnrestricted__c != \'s1\'';
     obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) where(' + whereClause + ') source(salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
     // get FObjectOne.TestLookup__c IDs
     List<Id> lookupIds = new List<Id>();
@@ -3137,7 +3594,8 @@ public class FObjectTest {
       SELECT TestPicklistDRequired__c, TestPicklistEUnrestricted__c
       FROM FObjectTwo__c
       WHERE Id IN :lookupIds
-      LIMIT 1000];
+      LIMIT 1000
+    ];
 
     Integer errors = 0;
     if (!obj2.getErrors().isEmpty()) {
@@ -3154,13 +3612,17 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup where - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupWhere_lookupRecordsAlreadyCreatedByUser_expectSuccess() {
     Test.startTest();
     // create FObjectTwo records
     List<FObjectTwo__c> newLookupRecords = new List<FObjectTwo__c>();
-    List<String> values1 = new List<String> { 'd1', 'd2' };
-    List<String> values2 = new List<String> { 's1', 's2', 's3' };
+    List<String> values1 = new List<String>{
+      'd1', 'd2'
+    };
+    List<String> values2 = new List<String>{
+      's1', 's2', 's3'
+    };
     Integer rnd1 = 0;
     Integer rnd2 = 0;
     for (Integer counter = 1; counter <= 100; counter++) {
@@ -3177,7 +3639,7 @@ public class FObjectTest {
     String whereClause = 'TestPicklistDRequired__c = \'d1\' AND TestPicklistEUnrestricted__c != \'s1\'';
     obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) where(' + whereClause + ') source(salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
     // get FObjectOne.TestLookup__c IDs
     List<Id> lookupIds = new List<Id>();
@@ -3189,7 +3651,8 @@ public class FObjectTest {
       SELECT TestPicklistDRequired__c, TestPicklistEUnrestricted__c
       FROM FObjectTwo__c
       WHERE Id IN :lookupIds
-      LIMIT 1000];
+      LIMIT 1000
+    ];
 
     Integer errors = 0;
     for (FObjectTwo__c objRecord : lookupRecords) {
@@ -3206,7 +3669,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random lookup where - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLookupWhere_invalidWhereClause_expectFailure() {
     Test.startTest();
     // create FObjectTwo records
@@ -3217,23 +3680,25 @@ public class FObjectTest {
     // create FObjectOne records
     FObject obj2 = new FObject('FObjectOne__c');
     String whereClause = 'TestPicklistDRequired__c = \'d1\' AND wrongField != \'s1\'';
-    obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) where(' + whereClause + ') source(salesforce)');
+    obj2.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) where(' +
+      whereClause + ') source(salesforce)');
     obj2.insertRecords(true);
     Test.stopTest();
 
     String expectedResult = 'Found errors selecting records from the lookup object [FObjectTwo__c]' +
-         ' for object [FObjectOne__c]';
-    String actualResult = obj2.getErrors().get('TestLookup__c').get(0).left(96);
-    System.assertEquals(expectedResult, actualResult, 'random lookup where - errors found');
+      ' for object [FObjectOne__c]';
+    String actualResult = obj2.getErrors().get('TestLookup__c').get(0);
+    Boolean result = actualResult.startsWith(expectedResult);
+    System.assertEquals(true, result, 'random lookup where - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDate_fromLessThanTo_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDate__c', 'random type("date ") from(2018-01-01) to(2018-01-10)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3250,7 +3715,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random date - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDate_fromEqualsTo_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -3263,7 +3728,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random date - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDate_fromGreaterThanTo_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -3277,13 +3742,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random date - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDatetimeLessThanToDatetimeSameDay_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type("datetime") from(2018-01-01 01:01:01) to(2018-01-01 02:02:02)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3300,13 +3765,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDatetimeLessThanToDatetimeDifferentDay_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(" 2018-01-01 01:01:01") to(2018-01-02 02:02:02)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3323,13 +3788,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDatetimeLessThanToDateSameDay_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-01)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3346,13 +3811,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDatetimeLessThanToDateDifferentDay_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-05)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3369,13 +3834,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDateLessThanToDatetimeSameDay_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01) to(2018-01-01 01:01:01)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3392,13 +3857,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDateLessThanToDatetimeDifferentDay_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01) to(2018-01-05 01:01:01)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3415,13 +3880,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDateLessThanToDate_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-1-1) to(2018-1-5)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3438,13 +3903,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDateEqualsToDate_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-1-1) to(2018-1-1)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3461,13 +3926,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDatetimeEqualsToDatetime_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-01 01:01:01)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The [from] datetime is greater than or equal to the [to] datetime in definition ' +
@@ -3476,7 +3941,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDatetimeGreaterThanToDatetime_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -3490,7 +3955,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDatetimeGreaterThanToDate_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -3504,7 +3969,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomDatetime_fromDateGreaterThanToDatetime_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -3518,7 +3983,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomFirstName_incorrectLanguageAndLocality_expectSuccess() {
     loadNamesFromUnitesStatesInEnglish();
 
@@ -3542,7 +4007,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random name errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomLastName_incorrectLanguageAndLocality_expectSuccess() {
     loadNamesFromUnitesStatesInEnglish();
 
@@ -3566,7 +4031,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random nameerrors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomFirstLastName_fromGreeceInGreek_expectSuccess() {
     loadNamesFromGreeceInGreek();
 
@@ -3594,7 +4059,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random name - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomFirstLastName_fromUnitedStatesInEnglish_expectSuccess() {
     loadNamesFromUnitesStatesInEnglish();
 
@@ -3622,7 +4087,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random name - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomStreet_fromUnitedStatesInEnglish_expectSuccess() {
     FObject.Language = 'English';
     FObject.Locality = 'United States';
@@ -3638,7 +4103,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(street) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3661,7 +4126,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random street - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomStreet_fromGreeceInGreek_expectSuccess() {
     FObject.Language = 'Greek';
     FObject.Locality = 'Greece';
@@ -3677,7 +4142,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(street) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3700,7 +4165,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random street - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomCity_fromUnitedStatesInEnglish_expectSuccess() {
     FObject.Language = 'English';
     FObject.Locality = 'United States';
@@ -3716,7 +4181,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(city) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3739,7 +4204,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random city - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomCity_fromGreeceInGreek_expectSuccess() {
     FObject.Language = 'Greek';
     FObject.Locality = 'Greece';
@@ -3755,7 +4220,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(city) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3775,7 +4240,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random city - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPostalCode_fromUnitedStatesInEnglish_expectSuccess() {
     FObject.Language = 'English';
     FObject.Locality = 'United States';
@@ -3791,7 +4256,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(postalcode) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3814,7 +4279,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random postalcode - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPostalCode_fromGreeceInGreek_expectSuccess() {
     FObject.Language = 'Greek';
     FObject.Locality = 'Greece';
@@ -3830,7 +4295,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(postalcode) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3853,7 +4318,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random postalcode - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomState_fromUnitedStatesInEnglish_expectSuccess() {
     FObject.Language = 'English';
     FObject.Locality = 'United States';
@@ -3869,7 +4334,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(state) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3892,7 +4357,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random state - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomCountry_fromUnitedStatesInEnglish_expectSuccess() {
     FObject.Language = 'English';
     FObject.Locality = 'United States';
@@ -3908,7 +4373,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(country) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3931,7 +4396,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random country - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomCountry_fromGreeceInGreek_expectSuccess() {
     FObject.Language = 'Greek';
     FObject.Locality = 'Greece';
@@ -3947,7 +4412,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'random type(country) group(shipping)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -3970,14 +4435,16 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random country - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_integerArguments_expectSuccess() {
-    List<String> arguments = new List<String> { '1.0', '2.0', '3.0', '0.0' };
+    List<String> arguments = new List<String>{
+      '1.0', '2.0', '3.0', '0.0'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestInteger__c', 'random type(list) value(1, 2, 3, 0)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
@@ -3986,14 +4453,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_decimalArguments_expectSuccess() {
-    List<String> arguments = new List<String> { '1.0', '2.22', '0.0', '3.0' };
+    List<String> arguments = new List<String>{
+      '1.0', '2.22', '0.0', '3.0'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDecimal__c', 'random type(list) value(1, 2.22, 0.0, 3)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
@@ -4002,14 +4471,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_dateArguments_expectSuccess() {
-    List<String> arguments = new List<String> { '2018-01-01 00:00:00', '2017-01-01 00:00:00', '2016-01-01 00:00:00', '2015-01-01 00:00:00' };
+    List<String> arguments = new List<String>{
+      '2018-01-01 00:00:00', '2017-01-01 00:00:00', '2016-01-01 00:00:00', '2015-01-01 00:00:00'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDate__c', 'random type(list) value(2018-01-01, 2017-01-01, 2016-01-01, 2015-01-01)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
@@ -4018,7 +4489,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_datetimeArguments_expectSuccess() {
     List<Datetime> arguments = new List<Datetime>();
     arguments.add(Datetime.newInstance(2018, 1, 1, 0, 0, 0));
@@ -4029,7 +4500,7 @@ public class FObjectTest {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDateTime__c', 'random type(list) value(2018-01-01 00:00:00, 2017-01-01 01:01:01, 2016-01-01 02:02:02, 2015-01-01 03:03:03)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
@@ -4038,14 +4509,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_timeArguments_expectSuccess() {
-    List<String> arguments = new List<String> { '01:01:01.000Z', '02:02:02.000Z', '03:03:03.000Z', '04:04:04.000Z' };
+    List<String> arguments = new List<String>{
+      '01:01:01.000Z', '02:02:02.000Z', '03:03:03.000Z', '04:04:04.000Z'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestTime__c', 'random type(list) value(01:01:01, 02:02:02, 03:03:03, 04:04:04)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
@@ -4054,14 +4527,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_stringArguments_expectSuccess() {
-    List<String> arguments = new List<String> { 'One', 'Two', 'Three', 'Twenty One' };
+    List<String> arguments = new List<String>{
+      'One', 'Two', 'Three', 'Twenty One'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(list) value(One,Two,Three,Twenty One)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
@@ -4070,15 +4545,17 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_restrictedIndependentPicklistField_expectSuccess() {
-    List<String> arguments = new List<String> { 'a0', 'a1', 'a2' };
+    List<String> arguments = new List<String>{
+      'a0', 'a1', 'a2'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'random type(list) value(a0, a1, a2, a4)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Boolean expectedResult = true;
@@ -4086,22 +4563,28 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_restrictedDependentPicklistField_expectSuccess() {
-    List<String> arguments = new List<String> { 'a0', 'a1', 'a2' };
-
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistB__c', 'random type(list) value(b0, b1, b2, b4, b5)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // set mapping
-    Set<String> picklistA0Mapping = new Set<String> { '' };
-    Set<String> picklistA1Mapping = new Set<String> { 'b1' };
-    Set<String> picklistA2Mapping = new Set<String> { 'b1', 'b2' };
-    Set<String> picklistA3Mapping = new Set<String> { 'b1', 'b2', 'b3' };
+    Set<String> picklistA0Mapping = new Set<String>{
+      ''
+    };
+    Set<String> picklistA1Mapping = new Set<String>{
+      'b1'
+    };
+    Set<String> picklistA2Mapping = new Set<String>{
+      'b1', 'b2'
+    };
+    Set<String> picklistA3Mapping = new Set<String>{
+      'b1', 'b2', 'b3'
+    };
 
     // get created field values
     List<String> picklistAValues = new List<String>();
@@ -4129,28 +4612,30 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_unrestrictedIndependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectTwo__c');
     obj.setDefinition('TestPicklistEUnrestricted__c', 'random type(list) value(e1, e4, e5, d1, d2)');
     obj.insertRecords(true);
-    List<FObjectTwo__c> records = (List<FObjectTwo__c>)obj.getRecords();
+    List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
     Test.stopTest();
 
     Boolean expectedResult = true;
-    List<String> arguments = new List<String> { 'e1', 'e4', 'e5', 'd1', 'd2' };
+    List<String> arguments = new List<String>{
+      'e1', 'e4', 'e5', 'd1', 'd2'
+    };
     Boolean actualResult = isValidDistribution('TestPicklistEUnrestricted__c', arguments, records);
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_unrestrictedDependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectTwo__c');
     obj.setDefinition('TestPicklistFUnrestricted__c', 'random type(list) value(f0, f1, f4, f5, e1, e2)');
     Database.SaveResult[] saveResults = obj.insertRecords(false);
-    List<FObjectTwo__c> records = (List<FObjectTwo__c>)obj.getRecords();
+    List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4165,12 +4650,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_controllingFieldIsCheckbox_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('testCheckbox__c', 'static value(true)');
-    obj.setDefinition('testpicklistD__c', 'random type(list) value(d2, d3)');
+    obj.setDefinition('TestCheckbox__c', 'static value(true)');
+    obj.setDefinition('TestpicklistD__c', 'random type(list) value(d2, d3)');
     Database.SaveResult[] saveResults = obj.insertRecords(false);
     Test.stopTest();
 
@@ -4186,42 +4671,48 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_oneRecordType_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'random type(list) value(RecordTypeA)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Boolean expectedResult = true;
     Id recordType1Id = Schema.SObjectType.FObjectOne__c.getRecordTypeInfosByName().get('Record Type A').getRecordTypeId();
-    List<String> arguments = new List<String> { recordType1Id };
+    List<String> arguments = new List<String>{
+      recordType1Id
+    };
     Boolean actualResult = isValidDistribution('RecordTypeId', arguments, records);
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_manyRecordTypes_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'random type(list) value(RecordTypeA, RecordTypeB)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Boolean expectedResult = true;
     Id recordType1Id = Schema.SObjectType.FObjectOne__c.getRecordTypeInfosByName().get('Record Type A').getRecordTypeId();
     Id recordType2Id = Schema.SObjectType.FObjectOne__c.getRecordTypeInfosByName().get('Record Type B').getRecordTypeId();
-    List<String> arguments = new List<String> { recordType1Id, recordType2Id };
+    List<String> arguments = new List<String>{
+      recordType1Id, recordType2Id
+    };
     Boolean actualResult = isValidDistribution('RecordTypeId', arguments, records);
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
-  private static void  sddlRandomList_doubleQuotes_expectSuccess() {
-    List<String> arguments = new List<String> { 'v1xyz', 'v2 xyz', 'v3xyz', 'v4 xyz' };
+  @IsTest
+  private static void sddlRandomList_doubleQuotes_expectSuccess() {
+    List<String> arguments = new List<String>{
+      'v1xyz', 'v2 xyz', 'v3xyz', 'v4 xyz'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -4236,13 +4727,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomList_invalidRecordType_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'random type(list) value(RecordTypeX)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid record type [RecordTypeX] for definition [random type(list) value(RecordTypeX)]';
@@ -4250,12 +4741,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random list - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomNumber_integerArgument_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('Account'); // should use the Account object
     obj.setDefinition('NumberOfEmployees', 'random type(number) from(1) to(100) scale(0)');
-    List<Account> records = (List<Account>)obj.getRecords();
+    List<Account> records = (List<Account>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4270,13 +4761,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random number - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomNumber_decimalArgument_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('testDecimal__c', 'random type(number) from(1) to(50.12) scale(2)');
+    obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(50.12) scale(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4291,13 +4782,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random number - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomNumber_fromEqualsTo_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('testDecimal__c', 'random type(number) from(10) to(10) scale(2)');
+    obj.setDefinition('TestDecimal__c', 'random type(number) from(10) to(10) scale(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The [from] number is greater than or equal to the [to] number ' +
@@ -4306,13 +4797,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random number - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomNumber_fromGreaterThanTo_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('testDecimal__c', 'random type(number) from(12) to(10) scale(2)');
+    obj.setDefinition('TestDecimal__c', 'random type(number) from(12) to(10) scale(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The [from] number is greater than or equal to the [to] number ' +
@@ -4321,15 +4812,56 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random number - errors found');
   }
 
-  @isTest
+  @IsTest
+  private static void sddlRandomPhone_independentPicklistField_expectSuccess() {
+    String formatString = '(30) 210 dd-11-1DD';
+
+    Test.startTest();
+    FObject obj = new FObject('FObjectOne__c');
+    obj.setDefinition('TestPhone__c', 'random type(phone) format("' + formatString + '")');
+    obj.insertRecords(true);
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getInsertedRecords();
+    Test.stopTest();
+
+    Integer value = 0;
+    Integer errors = 0;
+    List<String> formatChars = formatString.split('');
+
+    for (FObjectOne__c objRecord : records) {
+      List<Integer> charValues = objRecord.TestPhone__c.getChars();
+      List<String> phoneChars = objRecord.TestPhone__c.split('');
+
+      for (Integer counter = 0; counter < formatChars.size(); counter++) {
+        value = charValues[counter] - 48;
+        if (formatChars[counter] == 'd') {
+          if (value < 1 || value > 9) {
+            errors++;
+          }
+        } else if (formatChars[counter] == 'D') {
+          value = charValues[counter] - 48;
+          if (value < 0 || value > 9) {
+            errors++;
+          }
+        } else if (formatChars[counter] != phoneChars[counter]) {
+          errors++;
+        }
+      }
+    }
+
+    System.assertEquals(0, errors, 'random phone number - errors found');
+  }
+
+  @IsTest
   private static void sddlRandomPicklist_independentPicklistField_expectSuccess() {
-    List<String> arguments = new List<String> { 'a0', 'a1', 'a2', 'a3' };
+    List<String> arguments = new List<String>{
+      'a0', 'a1', 'a2', 'a3'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Boolean expectedResult = true;
@@ -4337,24 +4869,40 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklist_dependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistC__c', 'random type(picklist)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // set mapping
-    Set<String> picklistA0Mapping = new Set<String> { '' };
-    Set<String> picklistA1Mapping = new Set<String> { 'b1' };
-    Set<String> picklistA2Mapping = new Set<String> { 'b1', 'b2' };
-    Set<String> picklistA3Mapping = new Set<String> { 'b1', 'b2', 'b3' };
-    Set<String> picklistB0Mapping = new Set<String> { '' };
-    Set<String> picklistB1Mapping = new Set<String> { 'c1' };
-    Set<String> picklistB2Mapping = new Set<String> { 'c1', 'c2' };
-    Set<String> picklistB3Mapping = new Set<String> { 'c1', 'c2', 'c3' };
+    Set<String> picklistA0Mapping = new Set<String>{
+      ''
+    };
+    Set<String> picklistA1Mapping = new Set<String>{
+      'b1'
+    };
+    Set<String> picklistA2Mapping = new Set<String>{
+      'b1', 'b2'
+    };
+    Set<String> picklistA3Mapping = new Set<String>{
+      'b1', 'b2', 'b3'
+    };
+    Set<String> picklistB0Mapping = new Set<String>{
+      ''
+    };
+    Set<String> picklistB1Mapping = new Set<String>{
+      'c1'
+    };
+    Set<String> picklistB2Mapping = new Set<String>{
+      'c1', 'c2'
+    };
+    Set<String> picklistB3Mapping = new Set<String>{
+      'c1', 'c2', 'c3'
+    };
 
     // get created field values
     List<String> picklistAValues = new List<String>();
@@ -4394,21 +4942,21 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklist_controllingFieldAfterDependentField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistB__c', 'random type(picklist)');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // set mapping
-    Set<String> picklistA0Mapping = new Set<String> { '' };
-    Set<String> picklistA1Mapping = new Set<String> { 'b1' };
-    Set<String> picklistA2Mapping = new Set<String> { 'b1', 'b2' };
-    Set<String> picklistA3Mapping = new Set<String> { 'b1', 'b2', 'b3' };
+    Set<String> picklistA0Mapping = new Set<String>{''};
+    Set<String> picklistA1Mapping = new Set<String>{'b1'};
+    Set<String> picklistA2Mapping = new Set<String>{'b1', 'b2'};
+    Set<String> picklistA3Mapping = new Set<String>{'b1', 'b2', 'b3'};
 
     // get created field values
     List<String> picklistAValues = new List<String>();
@@ -4436,12 +4984,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklist_controllingFieldIsCheckbox_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('testCheckbox__c', 'static value(true)');
-    obj.setDefinition('testPicklistD__c', 'random type(picklist)');
+    obj.setDefinition('TestCheckbox__c', 'static value(true)');
+    obj.setDefinition('TestPicklistD__c', 'random type(picklist)');
     obj.insertRecords(false);
     Test.stopTest();
 
@@ -4450,7 +4998,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklist_definitionsOfDependentPicklists_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -4475,13 +5023,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklist_oneRecordType_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectThree__c');
     obj.setDefinition('RecordTypeId', 'random type(picklist)');
     obj.insertRecords(true);
-    List<FObjectThree__c> records = (List<FObjectThree__c>)obj.getRecords();
+    List<FObjectThree__c> records = (List<FObjectThree__c>) obj.getRecords();
     Test.stopTest();
 
     Map<Id, Schema.RecordTypeInfo> recordTypesMap = Schema.SObjectType.FObjectThree__c.getRecordTypeInfosById();
@@ -4499,13 +5047,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklist_manyRecordTypes_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'random type(picklist)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Map<Id, Schema.RecordTypeInfo> recordTypesMap = Schema.SObjectType.FObjectOne__c.getRecordTypeInfosById();
@@ -4519,7 +5067,11 @@ public class FObjectTest {
     }
 
     List<RecordType> recordTypes = [
-      SELECT Id FROM RecordType WHERE sObjectType = 'FObjectOne__c' AND IsActive = true LIMIT 1000];
+      SELECT Id
+      FROM RecordType
+      WHERE sObjectType = 'FObjectOne__c' AND IsActive = TRUE
+      LIMIT 1000
+    ];
     Set<Id> valuesSet = (new Map<Id, RecordType>(recordTypes)).keySet();
     List<Id> values = new List<Id>(valuesSet);
     if (!isValidDistribution('RecordTypeId', values, records)) {
@@ -4531,17 +5083,19 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_independentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist) except(a1)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
-    Set<String> picklistValuesSet = new Set<String> { 'a0', 'a2', 'a3' };
+    Set<String> picklistValuesSet = new Set<String>{
+      'a0', 'a2', 'a3'
+    };
     for (Integer counter = 0; counter < records.size(); counter++) {
       if (!picklistValuesSet.contains(records[counter].TestPicklistA__c)) {
         errors++;
@@ -4557,24 +5111,24 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_dependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistC__c', 'random type(picklist) except(c1)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // set mapping
-    Set<String> picklistA0Mapping = new Set<String> { '' };
-    Set<String> picklistA1Mapping = new Set<String> { 'b1' };
-    Set<String> picklistA2Mapping = new Set<String> { 'b1', 'b2' };
-    Set<String> picklistA3Mapping = new Set<String> { 'b1', 'b2', 'b3' };
-    Set<String> picklistB0Mapping = new Set<String> { '' };
-    Set<String> picklistB1Mapping = new Set<String> { '' };
-    Set<String> picklistB2Mapping = new Set<String> { 'c2' };
-    Set<String> picklistB3Mapping = new Set<String> { 'c2', 'c3' };
+    Set<String> picklistA0Mapping = new Set<String>{''};
+    Set<String> picklistA1Mapping = new Set<String>{'b1'};
+    Set<String> picklistA2Mapping = new Set<String>{'b1', 'b2'};
+    Set<String> picklistA3Mapping = new Set<String>{'b1', 'b2', 'b3'};
+    Set<String> picklistB0Mapping = new Set<String>{''};
+    Set<String> picklistB1Mapping = new Set<String>{''};
+    Set<String> picklistB2Mapping = new Set<String>{'c2'};
+    Set<String> picklistB3Mapping = new Set<String>{'c2', 'c3'};
 
     // get created field values
     List<String> picklistAValues = new List<String>();
@@ -4614,7 +5168,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_checkDefinitionsOfDependentPicklists_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -4639,17 +5193,19 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_noPicklistValues_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist) except(a0,a1,a2,a3)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
-    Set<String> picklistValuesSet = new Set<String> { 'a0', 'a1', 'a2', 'a3' };
+    Set<String> picklistValuesSet = new Set<String>{
+      'a0', 'a1', 'a2', 'a3'
+    };
     for (Integer counter = 0; counter < records.size(); counter++) {
       if (picklistValuesSet.contains(records[counter].TestPicklistA__c)) {
         errors++;
@@ -4661,17 +5217,19 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_onePicklistValue_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'random type(picklist) except(a0,a2,a3)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
-    Set<String> picklistValuesSet = new Set<String> { 'a1' };
+    Set<String> picklistValuesSet = new Set<String>{
+      'a1'
+    };
     for (Integer counter = 0; counter < records.size(); counter++) {
       if (!picklistValuesSet.contains(records[counter].TestPicklistA__c)) {
         errors++;
@@ -4687,12 +5245,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_controllingFieldIsCheckbox_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('testCheckbox__c', 'static value(true)');
-    obj.setDefinition('testpicklistD__c', 'random type(picklist) except(d0, d1)');
+    obj.setDefinition('TestCheckbox__c', 'static value(true)');
+    obj.setDefinition('TestpicklistD__c', 'random type(picklist) except(d0, d1)');
     Database.SaveResult[] saveResults = obj.insertRecords(false);
     Test.stopTest();
 
@@ -4711,14 +5269,14 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_noRecordType_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId',
       'random type(picklist) except(RecordTypeA, RecordTypeB, RecordTypeC)');
     Database.SaveResult[] saveResults = obj.insertRecords(false);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4738,7 +5296,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_oneRecordType_expectSuccess() {
     Id recordTypeId =
       Schema.SObjectType.FObjectOne__c.getRecordTypeInfosByName().get('Record Type C').getRecordTypeId();
@@ -4747,7 +5305,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'random type(picklist) except(RecordTypeA, RecordTypeB)');
     Database.SaveResult[] saveResults = obj.insertRecords(false);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4767,20 +5325,22 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomPicklistExcept_manyRecordTypes_expectSuccess() {
     Id recordTypeId1 =
       Schema.SObjectType.FObjectOne__c.getRecordTypeInfosByName().get('Record Type A').getRecordTypeId();
     Id recordTypeId2 =
       Schema.SObjectType.FObjectOne__c.getRecordTypeInfosByName().get('Record Type B').getRecordTypeId();
-    List<Id> arguments = new List<String> { recordTypeId1, recordTypeId2 };
+    List<Id> arguments = new List<String>{
+      recordTypeId1, recordTypeId2
+    };
     Set<Id> recordTypeIdsSet = new Set<Id>(arguments);
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'random type(picklist) except(RecordTypeC)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4798,21 +5358,21 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random picklist except - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_includeOnlyDigits_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(string) Minlength(5) Maxlength(10) ' +
       'startwith(Lower) include(Digit)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String result = '';
     Integer errors = 0;
     Integer len = 0;
     for (FObjectOne__c objRecord : records) {
-      len =  objRecord.TestText__c.length();
-      result = objRecord.TestText__c.right(len-1);
+      len = objRecord.TestText__c.length();
+      result = objRecord.TestText__c.right(len - 1);
       if (!result.isNumeric()) {
         errors++;
       }
@@ -4823,21 +5383,21 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random string - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_includeOnlyLowercase_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(string) Minlength(5) Maxlength(10) ' +
       'startwith(Upper) include(Lower)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String result = '';
     Integer errors = 0;
     Integer len = 0;
     for (FObjectOne__c objRecord : records) {
-      len =  objRecord.TestText__c.length();
-      result = objRecord.TestText__c.right(len-1);
+      len = objRecord.TestText__c.length();
+      result = objRecord.TestText__c.right(len - 1);
       if (!result.isAllLowerCase()) {
         errors++;
       }
@@ -4848,13 +5408,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random string - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_includeOnlyUppercase_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(string) Minlength(5) Maxlength(10) ' +
       'startwith(Lower) include(Upper)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String result = '';
@@ -4862,7 +5422,7 @@ public class FObjectTest {
     Integer len = 0;
     for (FObjectOne__c objRecord : records) {
       len = objRecord.TestText__c.length();
-      result = objRecord.TestText__c.right(len-1);
+      result = objRecord.TestText__c.right(len - 1);
       if (!result.isAllUpperCase()) {
         errors++;
       }
@@ -4873,13 +5433,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random string - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_startWithLower_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(string) Minlength(5) Maxlength(10) ' +
       'startwith(Lower) include(Lower,Upper)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4894,13 +5454,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random string - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_startWithUpper_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(string) Minlength(5) Maxlength(10) ' +
       'startwith(Upper) include(Lower, Upper)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4915,13 +5475,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random string - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_startWithDigit_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'random type(string) Minlength(5) Maxlength(10) ' +
       'startwith(Digit) include(Lower, Upper)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -4936,13 +5496,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random string - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_minEqualsZero_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(string) Minlength(0) Maxlength(5) ' +
       'Startwith(Upper) Include(Lower,Upper)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The minimum length should be greater than or equal to 1 ' +
@@ -4951,13 +5511,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random string - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_minLessThanZero_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(string) Minlength(-1) Maxlength(5) ' +
       'Startwith(Upper) Include(Lower,Upper)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The minimum length should be greater than or equal to 1 ' +
@@ -4966,13 +5526,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random string - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomString_minGreaterThanMax_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(string) Minlength(10) Maxlength(5) ' +
       'Startwith(Upper) Include(Lower,Upper)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The minimum length should be less than or equal to the maximum length ' +
@@ -4981,17 +5541,19 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random string - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomText_validWords_expectSuccess() {
-    List<String> words = new List<String> { 'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'tempor', 'aboreant',
-    'instructor', 'eu', 'nos', 'a', 'quo', 'magna', 'primis', 'labore', 'usi', 'virtute', 'fabellas', 'vis', 'duis',
-    'scripta', 'salutandi', 'laudem', 'commune', 'nam', 'laoreet', 'propriae', 'corrumpit', 'ea', 'partem',
-    'inermis', 'conclusion', 'ius', 'sint', 'impedit', 'deterruis', 'eam', 'elit', 'nusquam' };
+    List<String> words = new List<String>{
+      'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'tempor', 'aboreant',
+      'instructor', 'eu', 'nos', 'a', 'quo', 'magna', 'primis', 'labore', 'usi', 'virtute', 'fabellas', 'vis', 'duis',
+      'scripta', 'salutandi', 'laudem', 'commune', 'nam', 'laoreet', 'propriae', 'corrumpit', 'ea', 'partem',
+      'inermis', 'conclusion', 'ius', 'sint', 'impedit', 'deterruis', 'eam', 'elit', 'nusquam'
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(Text) Minlength(20) Maxlength(50)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5011,12 +5573,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random text - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomText_minEqualsMaxPlus1_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(Text) Minlength(20) Maxlength(21)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5033,12 +5595,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random text - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomText_minEqualsMaxPlus10_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', 1000);
     obj.setDefinition('TestText__c', 'Random Type(Text) Minlength(20) Maxlength(30)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5055,12 +5617,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random text - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomText_minEqualsMax_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(Text) Minlength(20) Maxlength(20)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The minimum length should be less than the maximum length ' +
@@ -5069,12 +5631,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random text - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomText_minEqualsZero_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(Text) Minlength(0) Maxlength(20)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The minimum length should be greater than or equal to 1 ' +
@@ -5083,12 +5645,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random text - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomText_minLessThanZero_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestText__c', 'Random Type(Text) Minlength(-1) Maxlength(20)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'The minimum length should be greater than or equal to 1 ' +
@@ -5097,16 +5659,18 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'random text - error found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlRandomUrl_valid_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestUrl__c', 'random type(url)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     obj.insertRecords(true);
     Test.stopTest();
 
-    List<String> notes = new List<String> { 'do', 're', 'mi', 'fa', 'sol', 'la', 'si' };
+    List<String> notes = new List<String>{
+      'do', 're', 'mi', 'fa', 'sol', 'la', 'si'
+    };
     Integer errors = 0;
     String url = '';
     for (FObjectOne__c objRecord : records) {
@@ -5124,7 +5688,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random url - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialNumber_positiveIntegerStep_expectSuccess() {
     Integer numOfRecords = 201;
     Decimal fromValue = 10;
@@ -5134,7 +5698,7 @@ public class FObjectTest {
     FObject obj = new FObject('Account'); // should use the Account object
     obj.setDefinition('NumberOfEmployees', 'Serial Type(Number) From(10) Step(2) Scale(0)');
     obj.insertRecords(true);
-    List<Account> records = (List<Account>)obj.getRecords();
+    List<Account> records = (List<Account>) obj.getRecords();
     Test.stopTest();
 
     Decimal expectedResult = fromValue + (numOfRecords - 1) * stepValue;
@@ -5142,7 +5706,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial number - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialNumber_negativeIntegerStep_expectSuccess() {
     Integer numOfRecords = 201;
     Decimal fromValue = 0;
@@ -5152,7 +5716,7 @@ public class FObjectTest {
     FObject obj = new FObject('Account'); // should use the Account object
     obj.setDefinition('NumberOfEmployees', 'Serial Type(Number) From(0) Step(-2) Scale(2)');
     obj.insertRecords(true);
-    List<Account> records = (List<Account>)obj.getRecords();
+    List<Account> records = (List<Account>) obj.getRecords();
     Test.stopTest();
 
     Decimal expectedResult = fromValue + (numOfRecords - 1) * stepValue;
@@ -5160,7 +5724,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial number - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialNumber_positiveDecimalStep_expectSuccess() {
     Integer numOfRecords = 201;
     Decimal fromValue = 10;
@@ -5170,7 +5734,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDecimal__c', 'Serial Type(Number) From(10) Step(1.52) Scale(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Decimal expectedResult = fromValue + (numOfRecords - 1) * stepValue;
@@ -5178,7 +5742,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial number - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialNumber_negativeDecimalStep_expectSuccess() {
     Integer numOfRecords = 201;
     Decimal fromValue = 10;
@@ -5188,7 +5752,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDecimal__c', 'Serial Type(Number) From(10) Step(-1.52) Scale(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Decimal expectedResult = fromValue + (numOfRecords - 1) * stepValue;
@@ -5196,25 +5760,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial number - errors found');
   }
 
-  @isTest //DEPRECATED
-  private static void sddlSerialNumberDEPRECATED_valid_expectSuccess() {
-    Integer numOfRecords = 201;
-    Decimal fromValue = 10;
-    Decimal stepValue = 2;
-
-    Test.startTest();
-    FObject obj = new FObject('Account');
-    obj.setDefinition('NumberOfEmployees', 'Serial From(10) Step(2) Scale(0)');
-    obj.insertRecords(true);
-    List<Account> records = (List<Account>)obj.getRecords();
-    Test.stopTest();
-
-    Decimal expectedResult = fromValue + (numOfRecords - 1) * stepValue;
-    Decimal actualResult = records[numOfRecords - 1].NumberOfEmployees;
-    System.assertEquals(expectedResult, actualResult, 'serial number - errors found');
-  }
-
-  @isTest
+  @IsTest
   private static void sddlSerialDate_positiveStep_expectSuccess() {
     Integer numOfRecords = 100;
     Date fromValue = Date.newInstance(2018, 1, 1);
@@ -5224,7 +5770,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDate__c', 'Serial Type(Date) From(2018-01-01) Step(5)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Date expectedResult = fromValue.addDays((numOfRecords - 1) * stepValue);
@@ -5232,7 +5778,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial date - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDate_negativeStep_expectSuccess() {
     Integer numOfRecords = 100;
     Date fromValue = Date.newInstance(2018, 1, 1);
@@ -5242,7 +5788,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDate__c', 'Serial Type(Date) From(2018-01-01) Step(-5)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Date expectedResult = fromValue.addDays((numOfRecords - 1) * stepValue);
@@ -5250,7 +5796,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial date - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDate_fromDatetime_expectSuccess() {
     Integer numOfRecords = 100;
     Date fromValue = Date.newInstance(2018, 1, 1);
@@ -5260,7 +5806,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDate__c', 'Serial Type(Date) From(2018-01-01 02:02:02) Step(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Date expectedResult = fromValue.addDays((numOfRecords - 1) * stepValue);
@@ -5268,7 +5814,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial date - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDate_decimalStep_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -5282,7 +5828,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial date - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDatetPositiveIntegerStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1);
@@ -5292,7 +5838,7 @@ public class FObjectTest {
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01) Step(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * 2);
@@ -5300,17 +5846,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDateNegativeIntegerStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1);
-    Decimal stepValue = -2;
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01) Step(-2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * (-2));
@@ -5318,17 +5863,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDatePositiveDecimalStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1);
-    Decimal stepValue = 2.2;
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01) Step(2.2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * 2);
@@ -5338,17 +5882,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDatetNegativeDecimalStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1);
-    Decimal stepValue = -2.2;
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01) Step(-2.2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * (-2));
@@ -5358,17 +5901,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDatetimePositiveIntegerStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1, 2, 2, 2);
-    Decimal stepValue = 2;
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01 02:02:02) Step(2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * 2);
@@ -5376,17 +5918,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDatetimeNegativeIntegerStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1, 2, 2, 2);
-    Decimal stepValue = -2;
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01 02:02:02) Step(-2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * (-2));
@@ -5394,17 +5935,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDatetimePositiveDecimalStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1, 2, 2, 2);
-    Decimal stepValue = 2.2;
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01 02:02:02) Step(2.2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * 2);
@@ -5414,17 +5954,16 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlSerialDatetime_fromDatetimeNegativeDecimalStep_expectSuccess() {
     Integer numOfRecords = 100;
     Datetime fromValue = Datetime.newInstance(2018, 1, 1, 2, 2, 2);
-    Decimal stepValue = -2.2;
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c', numOfRecords);
     obj.setDefinition('TestDatetime__c', 'Serial Type(Datetime) From(2018-01-01 02:02:02) Step(-2.2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Datetime expectedResult = fromValue.addDays((numOfRecords - 1) * (-2));
@@ -5434,14 +5973,14 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'serial datetime - errors found');
   }
 
-@isTest
+  @IsTest
   private static void sddlStaticLookupForceea_createLookupRecords_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    obj.setDefinition('TestLookup__c', 'static lookup(fObjectTwo__c) ' +
-      'field(testPicklistA__c) value(a1) source(Forceea)');
+    obj.setDefinition('TestLookup__c', 'static lookup(FObjectTwo__c) ' +
+      'field(TestPicklistA__c) value(a1) source(Forceea)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // get the TestLookup__c of the first FObjectOne__c record
@@ -5457,7 +5996,11 @@ public class FObjectTest {
 
     // verify that the FObjectTwo__c record of lookupId has TestText__c = 'a1'
     FObjectTwo__c refObjectRecord = [
-      SELECT Id, TestPicklistA__c FROM FObjectTwo__c WHERE Id = :lookupId LIMIT 1];
+      SELECT Id, TestPicklistA__c
+      FROM FObjectTwo__c
+      WHERE Id = :lookupId
+      LIMIT 1
+    ];
     if (refObjectRecord.TestPicklistA__c != 'a1') {
       errors++;
     }
@@ -5467,7 +6010,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStaticLookupForceea_lookupRecordsExist_expectSuccess() {
     String whereValue = 'Hot';
     Integer errors = 0;
@@ -5475,14 +6018,14 @@ public class FObjectTest {
     Test.startTest();
     FObject obj1 = new FObject('FObjectTwo__c');
     obj1.setDefinition('TestText__c', 'static value(' + whereValue + ')');
-    List<FObjectOne__c> records1 = (List<FObjectOne__c>)obj1.getRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
     obj1.insertRecords(true);
 
     FObject obj2 = new FObject('FObjectOne__c');
     obj2.setDefinition('TestLookup__c', 'static lookup(FObjectTwo__c) ' +
       'field(TestText__c) value(' + whereValue + ') source(Forceea)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
 
     // get the TestLookup__c of the first FObjectOne__c record
@@ -5497,8 +6040,11 @@ public class FObjectTest {
 
     // verify that the FObjectTwo__c record of lookupId has TestText__c = 'Hot'
     FObjectTwo__c refObjectRecord = [
-      SELECT Id, TestText__c FROM FObjectTwo__c
-      WHERE Id = :lookupId LIMIT 1];
+      SELECT Id, TestText__c
+      FROM FObjectTwo__c
+      WHERE Id = :lookupId
+      LIMIT 1
+    ];
     if (refObjectRecord.TestText__c != whereValue) {
       errors++;
     }
@@ -5508,7 +6054,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStaticLookupSalesforce_valid_expectSuccess() {
     String whereValue = 'Hot';
     Integer errors = 0;
@@ -5516,14 +6062,14 @@ public class FObjectTest {
     Test.startTest();
     FObject obj1 = new FObject('FObjectTwo__c');
     obj1.setDefinition('TestText__c', 'static value(' + whereValue + ')');
-    List<FObjectOne__c> records1 = (List<FObjectOne__c>)obj1.getRecords();
+    List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
     obj1.insertRecords(true);
 
     FObject obj2 = new FObject('FObjectOne__c');
     obj2.setDefinition('TestLookup__c', 'static lookup(FObjectTwo__c) ' +
       'field(TestText__c) value(' + whereValue + ') source(Salesforce)');
     obj2.insertRecords(true);
-    List<FObjectOne__c> records2 = (List<FObjectOne__c>)obj2.getRecords();
+    List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
     Test.stopTest();
 
     // get the TestLookup__c of the first FObjectOne__c record
@@ -5538,8 +6084,11 @@ public class FObjectTest {
 
     // verify that the FObjectTwo__c record of lookupId has TestText__c = 'Hot'
     FObjectTwo__c refObjectRecord = [
-      SELECT Id, TestText__c FROM FObjectTwo__c
-      WHERE Id = :lookupId LIMIT 1];
+      SELECT Id, TestText__c
+      FROM FObjectTwo__c
+      WHERE Id = :lookupId
+      LIMIT 1
+    ];
     if (refObjectRecord.TestText__c != whereValue) {
       errors++;
     }
@@ -5549,7 +6098,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStaticLookup_insertedGroupRecords_expectSuccess() {
     Test.startTest();
     // insert FObjectTwo__c records for group B
@@ -5579,13 +6128,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStaticLookup_invalidLookup_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'static lookup(FObjectTwo) ' +
       'field(TestPicklistA__c) value(a1) source(forceea)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid lookup object [FObjectTwo] in definition [static lookup(FObjectTwo) ' +
@@ -5594,27 +6143,27 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'static lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStaticLookup_nullLookup_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestLookup__c', 'static lookup() field(TestPicklistA__c) value(a1) source(forceea)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid syntax in definition [static lookup() field(TestPicklistA__c) value(a1) ' +
-        'source(forceea)] of field [TestLookup__c]';
+      'source(forceea)] of field [TestLookup__c]';
     String actualResult = obj.getErrors().get('TestLookup__c').get(0);
     System.assertEquals(expectedResult, actualResult, 'static lookup - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_recordType_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'static value(RecordTypeA)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     // get the record type ID of the first record
@@ -5640,13 +6189,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_boolean_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestCheckbox__c', 'static value(true)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5661,13 +6210,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_date_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDate__c', 'static value(2018-10-01)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5683,13 +6232,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_datetime_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDatetime__c', 'static value(2018-10-01 01:01:01)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5705,13 +6254,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_decimal_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestDecimal__c', 'static value(100000.11)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5726,13 +6275,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_integer_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestInteger__c', 'static value(10)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5747,13 +6296,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_stringForTextField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('testText__c', 'static value(Sales)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5768,13 +6317,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_validValueForRestrictedIndependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'static value(a1)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5789,13 +6338,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_invalidValueForRestrictedIndependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistA__c', 'static value(a10)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5810,13 +6359,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_validValueForRestrictedDependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistB__c', 'static value(b2)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5831,13 +6380,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_invalidValueForRestrictedDependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('TestPicklistB__c', 'static value(b10)');
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5852,13 +6401,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_validValueForUnrestrictedIndependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectTwo__c');
     obj.setDefinition('TestPicklistEUnrestricted__c', 'static value(e1)');
     obj.insertRecords(true);
-    List<FObjectTwo__c> records = (List<FObjectTwo__c>)obj.getRecords();
+    List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5873,13 +6422,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_invalidValueForUnrestrictedIndependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectTwo__c');
     obj.setDefinition('TestPicklistEUnrestricted__c', 'static value(a10)');
     obj.insertRecords(true);
-    List<FObjectTwo__c> records = (List<FObjectTwo__c>)obj.getRecords();
+    List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5894,13 +6443,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_validValueForUnrestrictedDependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectTwo__c');
     obj.setDefinition('TestPicklistFUnrestricted__c', 'static value(f2)');
     obj.insertRecords(true);
-    List<FObjectTwo__c> records = (List<FObjectTwo__c>)obj.getRecords();
+    List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5915,13 +6464,13 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_invalidValueForUnrestrictedDependentPicklistField_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectTwo__c');
     obj.setDefinition('TestPicklistFUnrestricted__c', 'static value(a10)');
     obj.insertRecords(true);
-    List<FObjectTwo__c> records = (List<FObjectTwo__c>)obj.getRecords();
+    List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -5936,7 +6485,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_controllingFieldIsCheckbox_expectSuccess() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -5960,12 +6509,12 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'random static - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_invalidRecordType_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
     obj.setDefinition('RecordTypeId', 'static value(RecordTypeAX)');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid record type [RecordTypeAX] for definition [static value(RecordTypeAX)]';
@@ -5973,12 +6522,12 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'static value - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void sddlStatic_twoArguments_expectFailure() {
     Test.startTest();
     FObject obj = new FObject(' FObjectOne__c ');
     obj.setDefinition('testtext__c', 'Static Value(One, "Two and Three")');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     String expectedResult = 'Invalid definition [Static Value(One, "Two and Three")] of field [TestText__c]';
@@ -5988,7 +6537,7 @@ public class FObjectTest {
 
   /* method setDefinition */
 
-  @isTest
+  @IsTest
   private static void setDefinition_definitionsWithSpacesAndCase_expectSuccess() {
     String field1 = 'TestDecimal__c';
     String field2 = 'TestText__c';
@@ -6009,7 +6558,7 @@ public class FObjectTest {
     obj.setDefinition(field4, definition4);
     obj.setDefinition(field5, definition5);
     obj.insertRecords(true);
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     Integer errors = 0;
@@ -6034,7 +6583,7 @@ public class FObjectTest {
     System.assertEquals(0, errors, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingOpeningParenthesis1_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6047,7 +6596,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingOpeningParenthesis2_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6060,7 +6609,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingOpeningParenthesis3_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6073,7 +6622,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingOpeningParenthesis4_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6086,7 +6635,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingClosingParenthesis1_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6099,7 +6648,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingClosingParenthesis2_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6112,7 +6661,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingClosingParenthesis3_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6125,7 +6674,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingClosingParenthesis4_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6138,7 +6687,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingComma1_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6151,7 +6700,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingComma2_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6164,7 +6713,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingOpeningingDoubleQuotes1_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6177,7 +6726,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingOpeningingDoubleQuotes2_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6190,7 +6739,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingOpeningingDoubleQuotes3_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6203,7 +6752,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingClosingDoubleQuotes1_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6216,7 +6765,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingClosingDoubleQuotes2_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6229,7 +6778,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_missingClosingDoubleQuotes3_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6242,7 +6791,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidComma_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6255,7 +6804,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidDoubleQuotes1_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6268,7 +6817,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidDoubleQuotes2_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6281,7 +6830,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidDoubleQuotes3_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6294,7 +6843,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidDoubleQuotes4_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6307,7 +6856,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidDoubleQuotes5_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6320,7 +6869,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidDoubleQuotes6_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6333,7 +6882,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_fieldIsBlank_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6346,7 +6895,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_fieldIsInvalid_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6359,7 +6908,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidCommand_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6372,7 +6921,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidParameter1_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6385,7 +6934,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidParameter2_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6398,7 +6947,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidParameter3_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6411,7 +6960,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidParameter4_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6424,7 +6973,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidParameter5_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6437,7 +6986,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_invalidParameter6_expectFailure() {
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
@@ -6450,7 +6999,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForCheckbox_expectFailure() {
     String fieldApiName = 'TestCheckbox__c';
 
@@ -6466,7 +7015,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForCombobox_expectSuccess() {
     String fieldApiName = 'Subject';
 
@@ -6485,7 +7034,7 @@ public class FObjectTest {
   }
 
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForCurrency_expectFailure() {
     String fieldApiName = 'TestCurrency__c';
 
@@ -6501,7 +7050,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForDate_expectFailure() {
     String fieldApiName = 'TestDate__c';
 
@@ -6517,7 +7066,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForDatetime_expectFailure() {
     String fieldApiName = 'TestDatetime__c';
 
@@ -6533,7 +7082,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForEmail_expectSuccess() {
     String fieldApiName = 'TestEmail__c';
 
@@ -6547,7 +7096,7 @@ public class FObjectTest {
     System.assertEquals(true, obj.getErrors().isEmpty(), 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForLookup_expectFailure() {
     String fieldApiName = 'TestLookup__c';
 
@@ -6563,7 +7112,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForMultiPicklist_expectFailure() {
     String fieldApiName = 'TestMultiPicklistA__c';
 
@@ -6579,7 +7128,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForNumber_expectFailure() {
     String fieldApiName = 'TestDecimal__c';
 
@@ -6595,7 +7144,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-   @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForPercent_expectFailure() {
     String fieldApiName = 'TestPercent__c';
 
@@ -6611,7 +7160,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForPhone_expectSuccess() {
     String fieldApiName = 'TestPhone__c';
 
@@ -6625,7 +7174,7 @@ public class FObjectTest {
     System.assertEquals(true, obj.getErrors().isEmpty(), 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForPicklist_expectFailure() {
     String fieldApiName = 'TestPicklistA__c';
 
@@ -6641,7 +7190,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForText_expectSuccess() {
     String fieldApiName = 'TestText__c';
 
@@ -6655,7 +7204,7 @@ public class FObjectTest {
     System.assertEquals(true, obj.getErrors().isEmpty(), 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForTextArea_expectSuccess() {
     String fieldApiName = 'TestTextArea__c';
 
@@ -6669,7 +7218,7 @@ public class FObjectTest {
     System.assertEquals(true, obj.getErrors().isEmpty(), 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForTextAreaLong_expectSuccess() {
     String fieldApiName = 'TestTextAreaLong__c';
 
@@ -6683,7 +7232,7 @@ public class FObjectTest {
     System.assertEquals(true, obj.getErrors().isEmpty(), 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForTextAreaRich_expectSuccess() {
     String fieldApiName = 'TestTextAreaRich__c';
 
@@ -6697,7 +7246,7 @@ public class FObjectTest {
     System.assertEquals(true, obj.getErrors().isEmpty(), 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForTime_expectFailure() {
     String fieldApiName = 'TestTime__c';
 
@@ -6713,7 +7262,7 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinition - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinition_multipleDefinitionsForUrl_expectSuccess() {
     String fieldApiName = 'TestUrl__c';
 
@@ -6730,13 +7279,13 @@ public class FObjectTest {
 
   /* method setDefinitionFromField */
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_accountName_expectSuccess() {
     String fieldApiName = 'Name';
 
     Test.startTest();
     FObject obj = new FObject('Account');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     obj.setDefinitionFromField(field);
@@ -6748,13 +7297,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_contactFirstName_expectSuccess() {
     String fieldApiName = 'FirstName';
 
     Test.startTest();
     FObject obj = new FObject('Contact');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     obj.setDefinitionFromField(field);
@@ -6765,13 +7314,32 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  //@isTest
+  //private static void setDefinitionFromField_firstAndLastHaveSameGroup_expectSuccess() {
+  //  // check that the auto-generated definition for names has the group argument
+  //  // of the first "pair" name
+  //  String fieldApiName = 'FirstName';
+
+  //  Test.startTest();
+  //  FObject obj = new FObject('Contact');
+  //  FObject.Field field = new FObject.Field();
+  //  field.fieldName = fieldApiName;
+  //  field.fieldApiName = fieldApiName;
+  //  obj.setDefinitionFromField(field);
+  //  Test.stopTest();
+
+  //  String expectedResult = 'random type(firstname) group(name)';
+  //  String actualResult = obj.getFieldDefinitions(fieldApiName).get(0);
+  //  System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
+  //}
+
+  @IsTest
   private static void setDefinitionFromField_contactLastName_expectSuccess() {
     String fieldApiName = 'LastName';
 
     Test.startTest();
     FObject obj = new FObject('Contact');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     obj.setDefinitionFromField(field);
@@ -6782,13 +7350,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_leadCompany_expectSuccess() {
     String fieldApiName = 'Company';
 
     Test.startTest();
     FObject obj = new FObject('Lead');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     obj.setDefinitionFromField(field);
@@ -6800,13 +7368,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_leadFirstName_expectSuccess() {
     String fieldApiName = 'FirstName';
 
     Test.startTest();
     FObject obj = new FObject('Lead');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     obj.setDefinitionFromField(field);
@@ -6817,13 +7385,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_leadLastName_expectSuccess() {
     String fieldApiName = 'LastName';
 
     Test.startTest();
     FObject obj = new FObject('Lead');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     obj.setDefinitionFromField(field);
@@ -6834,13 +7402,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_opportunityName_expectSuccess() {
-     String fieldApiName = 'Name';
+    String fieldApiName = 'Name';
 
     Test.startTest();
     FObject obj = new FObject('Opportunity');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     obj.setDefinitionFromField(field);
@@ -6852,13 +7420,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_boolean_expectSuccess() {
     String fieldApiName = 'TestCheckbox__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Boolean;
@@ -6870,13 +7438,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_combobox_expectSuccess() {
     String fieldApiName = 'Subject';
 
     Test.startTest();
     FObject obj = new FObject('Event');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Combobox;
@@ -6888,13 +7456,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_currency_expectSuccess() {
     String fieldApiName = 'TestCurrency__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Currency;
@@ -6906,13 +7474,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_date_expectSuccess() {
     String fieldApiName = 'TestDate__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Date;
@@ -6928,13 +7496,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_datetime_expectSuccess() {
     String fieldApiName = 'TestDatetime__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.DateTime;
@@ -6950,13 +7518,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_double_expectSuccess() {
     String fieldApiName = 'TestDecimal__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Double;
@@ -6968,13 +7536,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_email_expectSuccess() {
     String fieldApiName = 'TestEmail__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Email;
@@ -6986,13 +7554,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_integer_expectSuccess() {
     String fieldApiName = 'TestInteger__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Integer;
@@ -7004,13 +7572,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_multiPicklist_expectSuccess() {
     String fieldApiName = 'TestMultiPicklistA__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.MultiPicklist;
@@ -7022,13 +7590,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_percent_expectSuccess() {
     String fieldApiName = 'TestPercent__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Percent;
@@ -7040,13 +7608,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_phone_expectSuccess() {
     String fieldApiName = 'TestPhone__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Phone;
@@ -7054,18 +7622,18 @@ public class FObjectTest {
     Test.stopTest();
 
     String expectedResult = 'static value(21011) random type(number) from(11111) to(99999) scale(0)';
-    String actualResult = obj.getFieldDefinitions(fieldApiName).get(0) + ' '  +
+    String actualResult = obj.getFieldDefinitions(fieldApiName).get(0) + ' ' +
       obj.getFieldDefinitions(fieldApiName).get(1);
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_picklist_expectSuccess() {
     String fieldApiName = 'TestPicklistA__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.MultiPicklist;
@@ -7077,15 +7645,17 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_reference_expectSuccess() {
     String fieldApiName = 'TestLookup__c';
     Schema.sObjectType parentType = Schema.FObjectTwo__c.getSObjectType();
-    List<Schema.sObjectType> parents = new List<Schema.sObjectType> { parentType };
+    List<Schema.sObjectType> parents = new List<Schema.sObjectType>{
+      parentType
+    };
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Reference;
@@ -7098,13 +7668,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_string_expectSuccess() {
     String fieldApiName = 'TestText__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.length = 20;
@@ -7117,13 +7687,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_textArea_expectSuccess() {
     String fieldApiName = 'TestTextArea__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.TextArea;
@@ -7135,13 +7705,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_time_expectSuccess() {
     String fieldApiName = 'TestTime__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Time;
@@ -7153,13 +7723,13 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setDefinitionFromField_url_expectSuccess() {
     String fieldApiName = 'TestUrl__c';
 
     Test.startTest();
     FObject obj = new FObject('FObjectOne__c');
-    FObject.field field = new FObject.field();
+    FObject.Field field = new FObject.Field();
     field.fieldName = fieldApiName;
     field.fieldApiName = fieldApiName;
     field.dataType = Schema.DisplayType.Url;
@@ -7171,29 +7741,44 @@ public class FObjectTest {
     System.assertEquals(expectedResult, actualResult, 'setDefinitionFromField - errors found');
   }
 
-  @isTest
+  @IsTest
   private static void setVerbose_valid_expectSuccess() {
     Test.startTest();
     FObject.setGlobalVerbose('none');
     FObject obj = new FObject('FObjectOne__c', 10);
     obj.setVerbose('none');
-    List<FObjectOne__c> records = (List<FObjectOne__c>)obj.getRecords();
+    List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
 
     FObject.setGlobalVerbose('info');
     obj = new FObject('FObjectOne__c', 10);
     obj.setVerbose('info');
-    records = (List<FObjectOne__c>)obj.getRecords();
+    records = (List<FObjectOne__c>) obj.getRecords();
 
     FObject.setGlobalVerbose('debug');
     obj = new FObject('FObjectOne__c', 10);
     obj.setVerbose('debug');
-    records = (List<FObjectOne__c>)obj.getRecords();
+    records = (List<FObjectOne__c>) obj.getRecords();
     Test.stopTest();
 
     System.assertEquals(true, obj.getErrors().isEmpty(), 'setDefinition - errors found for multiple definitions');
   }
 
   /* HELPER METHODS */
+
+  //private static List<Database.SaveResult> insertRecords(
+  //    String objectApiName, Integer numRecords, List<String> definitions, Boolean allOrNone) {
+  //  String fieldApiName = '';
+  //  String definitionString = '';
+  //  FObject obj = new FObject(objectApiName, numRecords);
+
+  //  for (String definition : definitions) {
+  //    fieldApiName = definition.substringBefore('@').trim();
+  //    definitionString = definition.substringAfter('@').trim();
+  //    obj.setDefinition(fieldApiName, definitionString);
+  //  }
+  //  Database.SaveResult[] results = obj.insertRecords(allOrNone);
+  //  return results;
+  //}
 
   /**
    * @description Validates the distribution of a field based on a specific list of String values.
@@ -7219,7 +7804,7 @@ public class FObjectTest {
     Integer counter = 0;
     Integer errors = 0;
     for (String actualResult : obj.getErrors().get(fieldApiName)) {
-      IF (!actualResult.startsWith('Invalid definition [')) {
+      if (!actualResult.startsWith('Invalid definition [')) {
         continue;
       }
       expectedResult = 'Invalid definition [' + invalidDefinitions[counter] + '] for the data type of field [' +
@@ -7352,7 +7937,7 @@ public class FObjectTest {
     // populate occurrencies map
     Datetime valueToDatetime;
     for (SObject record : records) {
-      valueToDatetime = (datetime)record.get(fieldName);
+      valueToDatetime = (Datetime) record.get(fieldName);
       if (valuesSet.contains(valueToDatetime)) {
         occurrenciesMap.put(valueToDatetime, occurrenciesMap.get(valueToDatetime) + 1);
       }
@@ -7414,14 +7999,14 @@ public class FObjectTest {
   }
 
   private static void loadNamesFromGreeceInGreek() {
-    femaleFirstNames = new Set<String> {
+    femaleFirstNames = new Set<String>{
       'Νάντια', 'Διονυσία', 'Τάνια', 'Αδαμαντία', 'Αλίκη', 'Βασιλική', 'Φανή', 'Καίτη', 'Χρύσα', 'Μάγδα', 'Ηλιάνα',
       'Όλγα', 'Γεωργία', 'Μαριάνθη', 'Άρτεμις', 'Άντζελα', 'Στέλλα', 'Ζωή', 'Ανθή', 'Ευθυμία', 'Αγγελική', 'Τόνια',
       'Ντίνα', 'Ρίτα', 'Ντόρα', 'Αλεξία', 'Παυλίνα', 'Ρένα', 'Σοφία', 'Στεφανία', 'Λένα', 'Τζίνα', 'Γιούλη', 'Νεκταρία',
       'Ρέα', 'Γιώτα', 'Λίζα', 'Ελένη', 'Άννα', 'Έλενα', 'Αικατερίνη', 'Ρούλα', 'Παναγιώτα',
       'Ευγενία', 'Εμμανουέλα', 'Μαριέττα', 'Μυρσίνη', 'Μαρκέλλα', 'Τριανταφυλλιά', 'Αφροδίτη'
     };
-    femaleLastNames = new Set<String> {
+    femaleLastNames = new Set<String>{
       'Βαλαέτη', 'Σφακάκη', 'Καλογιάννη', 'Παυλίδου', 'Οικονόμου', 'Ανέστου', 'Κολάρου', 'Θανασούλια', 'Μωραίτη',
       'Κανατούλα', 'Τσιλιδέλου', 'Ανάγνου', 'Μαρινέα', 'Πατέρου', 'Μυρτσίδου', 'Μποτονάκη', 'Μυλωνάκη', 'Αρβανίτη',
       'Κυριαζή', 'Πασχαλίδη', 'Καμηλιέρη', 'Παπαμιχάλη', 'Σούρτζη', 'Κωφοτόλη', 'Μακρίδου', 'Γιαννιού', 'Λεοτσάκου',
@@ -7445,13 +8030,13 @@ public class FObjectTest {
       'Ανδρεαδάκη', 'Κουτσοκέρη', 'Πούλιου', 'Παπατρύφων', 'Πιεράτου', 'Νεκταρίου', 'Μπάμπαλη', 'Κλωθάκη', 'Νταλάκα',
       'Πανέτσου', 'Φράνγκου', 'Χρυσάνη', 'Αλιφραγκή', 'Μητρέλλου', 'Μηλιώνη', 'Αθανασίου', 'Ριζούδη', 'Τζανετή'
     };
-    maleFirstNames = new Set<String> {
+    maleFirstNames = new Set<String>{
       'Αδάμ', 'Ευγένιος', 'Αλέκος', 'Νώντας', 'Φάνης', 'Αργύρης', 'Άλκης', 'Διαμαντής', 'Θάνος', 'Παύλος', 'Φίλιππος', 'Αλέξης', 'Γιώργος', 'Κώστας',
       'Μάρκος', 'Θωμάς', 'Νίκος', 'Δήμος', 'Θεοδόσης', 'Στάθης', 'Φώτης', 'Κυριάκος', 'Χάρης', 'Λάμπρος', 'Άγγελος', 'Πέτρος', 'Στράτος', 'Γρηγόρης',
       'Μανώλης', 'Τάσος', 'Μιχάλης', 'Αντώνης', 'Ανδρέας', 'Δημήτρης', 'Γιάννης', 'Βαγγέλης', 'Νικήτας', 'Ηλίας', 'Αχιλλέας', 'Σταύρος',
       'Παναγιώτης', 'Φαίδων', 'Σάββας', 'Βασίλης', 'Ορέστης', 'Νεκτάριος', 'Πάνος', 'Στέφανος', 'Θεόφιλος', 'Στέλιος'
     };
-    maleLastNames = new Set<String> {
+    maleLastNames = new Set<String>{
       'Ψαλτήρας', 'Κονδύλης', 'Μοσχοβής', 'Κολώνιας', 'Μουρίκης', 'Μερτύκας', 'Χαρατσής', 'Μανιάτης', 'Τσιλίκης', 'Ταπάκης', 'Μανίκας', 'Χάλαρης',
       'Πούρνος', 'Κυρίδης', 'Ρέμπελος', 'Θανασάς', 'Τρυφέρης', 'Παράσχος', 'Κουρελάς', 'Νταλάκας', 'Μπίλιας', 'Σκαφίδας', 'Ψυράκης', 'Πανούσης',
       'Χαλικάς', 'Προβατάς', 'Λουκέρης', 'Καρλάκης', 'Τσαμάτης', 'Σέρτσος', 'Πλυμένος', 'Κολόνιας', 'Ηλιάδης', 'Σουλελές', 'Μαγουλάς', 'Λαζάρου',
@@ -7473,14 +8058,14 @@ public class FObjectTest {
   }
 
   private static void loadNamesFromUnitesStatesInEnglish() {
-    femaleFirstNames = new Set<String> {
+    femaleFirstNames = new Set<String>{
       'Tracey', 'Amelia', 'Leah', 'Nicola', 'Theresa', 'Sophie', 'Olivia', 'Sally', 'Wendy', 'Fiona',
       'Deirdre', 'Jane', 'Lillian', 'Abigail', 'Ella', 'Claire', 'Lauren', 'Bernadette', 'Karen', 'Vanessa',
       'Grace', 'Alison', 'Rachel', 'Heather', 'Ava', 'Wanda', 'Natalie', 'Victoria', 'Joan', 'Dorothy',
       'Una', 'Rebecca', 'Donna', 'Emma', 'Sarah', 'Sonia', 'Samantha', 'Lily', 'Bella', 'Penelope', 'Julia',
       'Caroline', 'Felicity', 'Anne', 'Faith', 'Diane', 'Sue', 'Joanne', 'Kylie', 'Jasmine'
     };
-    femaleLastNames = new Set<String> {
+    femaleLastNames = new Set<String>{
       'Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor',
       'Anderson', 'Thomas', 'Jackson', 'White', 'Harris', 'Martin', 'Thompson', 'Garcia', 'Martinez',
       'Robinson', 'Clark', 'Rodriguez', 'Lewis', 'Lee', 'Walker', 'Hall', 'Allen', 'Young', 'Hernandez',
@@ -7502,7 +8087,7 @@ public class FObjectTest {
       'Bradley', 'Lane', 'Andrews', 'Ruiz', 'Harper', 'Fox', 'Riley', 'Armstrong', 'Carpenter', 'Weaver',
       'Greene', 'Lawrence', 'Elliott', 'Chavez', 'Sims', 'Austin', 'Peters', 'Kelley', 'Franklin', 'Lawson'
     };
-    maleFirstNames = new Set<String> {
+    maleFirstNames = new Set<String>{
       'Sebastian', 'Boris', 'Andrew', 'Paul', 'Jake', 'Edward', 'Neil', 'Ryan', 'Christian', 'Ian', 'Max',
       'Gavin', 'Matt', 'Jonathan', 'Nicholas', 'Adam', 'Frank', 'Brandon', 'Julian', 'Richard', 'Steven',
       'Colin', 'James', 'Trevor', 'Anthony', 'Victor', 'Nathan', 'Adrian', 'John', 'Joshua', 'Stewart',

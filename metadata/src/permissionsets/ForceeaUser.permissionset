@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Profile xmlns="http://soap.sforce.com/2006/04/metadata">
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <applicationVisibilities>
+        <application>Forceea</application>
+        <visible>true</visible>
+    </applicationVisibilities>
+    <applicationVisibilities>
+        <application>ForceeaLightning</application>
+        <visible>true</visible>
+    </applicationVisibilities>
     <classAccesses>
         <apexClass>FObject</apexClass>
         <enabled>true</enabled>
@@ -9,14 +17,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>ForceeaExamples</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>ForceeaException</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <custom>false</custom>
+    <description>Enable Forceea data factory framework</description>
     <fieldPermissions>
         <editable>true</editable>
         <field>FObjectFour__c.TestDecimal__c</field>
@@ -63,8 +67,18 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectOne__c.TestExternalId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FObjectOne__c.TestFormulaNumber__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectOne__c.TestGeolocation__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -149,6 +163,46 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FObjectTwo__c.TestCheckbox__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestCurrency__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestDate__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestDatetime__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestDecimal__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestEmail__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestPercent__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestPhone__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FObjectTwo__c.TestPicklistA__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -178,54 +232,18 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>ForceeaSetting__mdt.ShowDebugLog__c</field>
-        <readable>false</readable>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestTime__c</field>
+        <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>ForceeaSetting__mdt.UserMessage__c</field>
-        <readable>false</readable>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestUrl__c</field>
+        <readable>true</readable>
     </fieldPermissions>
-    <layoutAssignments>
-        <layout>FObjectFour__c-FObjectFour Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectOne__c-FObjectOne Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectOne__c-FObjectOne Layout</layout>
-        <recordType>FObjectOne__c.RecordTypeA</recordType>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectOne__c-FObjectOne Layout</layout>
-        <recordType>FObjectOne__c.RecordTypeB</recordType>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectOne__c-FObjectOne Layout</layout>
-        <recordType>FObjectOne__c.RecordTypeC</recordType>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectThree__c-FObjectThree Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectThree__c-FObjectThree Layout</layout>
-        <recordType>FObjectThree__c.RecordTypeA</recordType>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectTwo__c-FObjectTwo Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectTwo__c-FObjectTwo Layout</layout>
-        <recordType>FObjectTwo__c.RecordTypeA</recordType>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>FObjectTwo__c-FObjectTwo Layout</layout>
-        <recordType>FObjectTwo__c.RecordTypeB</recordType>
-    </layoutAssignments>
-    <layoutAssignments>
-        <layout>ForceeaSetting__mdt-Forceea Setting Layout</layout>
-    </layoutAssignments>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Forceea user</label>
+    <license>Salesforce</license>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -263,52 +281,47 @@
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <recordTypeVisibilities>
-        <default>true</default>
-        <personAccountDefault>true</personAccountDefault>
         <recordType>FObjectOne__c.RecordTypeA</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
     <recordTypeVisibilities>
-        <default>false</default>
         <recordType>FObjectOne__c.RecordTypeB</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
     <recordTypeVisibilities>
-        <default>false</default>
         <recordType>FObjectOne__c.RecordTypeC</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
     <recordTypeVisibilities>
-        <default>true</default>
-        <personAccountDefault>true</personAccountDefault>
         <recordType>FObjectThree__c.RecordTypeA</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
     <recordTypeVisibilities>
-        <default>true</default>
-        <personAccountDefault>true</personAccountDefault>
         <recordType>FObjectTwo__c.RecordTypeA</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
     <recordTypeVisibilities>
-        <default>false</default>
         <recordType>FObjectTwo__c.RecordTypeB</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
-    <tabVisibilities>
+    <recordTypeVisibilities>
+        <recordType>FObjectTwo__c.RecordTypeC</recordType>
+        <visible>true</visible>
+    </recordTypeVisibilities>
+    <tabSettings>
         <tab>FObjectFour__c</tab>
-        <visibility>DefaultOn</visibility>
-    </tabVisibilities>
-    <tabVisibilities>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FObjectOne__c</tab>
-        <visibility>DefaultOn</visibility>
-    </tabVisibilities>
-    <tabVisibilities>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FObjectThree__c</tab>
-        <visibility>DefaultOn</visibility>
-    </tabVisibilities>
-    <tabVisibilities>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FObjectTwo__c</tab>
-        <visibility>DefaultOn</visibility>
-    </tabVisibilities>
-</Profile>
+        <visibility>Visible</visibility>
+    </tabSettings>
+</PermissionSet>

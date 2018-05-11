@@ -4,14 +4,9 @@
     <columns>NAME</columns>
     <columns>RECORDTYPE</columns>
     <columns>TestText__c</columns>
-    <columns>TestTextRequired__c</columns>
-    <columns>TestTextArea__c</columns>
-    <columns>TestTextAreaLong__c</columns>
-    <columns>TestTextAreaRich__c</columns>
     <columns>TestPhone__c</columns>
     <columns>TestEmail__c</columns>
     <columns>TestUrl__c</columns>
-    <columns>TestExternalId__c</columns>
     <filterScope>Everything</filterScope>
     <label>Text fields</label>
 </ListView>

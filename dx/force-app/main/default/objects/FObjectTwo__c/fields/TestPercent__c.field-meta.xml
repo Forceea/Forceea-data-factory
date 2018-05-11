@@ -3,9 +3,9 @@
     <fullName>TestPercent__c</fullName>
     <externalId>false</externalId>
     <label>TestPercent</label>
-    <precision>7</precision>
+    <precision>8</precision>
     <required>false</required>
-    <scale>2</scale>
+    <scale>3</scale>
     <trackTrending>false</trackTrending>
     <type>Percent</type>
 </CustomField>

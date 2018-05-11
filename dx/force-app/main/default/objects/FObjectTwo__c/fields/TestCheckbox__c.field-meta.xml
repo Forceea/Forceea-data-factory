@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>TestPercent__c</fullName>
+    <fullName>TestCheckbox__c</fullName>
+    <defaultValue>false</defaultValue>
     <externalId>false</externalId>
-    <label>TestPercent</label>
-    <precision>7</precision>
-    <required>false</required>
-    <scale>2</scale>
+    <label>TestCheckbox</label>
     <trackTrending>false</trackTrending>
-    <type>Percent</type>
+    <type>Checkbox</type>
 </CustomField>

@@ -1,5 +1,5 @@
 /*
-  FORCEEA data factory framework (version 1.2.1)
+  FORCEEA data factory framework (version 1.3)
   Copyright (C) 2018 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -16,43 +16,44 @@
 
 /**
  * @description Forceea data factory framework
- * @version 1.2.1
+ * @version 1.3
  */
-global class FObject {
+public with sharing virtual class FObject {
 
   /* CONSTANTS */
 
-  private static final String VERSION = '1.2';
+  private static final String VERSION = '1.3';
   private static final String MESSSAGE_NAMES = 'Loaded first & last names from ';
   private static final String MESSSAGE_ADDRESSES = 'Loaded addresses from ';
   private static final String FAILURE_SYMBOL = '►';
-  private static final String SUCCESS_SYMBOL = '●';
+  public static final String SUCCESS_SYMBOL = '●';
   private static final String ERROR = 'error';
-  private static final String WARN = 'warn';
-  private static final String INFO = 'info';
-  private static final String DEBUG = 'debug';
-  private static final String FINE = 'fine';
-  private static final DetailedErrorLevel ERROR_LEVEL = DetailedErrorLevel.LEVEL_DEBUG;
+  public static final String WARN = 'warn';
+  public static final String INFO = 'info';
+  public static final String DEBUG = 'debug';
   private static final VerboseLevel VERBOSE_MODE = VerboseLevel.VERBOSE_NONE;
 
   /* ENUMS */
 
   private enum DefinitionTypeId {
-    RANDOM_STRING, RANDOM_TEXT, RANDOM_NUMBER,
+    RANDOM_STRING, RANDOM_TEXT, RANDOM_NUMBER, RANDOM_PHONE,
     RANDOM_DATE, RANDOM_DATETIME,
     RANDOM_PICKLIST, RANDOM_PICKLIST_EXCEPT,
     RANDOM_LIST_INTEGER, RANDOM_LIST_DECIMAL, RANDOM_LIST_STRING,
-    RANDOM_LIST_DATE, RANDOM_LIST_DATETIME, RANDOM_LIST_TIME, 
+    RANDOM_LIST_DATE, RANDOM_LIST_DATETIME, RANDOM_LIST_TIME,
     RANDOM_STREET, RANDOM_CITY, RANDOM_STATE, RANDOM_POSTALCODE, RANDOM_COUNTRY,
     RANDOM_EMAIL, RANDOM_BOOLEAN, RANDOM_URL, RANDOM_FIRSTNAME, RANDOM_LASTNAME,
     RANDOM_LOOKUP, RANDOM_LOOKUP_WHERE,
-    STATIC_INTEGER, STATIC_DECIMAL, STATIC_DATE, STATIC_DATETIME, STATIC_TIME, STATIC_STRING, STATIC_LOOKUP, 
-    SERIAL_NUMBER_DEPRECATED, SERIAL_NUMBER, SERIAL_DATE, SERIAL_DATETIME,
-    COPY_FIELD }
-  private enum DetailedErrorLevel { LEVEL_DEBUG, LEVEL_FINE }
-  private enum ValueType { TYPE_INTEGER, TYPE_DECIMAL, TYPE_STRING, TYPE_DATE, TYPE_DATETIME, TYPE_TIME,
-    TYPE_EMAIL, TYPE_URL, TYPE_PHONE, TYPE_LOOKUP }
-  private enum VerboseLevel { VERBOSE_NONE, VERBOSE_DEBUG, VERBOSE_INFO }
+    STATIC_INTEGER, STATIC_DECIMAL, STATIC_DATE, STATIC_DATETIME, STATIC_TIME, STATIC_STRING, STATIC_LOOKUP,
+    SERIAL_NUMBER, SERIAL_DATE, SERIAL_DATETIME,
+    COPY_FIELD, COPY_LOOKUP
+  }
+  private enum ValueType {
+    TYPE_INTEGER, TYPE_DECIMAL, TYPE_STRING, TYPE_DATE, TYPE_DATETIME, TYPE_TIME, TYPE_URL
+  }
+  private enum VerboseLevel {
+    VERBOSE_NONE, VERBOSE_DEBUG, VERBOSE_INFO
+  }
 
   /* STATIC COLLECTIONS */
 
@@ -60,51 +61,51 @@ global class FObject {
   @TestVisible
   private static List<FAddress> addressesLibrary = new List<FAddress>();
   // the valid script commands
-  private static List<String> commands = new List<String> { 'copy', 'random', 'static', 'serial' };
+  private static List<String> commands = new List<String>{
+    'copy', 'random', 'static', 'serial'
+  };
   // the defined cluster types
   private static List<DefinitionType> definitionTypes = new List<DefinitionType>();
   // the libraries for first names - key: gender, value: first names
   private static Map<String, List<String>> firstNamesLibraryMap = new Map<String, List<String>>();
   // the inserted records of all objects
   // key: objectApiName or objectApiName.groupName (lowercase), value: list of records
-  private static Map<String, List<SObject>> globalInsertedRecordsMap = new Map<String, List<SObject>>();
+  public static Map<String, List<SObject>> globalInsertedRecordsMap = new Map<String, List<SObject>>();
   // the field details of each declared FObject
   // key: object API name (lowercase), value: (key:field API name (lowercase), value: Field)
   private static Map<String, Map<String, Field>> globalObjectFieldsMap = new Map<String, Map<String, Field>>();
   // the libraries for last names - key: gender, value: last names
   private static Map<String, List<String>> lastNamesLibraryMap = new Map<String, List<String>>();
   // the valid script parameters
-  private static Set<String> parametersSet = new Set<String> {
-    'scale', 'except', 'field', 'from', 'group', 'include', 'lookup', 'maxlength', 'minlength',
-    'number', 'object', 'source', 'startwith', 'step', 'to', 'type', 'value', 'where' };
+  private static Set<String> parametersSet = new Set<String>{
+    'scale', 'except', 'field', 'format', 'from', 'group', 'include', 'lookup', 'maxlength', 'minlength',
+    'number', 'object', 'source', 'startwith', 'step', 'to', 'type', 'value', 'where'
+  };
   // the results of the Record types SOQL query
   private static List<RecordType> recordTypesQueryResults = new List<RecordType>();
   // the API names of all sObjects
   private static List<String> sObjectApiNames = new List<String>();
-  // DEPRECATED
-  global static Boolean DebugMode { get; set; }
 
   /* INSTANCE COLLECTIONS */
 
   // the addresses - key: address group, value: address
-  private Map<String, List<FAddress>> addressesMap = new Map<String, List<FAddress>>();
+  protected Map<String, List<FAddress>> addressesMap = new Map<String, List<FAddress>>();
   // the lastcreated object records
-  private List<SObject> createdRecords = new List<SObject>();
+  protected List<SObject> createdRecords = new List<SObject>();
   // the declared field definitions
-  private List<Definition> definitions = new List<Definition>();
+  protected List<Definition> definitions = new List<Definition>();
   // the definition errors
   private List<Error> errors = new List<Error>();
   // the fields with declared definitions
-  private Set<String> fieldsSet = new Set<String>();
-  private List<String> fields = new List<String>(); // is populated from fieldsSet
+  protected List<String> fields = new List<String>();
   // the FVM, each List<string> contains a field's values
   private List<List<String>> fieldValuesMatrix = new List<List<String>>();
   // the first & last names - key: name group, value: name
-  private Map<String, List<Name>> namesMap = new Map<String, List<Name>>();
+  protected Map<String, List<Name>> namesMap = new Map<String, List<Name>>();
   // all object fields - key: field API name (lowercase), value: field object
-  private Map<String, Field> objectFieldsMap = new Map<String, Field>();
+  public Map<String, Field> objectFieldsMap = new Map<String, Field>();
   // the records to be inserted
-  private List<SObject> recordsToInsert = new List<SObject>();
+  protected List<SObject> recordsToInsert = new List<SObject>();
   // the record types of this object - key: DeveloperName, value: Id)
   private Map<String, Id> recordTypesMap = new Map<String, Id>();
 
@@ -115,31 +116,25 @@ global class FObject {
   // the level of verbose mode
   private static VerboseLevel globalVerboseMode { get; set; }
   // the language in name fields and addresses
-  global static String language {
+  public static String language {
     get;
     set {
-      // reset libraries
-      FObject.firstNamesLibraryMap.clear();
-      FObject.lastNamesLibraryMap.clear();
-      FObject.addressesLibrary.clear();
+      resetLanguageLocality();
       language = value;
     }
   }
   // the locality in name fields and addresses
-  global static String locality {
+  public static String locality {
     get;
     set {
-      // reset libraries
-      FObject.firstNamesLibraryMap.clear();
-      FObject.lastNamesLibraryMap.clear();
-      FObject.addressesLibrary.clear();
+      resetLanguageLocality();
       locality = value;
     }
   }
   // the maximum number of error records to display
   private static Integer maxErrorRecordsToDisplay { get; set; }
   // if true, the process has no errors (valid)
-  global static Boolean processIsValid { get; private set; }
+  public static Boolean processIsValid { get; private set; }
   // the default number of records to create
   private static Integer recordsToCreate { get; set; }
   // the number of created records to display
@@ -150,13 +145,32 @@ global class FObject {
   private static Boolean streetNumberAfterStreet { get; set; }
   // the message to display when initializing the FObject
   private static String userMessage { get; set; }
+  // a pseudorandom number that is greater than or equal to 0.0 and less than 1.0
+  // DeviousBard https://github.com/DeviousBard/Salesforce
+  private static Double random {
+    get {
+      Integer bits = 32;
+      seed = (seed * 25214903917L + 11L) & ((1L << 48) - 1L);
+      Long uInt = (Long) (seed >>> (48 - bits));
+      return (Double) (((Double) uInt + 1.0) * 0.0000000002328306435454494);
+    }
+  }
+  // the seed of pseudo-random number generator
+  public static Long seed {
+    get;
+    set {
+      seed = (value ^ 25214903917L) & ((1L << 48) - 1L);
+    }
+  }
+  // the process is anynchronous
+  public static Boolean isAsync { get; set; }
 
   /* INSTANCE PROPERTIES */
 
   // true if all definitions are validated
   private Boolean definitionsAreValidated { get; set; }
   // exclude the lookup records with IsActive = false
-  global Boolean excludeInactiveLookupRecords { get; set; }
+  public Boolean excludeInactiveLookupRecords { get; set; }
   // true if found required fields
   private Boolean foundRequiredFields { get; set; }
   // the CPU limit time for the timer start and finish
@@ -170,20 +184,19 @@ global class FObject {
         return Limits.getCpuTime() - milestoneStartTime;
       }
     }
-    //set;
   }
   // true if new records must be created
-  private Boolean mustCreateNewRecords { get; set; }
+  protected Boolean mustCreateNewRecords { get; set; }
   // the user-defined object name
   private String objectName { get; set; }
   // the API object name
-  private String objectApiName { get; set; }
+  public String objectApiName { get; set; }
   // the number of the next record to be created
-  private Integer recordNumber { get; set; }
+  protected Integer recordNumber { get; set; }
   // the number of records to create
-  global Integer records { get; set; }
+  public Integer records { get; set; }
   // true if Forceea sets all equired fields
-  global Boolean setRequiredFields { get; set; }
+  public Boolean setRequiredFields { get; set; }
   // the object type
   private Schema.SObjectType sObjType { get; set; }
   // the level of verbose mode
@@ -207,7 +220,7 @@ global class FObject {
   }
 
   /**
-   * @description  A template for a valid cluster
+   * @description A template for a valid cluster
    *   Cluster Types are defined in static method setDefinitionTypes
    */
   private class ClusterType {
@@ -227,10 +240,10 @@ global class FObject {
   /**
    * @description A field definition, <definition> ::= <command> <script>, <script> ::= <cluster>[,...n]
    */
-  private class Definition {
+  public class Definition {
     String fieldName { get; set; } // the user-defined field name
-    String fieldApiName { get; set; }
-    String definitionString { get; set; } // the user-defined field definition
+    public String fieldApiName { get; set; }
+    public String definitionString { get; set; } // the user-defined field definition
     String command { get; set; } // the definition command
     String script { get; set; } // the definition script
     Boolean isSystemDeclared { get; set; } // false: declared by user, true: declared by Forceea
@@ -307,49 +320,41 @@ global class FObject {
     @TestVisible String country { get; set; }
 
     private FAddress(String street, String postalCode, String city, String state, String country) {
-      this.Street = street;
-      this.City = city;
-      this.PostalCode = postalCode;
-      this.State = state;
-      this.Country = country;
+      this.street = street;
+      this.city = city;
+      this.postalCode = postalCode;
+      this.state = state;
+      this.country = country;
     }
 
     private FAddress(FAddress address) {
-      this.Street = address.Street;
-      this.PostalCode = address.PostalCode;
-      this.City = address.City;
-      this.State = address.State;
-      this.Country = address.Country;
+      this.street = address.street;
+      this.city = address.city;
+      this.postalCode = address.postalCode;
+      this.state = address.state;
+      this.country = address.country;
     }
   }
 
   /**
-   * @description An Field object.
+   * @description A Field object.
    */
   @TestVisible
-  private class Field {
-    // the user-defined field name
-    public String fieldName { get; set; }
-    // the API field name
-    public String fieldApiName { get; set; }
-    // the field data type
+  public class Field {
+    private Boolean allowsMultipleDefinitions { get; set; }
+    private Boolean canHaveMultipleTypesAsParents { get; set; }
+    private String controllingFieldApiName { get; set; } // the API name of the controlling picklist field
     public Schema.DisplayType dataType { get; set; }
-    // the field is required when inserting/updating a record
-    Boolean isRequired { get; set; }
-    // accepts multiple field definitions
-    Boolean allowsMultipleDefinitions { get; set; }
-    // the field is a restricted picklist
-    Boolean isRestrictedPicklist { get; set; }
-    // the field can have multiple types of objects as parents
-    Boolean canHaveMultipleTypesAsParents { get; set; }
-    // for string fields, the maximum size of the field in Unicode characters
-    public Integer length { get; set; }
-    // the API name of the controlling picklist field
-    String controllingFieldApiName { get; set; }
-    // a list of Schema.sObjectType objects for the parent objects of this field
+    public String fieldApiName { get; set; } // the field API name
+    public String fieldName { get; set; } // the field API name in lowercase
+    public Boolean isAccessible { get; set; } // the current user can see this field
+    public Boolean isCreateable { get; set; } // can be created by the current user
+    private Boolean isRequired { get; set; } // is required when inserting/updating a record
+    private Boolean isRestrictedPicklist { get; set; }
+    private String label { get; set; } // the text label that is displayed next to the field in the user interface
+    public Integer length { get; set; } // for string fields, the maximum size
     public List<Schema.sObjectType> parents = new List<Schema.sObjectType>();
-    // the picklist values of a picklist field
-    List<Schema.PicklistEntry> picklistValues = new List<Schema.PicklistEntry>();
+    private List<Schema.PicklistEntry> picklistValues = new List<Schema.PicklistEntry>();
   }
 
   /**
@@ -386,9 +391,10 @@ global class FObject {
   static {
     // get Forceea settings
     List<ForceeaSetting__mdt> forceeaSettings = [
-      SELECT DeveloperName, RecordsToCreate__c, RecordsToDisplay__c, 
+      SELECT DeveloperName, RecordsToCreate__c, RecordsToDisplay__c,
         MaxErrorRecordsToDisplay__c, ShowDebugLog__c, UserMessage__c
-      FROM ForceeaSetting__mdt];
+      FROM ForceeaSetting__mdt
+    ];
 
     // get the Default settings
     ForceeaSetting__mdt defaultSettings = new ForceeaSetting__mdt();
@@ -400,15 +406,19 @@ global class FObject {
     }
 
     // set settings
+
     FObject.globalVerboseMode = VERBOSE_MODE;
+    FObject.processIsValid = true;
+
     if (defaultSettings == new ForceeaSetting__mdt()) { // there is no Default settings record
-      FObject.forceeaStaticDebug(WARN, 'FORCEEA Found no Default settings');
       FObject.processIsValid = false;
+
       FObject.recordsToCreate = 201;
       FObject.recordsToDisplay = 20;
       FObject.maxErrorRecordsToDisplay = 20;
       FObject.showDebugLog = true;
       FObject.userMessage = '';
+      FObject.forceeaStaticDebug(WARN, 'FORCEEA Found no Default settings');
     } else {
       FObject.recordsToCreate = defaultSettings.RecordsToCreate__c.intValue();
       FObject.recordsToDisplay = defaultSettings.RecordsToDisplay__c.intValue();
@@ -440,11 +450,13 @@ global class FObject {
       FObject.sObjectApiNames.add(sot.getDescribe().getName());
     }
 
-    FObject.forceeaStaticDebug(INFO, '===     v' + VERSION + '     ===', true);
+    // set the PRNG seed
+    FObject.seed = Datetime.now().getTime();
+
+    FObject.forceeaStaticDebug(INFO, '==== v' + VERSION + ' =====', true);
     if (String.isNotBlank(FObject.userMessage)) {
       FObject.forceeaStaticDebug(INFO, FObject.userMessage, true);
     }
-    FObject.forceeaStaticDebug(INFO, '>> Initialized settings for FObject in ' + Limits.getCpuTime() + ' ms');
   }
 
   // instance initialization
@@ -455,16 +467,17 @@ global class FObject {
 
   /* CONSTRUCTORS */
 
-  global FObject(String objectName) {
+  public FObject(String objectName) {
     this(objectName, 0);
   }
 
-  global FObject(String objectName, Integer records) {
+  public FObject(String objectName, Integer records) {
     FObject.processIsValid = true;
+    FObject.isAsync = false;
+
     String thisObjectName = objectName.trim();
     String userObjectName = thisObjectName;
-
-    String objectApiName = getObjectApiName(thisObjectName);
+    String objectApiName = FObject.getObjectApiName(thisObjectName);
 
     if (String.isBlank(objectApiName)) { // object name is invalid
       FObject.processIsValid = false;
@@ -478,7 +491,7 @@ global class FObject {
     this.objectName = thisObjectName.toLowerCase();
 
     // check the number of records
-    if (records < 0) { 
+    if (records < 0) {
       addError(objectApiName, 'Invalid number of records for object [' + objectApiName + ']');
       if (processMustTerminate()) {
         return;
@@ -497,8 +510,7 @@ global class FObject {
     this.willValidateFieldDefinitionsMessageIsDisplayed = false;
     this.recordNumber = 1;
 
-    FObject.forceeaStaticDebug(INFO, SUCCESS_SYMBOL + SUCCESS_SYMBOL + SUCCESS_SYMBOL +
-      ' Object [' + this.objectApiName + '] ' + SUCCESS_SYMBOL + SUCCESS_SYMBOL + SUCCESS_SYMBOL, true);
+    FObject.forceeaStaticDebug(INFO, '=== Object [' + this.objectApiName + '] ===', true);
 
     // get object type
     this.sObjType = Schema.getGlobalDescribe().get(this.objectApiName);
@@ -512,14 +524,9 @@ global class FObject {
     }
 
     if (!FObject.globalObjectFieldsMap.containsKey(this.objectApiName.toLowerCase())) { // if object is not defined
-      FObject.setSObject(this.objectApiName); // store object's field details to global fields map
+      FObject.setObject(this.objectApiName); // store object's field details to global fields map
     }
     this.objectFieldsMap = FObject.globalObjectFieldsMap.get(this.objectApiName.toLowerCase()); // get stored fields details
-   
-    // reset milestone timer
-    FObject.forceeaStaticDebug(INFO, '>> Initialized settings for object [' + this.objectApiName + '] in ' +
-    this.milestoneDuration +  ' ms. Transaction duration: ' + Limits.getCpuTime() + ' ms', true);
-    this.milestoneStartTime = Limits.getCpuTime();
   }
 
   /* METHODS */
@@ -530,7 +537,7 @@ global class FObject {
    * @param errorMessage The error message.
    * @return None.
    */
-  private void addError(String errorId, String errorMessage) {
+  protected void addError(String errorId, String errorMessage) {
     this.errors.add(new Error(errorId, errorMessage));
     FObject.processIsValid = false;
     System.debug(LoggingLevel.ERROR, 'FORCEEA ' + FAILURE_SYMBOL + ' ' + errorMessage);
@@ -542,10 +549,10 @@ global class FObject {
    * @param fieldValues The list of field values.
    * @return None.
    */
-  private void addToFieldValuesMatrix(String fieldApiName, List<String> fieldValues) {
+  protected void addToFieldValuesMatrix(String fieldApiName, List<String> fieldValues) {
     Integer counter1 = 0;
 
-    for (String field : this.fieldsSet) { // for each defined field
+    for (String field : this.fields) { // for each defined field
       if (field == fieldApiName) { // when field API name matches
         // for each value in field's value list
         for (Integer counter2 = 0; counter2 < this.records; counter2++) {
@@ -582,7 +589,6 @@ global class FObject {
     if (countOfParameter != 1) {
       return false;
     }
-
 
     // check if cluster value is valid
     if (valueIsValid(clusterType, definition.clusters[index])) {
@@ -638,47 +644,18 @@ global class FObject {
   }
 
   /**
-   * @description Creates records using the declared field definitions.
-   * @param None.
-   * @return None.
-   */
-  global void createRecords() {
-    this.mustCreateNewRecords = true;
-    createNewRecords();
-  }
-
-  /**
-   * @description Creates records starting with the record with a specific ID.
-   * @param recordNumber The number of the next record to be created.
-   * @return None.
-   */
-  global void createRecords(Integer recordNumber) {
-    this.mustCreateNewRecords = true;
-
-    if (recordNumber <= 0) {
-      addError(objectApiName, 'Invalid record number in method createRecords');
-      if (processMustTerminate()) {
-        return;
-      }
-    } else {
-      this.recordNumber = recordNumber;
-    }
-    createNewRecords();
-  }
-
-  /**
-   * @description Creates object records using the field definitions.
-   * @return None.
-   */
-  private void createNewRecords() {
+  * @description Creates object records using the field definitions.
+  * @return None.
+  */
+  protected virtual void createNewRecords() {
     if (processMustTerminate() || !this.mustCreateNewRecords) {
       return;
     }
 
     // clear the list of previously created records
     this.createdRecords.clear();
-    this.namesMap.clear();
-    this.addressesMap.clear();
+    this.namesMap.clear(); // TODO must clear?
+    this.addressesMap.clear(); // TODO must clear?
 
     // check if must create the definitions of required fields
     setDefinitionOfRequiredFields();
@@ -690,29 +667,35 @@ global class FObject {
     }
 
     resetMilestoneTimer('Validated definitions');
-    
-    this.fields = new List<String>(this.fieldsSet);
 
     // populate the Field Values Matrix
     initializeFieldValuesMatrix();
+
     forceeaDebug(DEBUG, 'Creating records for object [' + this.objectApiName + ']');
 
     Integer numberOfFieldsWithData = 0;
-    for (Definition def : this.definitions) { // for each definition
-      List<String> fieldValues = getFieldValues(def); // get field values from definition
-      if (processMustTerminate()) {
-        return;
-      }
 
-      if (!fieldValues.isEmpty()) { // if field values are populated
-        // add the field values to FVM
-        addToFieldValuesMatrix(def.fieldApiName, fieldValues);
-        forceeaDebug(DEBUG, SUCCESS_SYMBOL + ' Created data for field [' + def.fieldApiName +
-          '] with definition [' + def.DefinitionString + ']');
-        numberOfFieldsWithData++;
-      } else { // do not add field values to FVM
-        forceeaDebug(WARN, 'Did not create data for field [' + def.fieldApiName +
-          '] with definition [' + def.DefinitionString + ']');
+    for (String field : this.fields) { // for each field
+      for (Definition def : this.definitions) { // for each definition
+        if (field != def.fieldApiName) {
+          continue; // go to next defintion if this defintion is not assigned to this field
+        }
+
+        List<String> fieldValues = createFieldValues(def); // get field values from definition
+        if (processMustTerminate()) {
+          return;
+        }
+
+        if (!fieldValues.isEmpty()) { // if field values are populated
+          // add the field values to FVM
+          addToFieldValuesMatrix(def.fieldApiName, fieldValues);
+          forceeaDebug(DEBUG, SUCCESS_SYMBOL + ' Created data for field [' + def.fieldApiName +
+            '] with definition [' + def.definitionString + ']');
+          numberOfFieldsWithData++;
+        } else { // do not add field values to FVM
+          forceeaDebug(WARN, 'Did not create data for field [' + def.fieldApiName +
+            '] with definition [' + def.definitionString + ']');
+        }
       }
     }
 
@@ -723,6 +706,13 @@ global class FObject {
     // create records
     for (Integer counter = 0; counter < this.records; counter++) {
       this.createdRecords.add(getRecord(counter)); // add created object to output list
+      if (!FObject.processIsValid) {
+        break;
+      }
+    }
+
+    if (processMustTerminate()) {
+      return;
     }
 
     // add the created records to the list of records for insertion
@@ -738,6 +728,35 @@ global class FObject {
   }
 
   /**
+   * @description Creates records using the declared field definitions.
+   * @param None.
+   * @return None.
+   */
+  public void createRecords() {
+    this.mustCreateNewRecords = true;
+    createNewRecords();
+  }
+
+  /**
+   * @description Creates records starting with the record with a specific ID.
+   * @param recordNumber The number of the next record to be created.
+   * @return None.
+   */
+  public virtual void createRecords(Integer recordNumber) {
+    this.mustCreateNewRecords = true;
+
+    if (recordNumber <= 0) {
+      addError(this.objectApiName, 'Invalid record number in method createRecords');
+      if (processMustTerminate()) {
+        return;
+      }
+    } else {
+      this.recordNumber = recordNumber;
+    }
+    createNewRecords();
+  }
+
+  /**
    * @description Validates a field definition.
    * @param definition The field definition.
    * @return Returns a boolean value.
@@ -745,7 +764,6 @@ global class FObject {
   private Boolean definitionIsValid(Definition definition) {
     Boolean result = true;
     String fieldApiName = definition.fieldApiName;
-    String userCommand = definition.command;
     String errorMessage = '';
     definition.isValid = true;
     definition.isValidated = true;
@@ -772,10 +790,12 @@ global class FObject {
         // check if field allows multiple definitions
         Field thisField = this.objectFieldsMap.get(fieldApiName.toLowerCase());
         if (thisField.allowsMultipleDefinitions == false && fieldHasMultipleDefinitions(fieldApiName)) {
-          errorMessage = 'Field [' + fieldApiName + '] does not accept multiple definitions';
-          addError(fieldApiName, errorMessage);
-          definition.isValid = false;
-          result = false;
+          if (!getErrors().containsKey(fieldApiName)) { // if there is no error for this field
+            errorMessage = 'Field [' + fieldApiName + '] does not accept multiple definitions';
+            addError(fieldApiName, errorMessage);
+            definition.isValid = false;
+            result = false;
+          }
         }
       }
     } else { // didn't find a definition type match
@@ -798,61 +818,63 @@ global class FObject {
 
     // get the field type
     Schema.DisplayType fieldType = this.objectFieldsMap.get(definition.fieldApiName.toLowerCase()).dataType;
-    DefinitionTypeId typeId = definition.Type.Id;
+    DefinitionTypeId typeId = definition.type.id;
 
     if (definition.fieldApiName == 'RecordTypeId') {
       if (typeId == DefinitionTypeId.STATIC_STRING ||
-          typeId == DefinitionTypeId.RANDOM_LIST_STRING ||
-          typeId == DefinitionTypeId.RANDOM_PICKLIST ||
-          typeId == DefinitionTypeId.RANDOM_PICKLIST_EXCEPT) {
+        typeId == DefinitionTypeId.RANDOM_LIST_STRING ||
+        typeId == DefinitionTypeId.RANDOM_PICKLIST ||
+        typeId == DefinitionTypeId.RANDOM_PICKLIST_EXCEPT) {
         result = true;
       }
     } else if (fieldType == Schema.DisplayType.String || fieldType == Schema.DisplayType.TextArea) {
       result = true;
       if (typeId == DefinitionTypeId.RANDOM_PICKLIST ||
-          typeId == DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
-          typeId == DefinitionTypeId.RANDOM_LOOKUP ||
-          typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
-          typeId == DefinitionTypeId.STATIC_LOOKUP) {
+        typeId == DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
+        typeId == DefinitionTypeId.RANDOM_LOOKUP ||
+        typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+        typeId == DefinitionTypeId.STATIC_LOOKUP) {
         result = false;
       }
     } else if (fieldType == Schema.DisplayType.Date && (
-        typeId == DefinitionTypeId.STATIC_DATE ||
+      typeId == DefinitionTypeId.STATIC_DATE ||
         typeId == DefinitionTypeId.RANDOM_LIST_DATE ||
         typeId == DefinitionTypeId.RANDOM_DATE ||
         typeId == DefinitionTypeId.SERIAL_DATE ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Integer && (
-        typeId == DefinitionTypeId.STATIC_INTEGER ||
+      typeId == DefinitionTypeId.STATIC_INTEGER ||
         typeId == DefinitionTypeId.RANDOM_LIST_INTEGER ||
         typeId == DefinitionTypeId.RANDOM_LIST_DECIMAL ||
         typeId == DefinitionTypeId.RANDOM_NUMBER ||
         typeId == DefinitionTypeId.SERIAL_NUMBER ||
-        typeId == DefinitionTypeId.SERIAL_NUMBER_DEPRECATED ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if ((
-        fieldType == Schema.DisplayType.Percent ||
+      fieldType == Schema.DisplayType.Percent ||
         fieldType == Schema.DisplayType.Currency ||
         fieldType == Schema.DisplayType.Double) && (
-        typeId == DefinitionTypeId.STATIC_INTEGER ||
+      typeId == DefinitionTypeId.STATIC_INTEGER ||
         typeId == DefinitionTypeId.STATIC_DECIMAL ||
         typeId == DefinitionTypeId.RANDOM_LIST_INTEGER ||
         typeId == DefinitionTypeId.RANDOM_LIST_DECIMAL ||
         typeId == DefinitionTypeId.RANDOM_NUMBER ||
         typeId == DefinitionTypeId.SERIAL_NUMBER ||
-        typeId == DefinitionTypeId.SERIAL_NUMBER_DEPRECATED ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Boolean && (
-        typeId == DefinitionTypeId.STATIC_STRING ||
+      typeId == DefinitionTypeId.STATIC_STRING ||
         typeId == DefinitionTypeId.RANDOM_BOOLEAN ||
         typeId == DefinitionTypeId.RANDOM_LIST_STRING ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Email && (
-        typeId == DefinitionTypeId.STATIC_STRING ||
+      typeId == DefinitionTypeId.STATIC_STRING ||
         typeId == DefinitionTypeId.STATIC_INTEGER ||
         typeId == DefinitionTypeId.RANDOM_LIST_INTEGER ||
         typeId == DefinitionTypeId.RANDOM_LIST_STRING ||
@@ -860,19 +882,19 @@ global class FObject {
         typeId == DefinitionTypeId.RANDOM_STRING ||
         typeId == DefinitionTypeId.RANDOM_BOOLEAN ||
         typeId == DefinitionTypeId.RANDOM_NUMBER ||
-        typeId == DefinitionTypeId.SERIAL_NUMBER_DEPRECATED ||
         typeId == DefinitionTypeId.SERIAL_NUMBER ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Picklist || fieldType == Schema.DisplayType.MultiPicklist) {
       result = true;
       if (typeId == DefinitionTypeId.RANDOM_LOOKUP ||
-          typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
-          typeId == DefinitionTypeId.STATIC_LOOKUP) {
+        typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+        typeId == DefinitionTypeId.STATIC_LOOKUP) {
         result = false;
       }
     } else if (fieldType == Schema.DisplayType.Datetime && (
-        typeId == DefinitionTypeId.STATIC_DATE ||
+      typeId == DefinitionTypeId.STATIC_DATE ||
         typeId == DefinitionTypeId.STATIC_DATETIME ||
         typeId == DefinitionTypeId.RANDOM_LIST_DATE ||
         typeId == DefinitionTypeId.RANDOM_LIST_DATETIME ||
@@ -880,54 +902,58 @@ global class FObject {
         typeId == DefinitionTypeId.RANDOM_DATETIME ||
         typeId == DefinitionTypeId.SERIAL_DATE ||
         typeId == DefinitionTypeId.SERIAL_DATETIME ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Phone && (
+      typeId == DefinitionTypeId.RANDOM_PHONE ||
         typeId == DefinitionTypeId.STATIC_INTEGER ||
         typeId == DefinitionTypeId.STATIC_STRING ||
         typeId == DefinitionTypeId.RANDOM_LIST_STRING ||
         typeId == DefinitionTypeId.RANDOM_NUMBER ||
-        typeId == DefinitionTypeId.SERIAL_NUMBER_DEPRECATED ||
         typeId == DefinitionTypeId.SERIAL_NUMBER ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Reference && (
-        typeId == DefinitionTypeId.STATIC_LOOKUP ||
+      typeId == DefinitionTypeId.STATIC_LOOKUP ||
         typeId == DefinitionTypeId.RANDOM_LOOKUP ||
         typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Url && (
-        typeId == DefinitionTypeId.STATIC_INTEGER ||
-        typeId == DefinitionTypeId.STATIC_STRING || 
+      typeId == DefinitionTypeId.STATIC_INTEGER ||
+        typeId == DefinitionTypeId.STATIC_STRING ||
         typeId == DefinitionTypeId.RANDOM_LIST_INTEGER ||
         typeId == DefinitionTypeId.RANDOM_LIST_STRING ||
         typeId == DefinitionTypeId.RANDOM_NUMBER ||
         typeId == DefinitionTypeId.RANDOM_STRING ||
         typeId == DefinitionTypeId.RANDOM_URL ||
-        typeId == DefinitionTypeId.SERIAL_NUMBER_DEPRECATED ||
         typeId == DefinitionTypeId.SERIAL_NUMBER ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else if (fieldType == Schema.DisplayType.Combobox) {
       result = true;
       if (typeId == DefinitionTypeId.STATIC_LOOKUP ||
-          typeId == DefinitionTypeId.RANDOM_LOOKUP ||
-          typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE) {
+        typeId == DefinitionTypeId.RANDOM_LOOKUP ||
+        typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE) {
         result = false;
       }
     } else if (fieldType == Schema.DisplayType.Base64) {
       result = true;
       if (typeId == DefinitionTypeId.RANDOM_PICKLIST ||
-          typeId == DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
-          typeId == DefinitionTypeId.RANDOM_LOOKUP ||
-          typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
-          typeId == DefinitionTypeId.STATIC_LOOKUP) {
+        typeId == DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
+        typeId == DefinitionTypeId.RANDOM_LOOKUP ||
+        typeId == DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+        typeId == DefinitionTypeId.STATIC_LOOKUP) {
         result = false;
       }
     } else if (fieldType == Schema.DisplayType.Time && (
-        typeId == DefinitionTypeId.STATIC_TIME ||
+      typeId == DefinitionTypeId.STATIC_TIME ||
         typeId == DefinitionTypeId.RANDOM_LIST_TIME ||
+        typeId == DefinitionTypeId.COPY_LOOKUP ||
         typeId == DefinitionTypeId.COPY_FIELD)) {
       result = true;
     } else {
@@ -947,11 +973,11 @@ global class FObject {
    */
   private Boolean definitionTypeExists(DefinitionType definitionType, Definition definition) {
     // if command is invalid, just exit
-    if (definitionType.Command != definition.Command) {
-      definition.IsValid = false;
+    if (definitionType.command != definition.command) {
+      definition.isValid = false;
       return false;
     }
-    
+
     // assess each Cluster Type of the Definition Type
     Integer numValidClusterTypes = 0;
     for (ClusterType ct : definitionType.clusterTypes) { // for every Cluster ype
@@ -964,12 +990,12 @@ global class FObject {
 
     // if all Cluster Types are valid, Definition Type is found
     if (numValidClusterTypes == definitionType.clusterTypes.size()
-        && numValidClusterTypes == definition.clusters.size()) {
-      definition.IsValid = true;
-      definition.Type = definitionType;
+      && numValidClusterTypes == definition.clusters.size()) {
+      definition.isValid = true;
+      definition.type = definitionType;
       return true;
     } else {
-      definition.IsValid = false;
+      definition.isValid = false;
       return false;
     }
 
@@ -980,20 +1006,21 @@ global class FObject {
    * @param None.
    * @return None.
    */
-  global void deleteAllDefinitions() {
+  public void deleteAllDefinitions() {
     forceeaDebug(INFO, 'Deleting the definitions of all fields');
+
     this.definitions.clear();
     this.fields.clear();
-    this.fieldsSet.clear();
+
     this.willValidateFieldDefinitionsMessageIsDisplayed = true;
   }
 
- /**
+  /**
    * @description Deletes all definitions of a field.
    * @param fieldName The user-defined name of the field.
    * @return None.
    */
-  global void deleteFieldDefinitions(String fieldName) {
+  public void deleteFieldDefinitions(String fieldName) {
     // fix field name
     String thisFieldName = fieldName.trim();
 
@@ -1018,31 +1045,46 @@ global class FObject {
       }
       index++;
     }
-
     for (Integer count = indexesToRemove.size() - 1; count >= 0; count--) {
       this.definitions.remove(indexesToRemove.get(count)); // remove definition
     }
 
-    // delete field from other collections
-    this.fieldsSet.removeAll(new List<String>{fieldApiName});
-    this.fields = new List<String>(this.fieldsSet);
+    // de-activate field
+    Integer counter = 0;
+    for (String field : this.fields) {
+      if (field == fieldApiName) {
+        this.fields[counter] = '.' + field;
+        break;
+      }
+      counter++;
+    }
   }
 
   /**
-   * @description Deletes created records of the object, using specific criteria (WHERE clause).
+   * @description Deletes records of the object, using specific criteria (WHERE clause).
    * @param whereClause The WHERE clause of the SOQL query (e.g. MyField__c > 10).
    * @return Returns a list of Database.DeleteResult objects.
    */
-  global List<Database.DeleteResult> deleteRecords(String whereClause) {
+  public List<Database.DeleteResult> deleteRecords(String whereClause) {
     List<Database.DeleteResult> results = new List<Database.DeleteResult>();
     List<SObject> recordsToDelete = new List<SObject>();
     Set<Id> deletedRecordIdsSet = new Set<Id>();
     Integer numDeletedRecords = 0;
 
+    if (processMustTerminate()) {
+      return results;
+    }
+
     forceeaDebug(INFO, 'Deleting records for object [' + this.objectApiName + ']');
 
     // set SOQL query
-    String soql = 'SELECT Id FROM ' + this.objectApiName + ' WHERE ' + whereClause + ' LIMIT 10000';
+    String soql = 'SELECT Id FROM ' + this.objectApiName;
+    if (String.isBlank(whereClause)) {
+      soql += ' LIMIT 10000';
+    } else {
+      soql += ' WHERE ' + whereClause + ' LIMIT 10000';
+    }
+
     try {
       recordsToDelete = Database.query(soql);
     } catch (QueryException ex) {
@@ -1074,7 +1116,7 @@ global class FObject {
         errorsCounter++;
         if (this.errors.size() <= FObject.maxErrorRecordsToDisplay) {
           for (Database.Error err : dr.getErrors()) {
-            addError(this.objectApiName , 'Found errors deleting record #' + recordsCounter + ': ' +
+            addError(this.objectApiName, 'Found errors deleting record #' + recordsCounter + ': ' +
               err.getMessage() + '. Fields that affected this error: ' + err.getFields());
           }
         }
@@ -1091,8 +1133,7 @@ global class FObject {
     }
 
     // remove deleted records from global records map
-    List<SObject> recordsAfterDelete = new List<SObject>();
-    for (String mapKey : FObject.globalInsertedRecordsMap.KeySet()) { // for each inserted record
+    for (String mapKey : FObject.globalInsertedRecordsMap.keySet()) { // for each inserted record
       // get the object API name
       String objectName = '';
       if (mapKey.contains('.')) { // this is a group
@@ -1102,7 +1143,7 @@ global class FObject {
       }
 
       if (objectName == this.objectApiName.toLowerCase()) { // the key belongs to this object
-         Map<Id, sObject> insertedRecordsMap = new Map<Id, sObject>
+        Map<Id, sObject> insertedRecordsMap = new Map<Id, sObject>
           (FObject.globalInsertedRecordsMap.get(mapKey));
         for (Id deletedRecordId : deletedRecordIdsSet) { // for each deleted record ID
           insertedRecordsMap.remove(deletedRecordId); // remove the record from the inserted records map
@@ -1120,7 +1161,7 @@ global class FObject {
    * @param None.
    * @return None.
    */
-  private void displayCreatedRecords() {
+  protected void displayCreatedRecords() {
     forceeaDebug(DEBUG, 'Displaying the created records for object [' + this.objectApiName + ']');
     Integer counter1 = 0;
     Integer numOfRecords = 0;
@@ -1133,7 +1174,7 @@ global class FObject {
       numOfRecords = FObject.recordsToDisplay;
     }
 
-    for (String field : this.fieldsSet) { // for each field
+    for (String field : this.fields) { // for each field
       // add dividers between records
       str = '';
       for (Integer counter2 = 0; counter2 < numOfRecords; counter2++) {
@@ -1173,7 +1214,7 @@ global class FObject {
    * @param message The message to post.
    * @return None.
    */
-  private void forceeaDebug(String errorLevel, String message) {
+  protected void forceeaDebug(String errorLevel, String message) {
     if (!FObject.showDebugLog) {
       return;
     }
@@ -1216,7 +1257,7 @@ global class FObject {
    * @param None.
    * @return Returns a map of key:string, value:List of string values.
    */
-  global Map<String, List<String>> getAllDefinitions() {
+  public Map<String, List<String>> getAllDefinitions() {
     Map<String, List<String>> valuesMap = new Map<String, List<String>>();
 
     validateDefinitions();
@@ -1226,7 +1267,9 @@ global class FObject {
       if (valuesMap.containsKey(field)) { // field is already in the result map
         valuesMap.get(field).add(def.definitionString);
       } else { // field is not in the Map
-        valuesMap.put(field, new List<String> {def.definitionString});
+        valuesMap.put(field, new List<String>{
+          def.definitionString
+        });
       }
     }
 
@@ -1276,6 +1319,111 @@ global class FObject {
   }
 
   /**
+   * @description Copies the values of another lookup object's field.
+   * @param definition The definition of the field.
+   * @param fieldName The API name of the field.
+   * @param fromObjectFieldName The lookup objet and the lookup field API names
+   *   seperated with a dot, e.g. Account.Rating
+   * @return Returns a list of string values.
+   */
+  private List<String> getCopiedLookupValues(
+    Definition definition, String fieldName, String fromObjectFieldName) {
+    List<String> values = new List<String>();
+    fieldName = fieldName.trim();
+
+    // check if the field API name is valid
+    String fieldApiName = getFieldApiName(fieldName);
+    if (String.isBlank(fieldApiName)) { // field is invalid
+      addError(definition.fieldApiName, 'Invalid field [' + fieldName + '] in definition [' +
+        definition.definitionString + ']');
+    }
+    if (processMustTerminate()) {
+      return values;
+    }
+
+    if (fieldApiName == definition.fieldApiName) {
+      addError(definition.fieldApiName, 'The field [' + fieldApiName + '] cannot be the same as ' +
+        'the definition field in definition [' + definition.definitionString + ']');
+    }
+    if (processMustTerminate()) {
+      return values;
+    }
+
+    // check if the lookup object is valid
+    String lookupObjectName = fromObjectFieldName.trim().substringBefore('.');
+    String lookupObjectApiName = FObject.getObjectApiName(lookupObjectName);
+    if (String.isBlank(lookupObjectApiName)) { // object is invalid
+      addError(definition.fieldApiName, 'Invalid lookup object [' + lookupObjectName + '] in definition [' +
+        definition.definitionString + ']');
+    }
+    if (processMustTerminate()) {
+      return values;
+    }
+
+    // check if the lookup field is valid
+    String lookupFieldName = fromObjectFieldName.trim().substringAfter('.');
+    String lookupFieldApiName = FObject.getFieldApiName(lookupObjectName, lookupFieldName);
+    if (String.isBlank(lookupFieldApiName)) {
+      addError(definition.fieldApiName, 'Invalid lookup field [' + lookupFieldName + '] in definition [' +
+        definition.definitionString + ']');
+    }
+    if (processMustTerminate()) {
+      return values;
+    }
+
+    // get the lookup field values
+    Integer fieldPosition = getFieldPosition(fieldApiName);
+
+    List<String> lookupIds = new List<String>(this.fieldValuesMatrix.get(fieldPosition));
+    Set<String> lookupIdsSet = new Set<String>(lookupIds);
+
+    String soqlQuery = 'SELECT Id, ' + lookupFieldApiName +
+      ' FROM ' + lookupObjectApiName +
+      ' WHERE Id IN :lookupIdsSet LIMIT 10000';
+
+    Map<Id, SObject> lookupRecordsMap; // the lookup object's records map
+    try { //query the database and populate the lookup records map
+      lookupRecordsMap = new Map<Id, SObject>(Database.query(soqlQuery));
+    } catch (QueryException ex) {
+      addError(fieldApiName, 'Found errors selecting records from the lookup object [' + lookupObjectApiName +
+        '] for object [' + this.objectApiName + ']: ' + ex.getMessage());
+    } finally {
+      if (lookupRecordsMap.isEmpty() || processMustTerminate()) {
+        return values;
+      }
+    }
+
+    // get the field data type
+    Schema.DisplayType valueType = this.objectFieldsMap.get(definition.fieldApiName.toLowerCase()).dataType;
+
+    String val = '';
+    Datetime dt;
+
+    if (valueType == Schema.DisplayType.DATETIME) { // the field is Datatime
+      for (String lookupId : lookupIds) {
+        dt = (Datetime) lookupRecordsMap.get(lookupId).get(lookupFieldApiName); // get the datetime value
+        val = String.valueOf(dt);
+        if (String.isBlank(val)) {
+          values.add('');
+        } else {
+          values.add(val);
+        }
+      }
+    } else { // the field is not Datatime
+      for (String lookupId : lookupIds) {
+        val = String.valueOf(lookupRecordsMap.get(lookupId).get(lookupFieldApiName));
+        if (String.isBlank(val)) {
+          values.add('');
+        } else {
+          values.add(val);
+        }
+      }
+    }
+
+    return values;
+  }
+
+  /**
    * @description Copies the values of a field.
    * @param definition The definition of the field.
    * @param fieldName The API name of the field.
@@ -1285,27 +1433,33 @@ global class FObject {
     List<String> values = new List<String>();
     fieldName = fieldName.trim();
 
-    // check if the lookup field API name is valid
-    if (!this.objectFieldsMap.containsKey(fieldName.toLowerCase())) {
-      addError(definition.fieldApiName, 'Invalid lookup field [' + fieldName + '] in definition [' +
+    // check if the field API name is valid
+    String fieldApiName = getFieldApiName(fieldName);
+    if (String.isBlank(fieldApiName)) {
+      addError(definition.fieldApiName, 'Invalid field [' + fieldName + '] in definition [' +
         definition.definitionString + ']');
     }
     if (processMustTerminate()) {
       return values;
     }
 
-    String lookupFieldApiName = this.objectFieldsMap.get(fieldName.toLowerCase()).fieldApiName;
-    if (lookupFieldApiName == definition.fieldApiName) {
-      addError(definition.fieldApiName, 'The lookup field [' + lookupFieldApiName + '] cannot be the same as ' +
+    if (fieldApiName == definition.fieldApiName) {
+      addError(definition.fieldApiName, 'The field [' + fieldApiName + '] cannot be the same as ' +
         'the definition field in definition [' + definition.definitionString + ']');
     }
     if (processMustTerminate()) {
       return values;
     }
 
-    // get the lookup field values
-    Integer fieldPosition = getFieldPosition(lookupFieldApiName);
-    values = this.fieldValuesMatrix[fieldPosition];
+    // get the field values
+    Integer fieldPosition = getFieldPosition(fieldApiName);
+
+    if (fieldPosition == -1) { // field is not found
+      forceeaDebug(WARN, 'Did not copy data from field [' + fieldApiName + '] to field ['
+        + definition.fieldApiName + ']');
+      return values;
+    }
+    values = this.fieldValuesMatrix.get(fieldPosition);
 
     return values;
   }
@@ -1327,7 +1481,7 @@ global class FObject {
     return Integer.valueOf(defaultRecords);
   }
 
-/**
+  /**
    * @description Retrieves the field details.
    * @param sObjectField The sObject field.
    * @return Returns a Field object.
@@ -1338,11 +1492,14 @@ global class FObject {
     Field objectField = new Field();
     objectField.fieldName = dfr.getName().toLowerCase();
     objectField.fieldApiName = dfr.getName();
+    objectField.label = dfr.getLabel();
     objectField.dataType = dfr.getType();
     objectField.isRestrictedPicklist = dfr.isRestrictedPicklist();
     objectField.canHaveMultipleTypesAsParents = dfr.isNamePointing();
     objectField.length = dfr.getLength();
     objectField.parents = dfr.getReferenceTo();
+    objectField.isAccessible = dfr.isAccessible();
+    objectField.isCreateable = dfr.isCreateable();
 
     // check if field is required
     if (dfr.isCreateable() && !dfr.isNillable() && !dfr.isDefaultedOnCreate()) {
@@ -1355,20 +1512,20 @@ global class FObject {
 
     // check if field allows multiple definitions
     if (dt == Schema.DisplayType.String ||
-        dt == Schema.DisplayType.Email ||
-        dt == Schema.DisplayType.Url ||
-        dt == Schema.DisplayType.Base64 ||
-        dt == Schema.DisplayType.Phone ||
-        dt == Schema.DisplayType.TextArea ||
-        dt == Schema.DisplayType.Combobox) {
+      dt == Schema.DisplayType.Email ||
+      dt == Schema.DisplayType.Url ||
+      dt == Schema.DisplayType.Base64 ||
+      dt == Schema.DisplayType.Phone ||
+      dt == Schema.DisplayType.TextArea ||
+      dt == Schema.DisplayType.Combobox) {
       objectField.allowsMultipleDefinitions = true;
     } else {
       objectField.allowsMultipleDefinitions = false;
     }
 
     if (dt == Schema.DisplayType.Picklist ||
-        dt == Schema.DisplayType.MultiPicklist ||
-        dt == Schema.DisplayType.Combobox) {
+      dt == Schema.DisplayType.MultiPicklist ||
+      dt == Schema.DisplayType.Combobox) {
       if (dfr.getController() != null) {
         objectField.controllingFieldApiName = dfr.getController().getDescribe().getName(); // get controlling field
       }
@@ -1384,15 +1541,18 @@ global class FObject {
    * @param None.
    * @return Returns a map of key:String, value:List<String> values.
    */
-  global Map<String, List<String>> getErrors() {
+  public Map<String, List<String>> getErrors() {
     Map<String, List<String>> results = new Map<String, List<String>>();
-    List<String> errorMessages = new List<String>();
 
     for (Error err : this.errors) {
-      if (results.containsKey(err.Id)) { // the key exists
-        results.get(err.Id).add(err.ErrorMessage);
+      if (results.containsKey(err.id)) { // the key exists
+        // add a new element in the list
+        results.get(err.id).add(err.errorMessage);
       } else {
-        results.put(err.id, new List<String> {err.ErrorMessage});
+        // add a new element in the map
+        results.put(err.id, new List<String>{
+          err.errorMessage
+        });
       }
     }
 
@@ -1402,7 +1562,7 @@ global class FObject {
   /**
    * @description Retrieves the API name of a specific object's field
    *   or a blank string i the field name is invalid.
-   * @param fieldName The user-defined field name.
+   * @param fieldName The field name.
    * @return Returns a string value.
    */
   private String getFieldApiName(String fieldName) {
@@ -1411,13 +1571,41 @@ global class FObject {
       return result;
     }
 
-    fieldName = fieldName.trim();
-    fieldName = fieldName.toLowerCase();
+    String thisFieldName = fieldName.trim().toLowerCase();
 
-    if (this.objectFieldsMap.containsKey(fieldName)) {
-      Field field = this.objectFieldsMap.get(fieldName);
+    if (this.objectFieldsMap.containsKey(thisFieldName)) {
+      Field field = this.objectFieldsMap.get(thisFieldName);
       result = field.fieldApiName;
     }
+    return result;
+  }
+
+  /**
+   * @description Retrieves the API name of a specific object's field
+   *   or a blank string i the field name is invalid.
+   * @param objectName The object name.
+   * @param fieldName The field name.
+   * @return Returns a string value.
+   */
+  public static String getFieldApiName(String objectName, String fieldName) {
+    String result = '';
+
+    if (String.isBlank(objectName) || String.isBlank(fieldName)) {
+      return result;
+    }
+    objectName = objectName.trim().toLowerCase();
+    fieldName = fieldName.trim().toLowerCase();
+
+    if (String.isNotBlank(FObject.getObjectApiName(objectName))) { // the object name is valid
+      if (!FObject.globalObjectFieldsMap.containsKey(objectName)) { // the object's field details don't exist
+        FObject.setObject(objectName);
+      }
+      Map<String, Field> fieldsMap = FObject.globalObjectFieldsMap.get(objectName);
+      if (fieldsMap.containsKey(fieldName)) {
+        result = fieldsMap.get(fieldName).fieldApiName;
+      }
+    }
+
     return result;
   }
 
@@ -1426,40 +1614,20 @@ global class FObject {
    * @param fieldName The API name of the field.
    * @return Returns a list of string values.
    */
-  global List<String> getFieldDefinitions(String fieldApiName) {
+  public List<String> getFieldDefinitions(String fieldApiName) {
     validateDefinitions();
     String thisFieldApiName = fieldApiName.trim();
-    
+
     thisFieldApiName = thisFieldApiName.toLowerCase();
 
     List<String> values = new List<String>();
     for (Definition def : this.definitions) {
       if (def.fieldApiName.toLowerCase() == thisFieldApiName) {
-        values.add(def.DefinitionString);
+        values.add(def.definitionString);
       }
     }
 
     return values;
-  }
-
-  /**
-   * @description Retrieves the first field definition's position and -1 if there is no definition.
-   * @param fieldApiName The API name of the field.
-   * @return Returns an integer value.
-   */
-  private Integer getFieldDefinitionPosition(String fieldApiName) {
-    Integer result = -1;
-    Integer counter = 0;
-
-    for (Definition definition : this.definitions) { // for each existing definition
-      if (definition.fieldApiName == fieldApiName) { // dependent field is found
-        result = counter; // get dependent field's definition position
-        break;
-      }
-      counter++;
-    }
-
-    return result;
   }
 
   /**
@@ -1472,7 +1640,7 @@ global class FObject {
    * @return A map of the controlling field value and the dependent field values.
    */
   private Map<String, Set<String>> getFieldDependenciesMap(
-      String objectName, String controllingField, String dependentField) {
+    String objectName, String controllingField, String dependentField) {
     Map<String, Set<String>> results = new Map<String, Set<String>>();
     Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectName);
     Schema.DescribeSObjectResult describeResult = objType.getDescribe();
@@ -1487,7 +1655,7 @@ global class FObject {
 
     for (Schema.PicklistEntry currDependentValue : dependentValues) {
       String jsonString = JSON.serialize(currDependentValue);
-      PicklistInfo info = (PicklistInfo)JSON.deserialize(jsonString, PicklistInfo.class);
+      PicklistInfo info = (PicklistInfo) JSON.deserialize(jsonString, PicklistInfo.class);
       String hexString = EncodingUtil.convertToHex(EncodingUtil.base64Decode(info.validFor)).toUpperCase();
       Integer baseCount = 0;
 
@@ -1504,16 +1672,16 @@ global class FObject {
           results.get(controllingValues[baseCount + 0].getValue()).add(currDependentValue.getValue());
         }
         if ((val & 4) == 4) {
-          results.get(controllingValues[baseCount + 1].getValue()).add(currDependentValue.getValue());                    
+          results.get(controllingValues[baseCount + 1].getValue()).add(currDependentValue.getValue());
         }
         if ((val & 2) == 2) {
-          results.get(controllingValues[baseCount + 2].getValue()).add(currDependentValue.getValue());                    
+          results.get(controllingValues[baseCount + 2].getValue()).add(currDependentValue.getValue());
         }
         if ((val & 1) == 1) {
-          results.get(controllingValues[baseCount + 3].getValue()).add(currDependentValue.getValue());                    
+          results.get(controllingValues[baseCount + 3].getValue()).add(currDependentValue.getValue());
         }
         baseCount += 4;
-      }            
+      }
     }
 
     return results;
@@ -1524,10 +1692,10 @@ global class FObject {
    * @param definition A field definition.
    * @return Returns a list of string values.
    */
-  private List<String> getFieldValues(Definition definition) {
+  protected List<String> createFieldValues(Definition definition) {
     List<String> results = new List<String>();
     List<Cluster> clusters = definition.clusters;
-    DefinitionTypeId defId = definition.Type.Id;
+    DefinitionTypeId defId = definition.type.id;
 
     if (defId == DefinitionTypeId.RANDOM_NUMBER) {
       Decimal fromArgm = Decimal.valueOf(getClusterArgument('from', clusters));
@@ -1560,9 +1728,9 @@ global class FObject {
       List<String> exceptions = getClusterArguments('except', clusters);
       results = getRandomPicklistValuesExcept(definition.fieldApiName, exceptions);
     } else if (
-        defId == DefinitionTypeId.RANDOM_LIST_STRING ||
+      defId == DefinitionTypeId.RANDOM_LIST_STRING ||
         defId == DefinitionTypeId.RANDOM_LIST_INTEGER ||
-        defId == DefinitionTypeId.RANDOM_LIST_DECIMAL||
+        defId == DefinitionTypeId.RANDOM_LIST_DECIMAL ||
         defId == DefinitionTypeId.RANDOM_LIST_DATE ||
         defId == DefinitionTypeId.RANDOM_LIST_TIME ||
         defId == DefinitionTypeId.RANDOM_LIST_DATETIME) {
@@ -1604,6 +1772,9 @@ global class FObject {
       Integer minLength = Integer.valueOf(getClusterArgument('minlength', clusters));
       Integer maxLength = Integer.valueOf(getClusterArgument('maxlength', clusters));
       results = getRandomTexts(minLength, maxLength, definition);
+    } else if (defId == DefinitionTypeId.RANDOM_PHONE) {
+      String formatString = getClusterArgument('format', clusters);
+      results = getRandomPhoneNumbers(formatString);
     } else if (defId == DefinitionTypeId.RANDOM_LOOKUP) {
       String source = getClusterArgument('source', clusters);
       String lookupObject = getClusterArgument('lookup', clusters);
@@ -1624,11 +1795,6 @@ global class FObject {
       String lookupField = getClusterArgument('field', clusters);
       List<String> lookupValues = getClusterArguments('value', clusters);
       results = getLookupValues(definition, 'static', source, lookupObject, lookupField, lookupValues, null, null, null);
-    } else if (defId == DefinitionTypeId.SERIAL_NUMBER_DEPRECATED) {
-      Decimal fromArgm = Decimal.valueOf(getClusterArgument('from', clusters));
-      Decimal stepArgm = Decimal.valueOf(getClusterArgument('step', clusters));
-      Integer scaleArgm = Integer.valueOf(getClusterArgument('scale', clusters));
-      results = getSerialNumbers(fromArgm, stepArgm, scaleArgm);
     } else if (defId == DefinitionTypeId.SERIAL_NUMBER) {
       Decimal fromArgm = Decimal.valueOf(getClusterArgument('from', clusters));
       Decimal stepArgm = Decimal.valueOf(getClusterArgument('step', clusters));
@@ -1649,17 +1815,21 @@ global class FObject {
       Decimal stepArgm = Decimal.valueOf(getClusterArgument('step', clusters));
       results = getSerialDatetimes(fromArgm, stepArgm);
     } else if (
-        defId == DefinitionTypeId.STATIC_STRING ||
+      defId == DefinitionTypeId.STATIC_STRING ||
         defId == DefinitionTypeId.STATIC_INTEGER ||
         defId == DefinitionTypeId.STATIC_DECIMAL ||
         defId == DefinitionTypeId.STATIC_DATE ||
-        defId == DefinitionTypeId.STATIC_TIME||
+        defId == DefinitionTypeId.STATIC_TIME ||
         defId == DefinitionTypeId.STATIC_DATETIME) {
       String label = getClusterArgument('value', clusters);
       results = getStaticValues(definition, label);
     } else if (defId == DefinitionTypeId.COPY_FIELD) {
       String field = getClusterArgument('field', clusters);
       results = getCopiedValues(definition, field);
+    } else if (defId == DefinitionTypeId.COPY_LOOKUP) {
+      String fieldName = getClusterArgument('field', clusters);
+      String fromObjectFieldName = getClusterArgument('from', clusters);
+      results = getCopiedLookupValues(definition, fieldName, fromObjectFieldName);
     }
 
     return results;
@@ -1673,16 +1843,22 @@ global class FObject {
   private Integer getFieldPosition(String fieldApiName) {
     Integer result = 0;
     Integer counter = 0;
+    Boolean isFound = false;
 
-    for (String field : this.fieldsSet) {
+    for (String field : this.fields) {
       if (field == fieldApiName) {
         result = counter;
+        isFound = true;
         break;
       }
       counter++;
     }
 
-    return result;
+    if (!isFound) {
+      return -1;
+    } else {
+      return result;
+    }
   }
 
   /**
@@ -1690,13 +1866,13 @@ global class FObject {
    * @param None.
    * @return Returns a list of sObject records.
    */
-  global List<SObject> getInsertedRecords() {
+  public List<SObject> getInsertedRecords() {
     List<SObject> results = new List<SObject>();
     String mapKey = this.objectApiName.toLowerCase();
     if (FObject.globalInsertedRecordsMap.containsKey(mapKey)) {
       results = FObject.globalInsertedRecordsMap.get(mapKey);
     }
-    
+
     return results;
   }
 
@@ -1704,8 +1880,8 @@ global class FObject {
    * @description Retrieves all inserted records of an object.
    * @param objectApiName The object API name.
    * @return Returns a list of sObject records.
-   */ 
-  global static List<SObject> getInsertedRecords(String objectApiName) {
+   */
+  public static List<SObject> getInsertedRecords(String objectApiName) {
     List<SObject> results = new List<SObject>();
     Set<String> objectApiNamesSet = new Set<String>(FObject.sObjectApiNames);
     objectApiNamesSet = convertSetToLowercase(objectApiNamesSet);
@@ -1730,7 +1906,7 @@ global class FObject {
    * @param groupName The group name of the inserted records.
    * @return Returns a list of sObject records.
    */
-  global List<SObject> getInsertedGroupRecords(String groupName) {
+  public List<SObject> getInsertedGroupRecords(String groupName) {
     List<SObject> results = new List<SObject>();
 
     String mapKey = this.objectApiName.toLowerCase() + '.' + groupName.trim().toLowerCase();
@@ -1747,7 +1923,7 @@ global class FObject {
    * @param groupName The group name of the inserted records.
    * @return Returns a list of sObject records.
    */
-  global static List<SObject> getInsertedGroupRecords(String objectApiName, String groupName) {
+  public static List<SObject> getInsertedGroupRecords(String objectApiName, String groupName) {
     List<SObject> results = new List<SObject>();
     Set<String> objectApiNamesSet = new Set<String>(FObject.sObjectApiNames);
     objectApiNamesSet = convertSetToLowercase(objectApiNamesSet);
@@ -1808,8 +1984,8 @@ global class FObject {
    * @return Returns a list of ID values.
    */
   private List<Id> getLookupValues(Definition definition, String type, String source,
-      String lookupObjectName, String lookupFieldName,
-      List<String> lookupValues, List<String> lookupExceptions, String groupName, String whereClause) {
+    String lookupObjectName, String lookupFieldName,
+    List<String> lookupValues, List<String> lookupExceptions, String groupName, String whereClause) {
 
     List<Id> values = new List<Id>();
     List<SObject> lookupRecords = new List<SObject>(); // the lookup object's records
@@ -1817,7 +1993,7 @@ global class FObject {
     source = source.toLowerCase();
 
     // check if the object name is valid
-    String lookupObjectApiName = getObjectApiName(lookupObjectName);
+    String lookupObjectApiName = FObject.getObjectApiName(lookupObjectName);
     if (String.isBlank(lookupObjectApiName)) {
       addError(fieldApiName, 'Invalid lookup object [' + lookupObjectName + '] in definition [' +
         definition.definitionString + ']');
@@ -1828,9 +2004,10 @@ global class FObject {
 
     // get the object fields map
     if (!FObject.globalObjectFieldsMap.containsKey(lookupObjectApiName.toLowerCase())) { // object is not defined
-      FObject.setSObject(lookupObjectApiName); // store to global fields map
+      FObject.setObject(lookupObjectApiName); // store to global fields map
     }
-    Map<String, Field> fieldsMap = FObject.globalObjectFieldsMap.get(lookupObjectApiName.toLowerCase()); // get stored fields details
+    // get stored fields details
+    Map<String, Field> fieldsMap = FObject.globalObjectFieldsMap.get(lookupObjectApiName.toLowerCase());
 
     // check if the lookup field API name is valid
     // the fieldName may be blank because of the definition random lookup(Object)
@@ -1870,13 +2047,13 @@ global class FObject {
         } else { // no records have been inserted
           noInsertedRecords = true;
         }
-      } 
+      }
 
       if (noInsertedRecords && !definition.isSystemDeclared) {
         forceeaDebug(WARN, 'The required records of lookup object [' + lookupObjectApiName +
           '] have not been created by Forceea and will be created now');
         // create records for the lookup object
-        lookupRecords = getLookupRecords(lookupObjectApiName, lookupFieldApiName, groupName); 
+        lookupRecords = getLookupRecords(lookupObjectApiName, lookupFieldApiName, groupName);
       }
     }
 
@@ -1900,12 +2077,12 @@ global class FObject {
         }
       }
       soqlQuery += ' LIMIT 10000';
-      system.debug('soqlQuery='+soqlQuery);
+
       try { //query the database and get the IDs
         lookupRecords = Database.query(soqlQuery);
       } catch (QueryException ex) {
         addError(fieldApiName, 'Found errors selecting records from the lookup object [' + lookupObjectApiName +
-         '] for object [' + this.objectApiName + ']: ' + ex.getMessage());
+          '] for object [' + this.objectApiName + ']: ' + ex.getMessage());
       } finally {
         if (processMustTerminate()) {
           return values;
@@ -1922,7 +2099,7 @@ global class FObject {
       String lookupId = '';
       for (SObject objRecord : lookupRecords) { // for each record
         // if lookup field value is found
-        if (lookupValues[0].equalsIgnoreCase((String)objRecord.get(lookupFieldApiName))) {
+        if (lookupValues[0].equalsIgnoreCase((String) objRecord.get(lookupFieldApiName))) {
           lookupId = objRecord.Id; // get record Id
           break;
         }
@@ -1933,29 +2110,29 @@ global class FObject {
     } else if (type == 'random') {
       List<Id> lookupIds = new List<Id>();
       if ((lookupValues == null || lookupValues.isEmpty()) &&
-          (lookupExceptions == null || lookupExceptions.isEmpty())) {
+        (lookupExceptions == null || lookupExceptions.isEmpty())) {
         for (SObject objRecord : lookupRecords) {
           lookupIds.add(objRecord.Id);
         }
       } else if ((lookupValues != null || !lookupValues.isEmpty()) &&
-          (lookupExceptions == null || lookupExceptions.isEmpty())) {
+        (lookupExceptions == null || lookupExceptions.isEmpty())) {
         Set<String> lookupValuesSet = new Set<String>(lookupValues);
         lookupValuesSet = convertSetToLowercase(lookupValuesSet);
         String fieldValue = '';
         for (SObject objRecord : lookupRecords) {
-          fieldValue = (String)objRecord.get(lookupFieldApiName);
+          fieldValue = (String) objRecord.get(lookupFieldApiName);
           if (String.isNotBlank(fieldValue) && lookupValuesSet.contains(fieldValue.toLowerCase())) {
             lookupIds.add(objRecord.Id);
           }
         }
 
       } else if ((lookupValues == null || lookupValues.isEmpty()) &&
-          (lookupExceptions != null || !lookupExceptions.isEmpty())) {
+        (lookupExceptions != null || !lookupExceptions.isEmpty())) {
         Set<String> lookupExceptionsSet = new Set<String>(lookupExceptions);
         lookupExceptionsSet = convertSetToLowercase(lookupExceptionsSet);
         String fieldValue = '';
         for (SObject objRecord : lookupRecords) { // for each record
-          fieldValue = (String)objRecord.get(lookupFieldApiName);
+          fieldValue = (String) objRecord.get(lookupFieldApiName);
           if (String.isNotBlank(fieldValue) && !lookupExceptionsSet.contains(fieldValue)) { // if exception value is not found
             lookupIds.add(objRecord.Id);
           }
@@ -1975,7 +2152,7 @@ global class FObject {
         }
       } else if (size > 1) {
         for (Integer counter = 0; counter < this.records; counter++) {
-          rnd = (Math.random() * size).intValue();
+          rnd = (FObject.random * size).intValue();
           values.add(lookupIds[rnd]);
         }
       }
@@ -1989,10 +2166,9 @@ global class FObject {
    * @param objectName The user-defined name of an object.
    * @return Returns a string value.
    */
-  private String getObjectApiName(string objectName) {
+  private static String getObjectApiName(String objectName) {
     String result = '';
-    objectName = objectName.trim();
-    objectName = objectName.toLowerCase();
+    objectName = objectName.trim().toLowerCase();
 
     for (String objectApiName : FObject.sObjectApiNames) {
       if (objectApiName.toLowerCase() == objectName) { // object is found
@@ -2013,7 +2189,7 @@ global class FObject {
    * @return Returns a list of string values.
    */
   private List<String> getPicklistValuesWithRespect(String dependentFieldApiName, String controllingFieldApiName,
-      List<String> inclusions, List<String> exceptions) {
+    List<String> inclusions, List<String> exceptions) {
     List<String> values = new List<String>();
 
     // get the position of the controlling field
@@ -2038,7 +2214,8 @@ global class FObject {
     }
 
     // get the created values of controlling field
-    List<String> ctrlFieldValues = this.fieldValuesMatrix[ctrlFieldPosition]; 
+    List<String> ctrlFieldValues = this.fieldValuesMatrix.get(ctrlFieldPosition);
+
     List<String> depFieldValues = new List<String>();
 
     // the dependent field's values mapped to the controlling field's value
@@ -2048,6 +2225,7 @@ global class FObject {
     for (Integer counter = 0; counter < this.records; counter++) {
       // get the controlling field's value
       ctrlValue = ctrlFieldValues[counter];
+
       // get the dependent field's value set from the Field Dependencies map
       fieldDependenciesSet = fieldDependenciesMap.get(ctrlValue);
       // if there are no mapped values between controlling and dependent field
@@ -2057,7 +2235,7 @@ global class FObject {
         // get the dependent field's value list
         depFieldValues = new List<String>(fieldDependenciesSet);
         // get a random value
-        rnd = (Math.random() * depFieldValues.size()).intValue();
+        rnd = (FObject.random * depFieldValues.size()).intValue();
         values.add(depFieldValues[rnd]);
       }
     }
@@ -2083,7 +2261,7 @@ global class FObject {
     } else {
       Integer rnd = 0;
       for (Integer counter = 0; counter < this.records; counter++) {
-        rnd = (Math.random() * size).intValue();
+        rnd = (FObject.random * size).intValue();
         values.add(picklistValues[rnd]);
       }
     }
@@ -2104,7 +2282,7 @@ global class FObject {
     Integer librarySize = FObject.addressesLibrary.size();
 
     for (Integer counter = 0; counter < this.records; counter++) {
-      rnd = (Math.random() * librarySize).intValue();
+      rnd = (FObject.random * librarySize).intValue();
       values.add(new FAddress(FObject.addressesLibrary[rnd]));
     }
 
@@ -2120,7 +2298,7 @@ global class FObject {
     List<String> values = new List<String>();
 
     for (Integer counter = 0; counter < this.records; counter++) {
-      if (Math.random() > 0.5) {
+      if (FObject.random > 0.5) {
         values.add('true');
       } else {
         values.add('false');
@@ -2130,11 +2308,11 @@ global class FObject {
     return values;
   }
 
- /**
-  * @description Creates random cities.
-  * @param addressGroup The group of this address.
-  * @return Returns a list of string values.
-  */
+  /**
+   * @description Creates random cities.
+   * @param addressGroup The group of this address.
+   * @return Returns a list of string values.
+   */
   private List<String> getRandomCities(String addressGroup) {
     List<String> values = new List<String>();
 
@@ -2148,7 +2326,7 @@ global class FObject {
     }
 
     for (Integer counter = 0; counter < this.records; counter++) {
-      values.add(groupAddresses[counter].City);
+      values.add(groupAddresses[counter].city);
     }
 
     return values;
@@ -2172,7 +2350,7 @@ global class FObject {
     }
 
     for (Integer counter = 0; counter < this.records; counter++) {
-      values.add(groupAddresses[counter].Country);
+      values.add(groupAddresses[counter].country);
     }
 
     return values;
@@ -2190,14 +2368,14 @@ global class FObject {
     // check arguments
     if (fromDate >= toDate) {
       addError(definition.fieldApiName, 'The [from] date is greater than or equal to ' +
-        'the [to] date in definition [' + definition.DefinitionString + ']');
+        'the [to] date in definition [' + definition.definitionString + ']');
       return values;
     }
 
     Integer range = fromDate.daysBetween(toDate) + 1;
     Integer days = 0; // the number of days to add to fromDate
     for (Integer counter = 0; counter < this.records; counter++) {
-      days = (Math.random() * range).intValue();
+      days = (FObject.random * range).intValue();
       values.add(String.valueOf(fromDate.addDays(days)));
     }
 
@@ -2215,10 +2393,10 @@ global class FObject {
 
     Boolean fromIsDate = false;
     Boolean toIsDate = false;
-    if (fromDatetime.hour() == 0 && fromDatetime.minute() == 0 && fromDatetime.second() == 0 ) {
+    if (fromDatetime.hour() == 0 && fromDatetime.minute() == 0 && fromDatetime.second() == 0) {
       fromIsDate = true;
-    }   
-    if (toDatetime.hour() == 0 && toDatetime.minute() == 0 && toDatetime.second() == 0 ) {
+    }
+    if (toDatetime.hour() == 0 && toDatetime.minute() == 0 && toDatetime.second() == 0) {
       toIsDate = true;
     }
 
@@ -2234,14 +2412,14 @@ global class FObject {
     // check arguments
     if (fromDatetimePoint >= toDatetimePoint) {
       addError(definition.fieldApiName, 'The [from] datetime is greater than or equal to ' +
-        'the [to] datetime in definition [' + definition.DefinitionString + ']');
+        'the [to] datetime in definition [' + definition.definitionString + ']');
       return values;
     }
 
     Long range = toDatetimePoint - fromDatetimePoint;
     Long randomPoint; // a random value in ms
     for (Integer counter = 0; counter < this.records; counter++) {
-      randomPoint = fromDatetimePoint + (Math.random() * range).longValue();
+      randomPoint = fromDatetimePoint + (FObject.random * range).longValue();
       values.add(String.valueOf(Datetime.newInstance(randomPoint)));
     }
 
@@ -2256,7 +2434,7 @@ global class FObject {
    * @return Returns a list of string values.
    */
   private List<String> getRandomNumbers(Decimal fromNumber, Decimal toNumber, Integer scale,
-      Definition definition) {
+    Definition definition) {
     List<String> values = new List<String>();
     fromNumber = fromNumber.setScale(scale);
     toNumber = toNumber.setScale(scale);
@@ -2264,13 +2442,13 @@ global class FObject {
     // check arguments
     if (fromNumber >= toNumber) {
       addError(definition.fieldApiName, 'The [from] number is greater than or equal to ' +
-        'the [to] number in definition [' + definition.DefinitionString + ']');
+        'the [to] number in definition [' + definition.definitionString + ']');
     }
 
     Decimal range = toNumber - fromNumber;
     Decimal val = 0;
     for (Integer counter = 0; counter < this.records; counter++) {
-      val = fromNumber + Math.random() * range;
+      val = fromNumber + FObject.random * range;
       values.add(val.setScale(scale).toPlainString());
     }
 
@@ -2284,12 +2462,14 @@ global class FObject {
    */
   private List<String> getRandomDomains(Integer syllables) {
     List<String> values = new List<String>();
-    List<String> notes = new List<String> {'do', 're', 'mi', 'fa', 'sol', 'la', 'si'};
+    List<String> notes = new List<String>{
+      'do', 're', 'mi', 'fa', 'sol', 'la', 'si'
+    };
 
     for (Integer counter1 = 0; counter1 < this.records; counter1++) {
       String domain = '';
-      for (Integer counter2 = 0; counter2< syllables; counter2++) {
-        Integer rnd = (Math.random() * 7).intValue();
+      for (Integer counter2 = 0; counter2 < syllables; counter2++) {
+        Integer rnd = (FObject.random * 7).intValue();
         domain += notes[rnd];
       }
       values.add(domain + '.com');
@@ -2305,7 +2485,9 @@ global class FObject {
    */
   private List<String> getRandomEmails(Definition definition) {
     List<String> values = new List<String>();
-    List<String> includes = new List<String> { 'lower' };
+    List<String> includes = new List<String>{
+      'lower'
+    };
     List<String> names = getRandomStrings(10, 10, 'lower', includes, definition);
     List<String> domains = getRandomDomains(5);
 
@@ -2388,12 +2570,12 @@ global class FObject {
     }
 
     if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) { 
+      this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
       values = getPicklistValuesWithoutRespect(arguments);
     } else { // there is a controlling field
       values = getPicklistValuesWithRespect(fieldApiName, ctrlFieldApiName, arguments, null);
     }
-    
+
     return values;
   }
 
@@ -2404,6 +2586,7 @@ global class FObject {
    */
   private List<String> getRandomListValues(Definition definition) {
     Set<String> argumentsSet = new Set<String>(getClusterArguments('value', definition.clusters));
+
     List<String> values = new List<String>();
     String fieldApiName = definition.fieldApiName;
     Integer size = 0;
@@ -2413,7 +2596,7 @@ global class FObject {
       // get the list of record type IDs
       List<Id> recordTypeIds = new List<Id>();
       for (String argument : argumentsSet) {
-        if (this.recordTypesMap.containsKey(argument.toLowerCase())) { // if the argument is a valid record type 
+        if (this.recordTypesMap.containsKey(argument.toLowerCase())) { // if the argument is a valid record type
           recordTypeIds.add(this.recordTypesMap.get(argument.toLowerCase())); // add the argument's ID to a list
         } else {
           addError(fieldApiName, 'Invalid record type [' + argument + '] for definition [' +
@@ -2433,7 +2616,7 @@ global class FObject {
         }
       } else {
         for (Integer counter = 0; counter < this.records; counter++) {
-          rnd = (Math.random() * size).intValue();
+          rnd = (FObject.random * size).intValue();
           values.add(recordTypeIds[rnd]);
         }
       }
@@ -2451,7 +2634,7 @@ global class FObject {
       List<String> arguments = new List<String>(argumentsSet);
       size = arguments.size();
       for (Integer counter = 0; counter < this.records; counter++) {
-        rnd = (Math.random() * size).intValue();
+        rnd = (FObject.random * size).intValue();
         values.add(arguments[rnd]);
       }
     }
@@ -2459,11 +2642,11 @@ global class FObject {
     return values;
   }
 
- /**
-  * @description Creates random names.
-  * @param None.
-  * @return Returns a list of Name objects.
-  */
+  /**
+   * @description Creates random names.
+   * @param None.
+   * @return Returns a list of Name objects.
+   */
   private List<Name> getRandomNames() {
     List<Name> values = new List<Name>();
     String firstName = '';
@@ -2500,9 +2683,9 @@ global class FObject {
       }
       // set values
       for (Integer counter = 0; counter < groupSize; counter++) {
-        vFirst = (Math.random() * firstNamesSize).intValue();
+        vFirst = (FObject.random * firstNamesSize).intValue();
         firstName = firstNames[vFirst];
-        vLast = (Math.random() * lastNamesSize).intValue();
+        vLast = (FObject.random * lastNamesSize).intValue();
         lastName = lastNames[vLast];
         values.add(new Name(firstName, lastName, gender));
       }
@@ -2513,10 +2696,40 @@ global class FObject {
     Name temp = new Name();
     Integer size = values.size();
     for (Integer counter = 0; counter < size; counter++) {
-      rnd = (Math.random() * size).intValue(); // get a random index
+      rnd = (FObject.random * size).intValue(); // get a random index
       temp = values[counter] ;
       values[counter] = values[rnd];
       values[rnd] = temp;
+    }
+
+    return values;
+  }
+
+  /**
+   * @description Creates random phone numbers.
+   * @param formatString The format string which defines the phone numbers.
+   * @return Returns a list of phone numbers.
+   */
+  private List<String> getRandomPhoneNumbers(String formatString) {
+    List<String> values = new List<String>();
+
+    List<String> chars = formatString.split('');
+    Integer rnd = 0;
+
+    for (Integer counter1 = 0; counter1 < this.records; counter1++) {
+      String val = '';
+      for (Integer counter2 = 0; counter2 < chars.size(); counter2++) {
+        if (chars[counter2] == 'd') {
+          rnd = 1 + (FObject.random * 9).intValue(); // get a random number betwwen 1 and 9
+          val += String.valueOf(rnd);
+        } else if (chars[counter2] == 'D') {
+          rnd = (FObject.random * 10).intValue(); // get a random number betwwen 0 and 9
+          val += String.valueOf(rnd);
+        } else {
+          val += chars[counter2];
+        }
+      }
+      values.add(val);
     }
 
     return values;
@@ -2532,7 +2745,7 @@ global class FObject {
 
     if (fieldApiName == 'RecordTypeId') {
       // create a new list with the record type values
-      List<Id> recordTypeIDs = new List<Id>(this.recordTypesMap.values());
+      List<Id> recordTypeIds = new List<Id>(this.recordTypesMap.values());
 
       Integer size = recordTypeIds.size();
       if (size == 1) {
@@ -2543,7 +2756,7 @@ global class FObject {
       } else {
         Integer rnd = 0;
         for (Integer counter = 0; counter < this.records; counter++) {
-          rnd = (Math.random() * size).intValue();
+          rnd = (FObject.random * size).intValue();
           values.add(recordTypeIds[rnd]);
         }
       }
@@ -2555,7 +2768,7 @@ global class FObject {
     String ctrlFieldApiName = dependentField.controllingFieldApiName;
 
     if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) { 
+      this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
       // get all picklist values
       List<String> picklistValues = new List<String>(); // the picklist items
       for (Schema.PicklistEntry picklistEntry : this.objectFieldsMap.get(fieldApiName.toLowerCase()).pickListValues) {
@@ -2578,6 +2791,7 @@ global class FObject {
   private List<String> getRandomPicklistValuesExcept(String fieldApiName, List<String> exceptions) {
     List<String> values = new List<String>();
 
+    // convert exceptions to lowercase
     exceptions = new List<String>(convertListToLowercase(exceptions));
 
     if (fieldApiName == 'RecordTypeId') {
@@ -2600,7 +2814,7 @@ global class FObject {
       } else {
         Integer rnd = 0;
         for (Integer counter = 0; counter < this.records; counter++) {
-          rnd = (Math.random() * size).intValue();
+          rnd = (FObject.random * size).intValue();
           values.add(recordTypeIds[rnd]);
         }
       }
@@ -2611,9 +2825,9 @@ global class FObject {
     // get dependent and controlling fields
     Field depField = this.objectFieldsMap.get(fieldApiName.toLowerCase());
     String ctrlFieldApiName = depField.controllingFieldApiName;
- 
+
     if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) { 
+      this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
       // get all picklist items
       List<String> picklistValues = new List<String>(); // the picklist items
       for (Schema.PicklistEntry picklistEntry : this.objectFieldsMap.get(fieldApiName.toLowerCase()).pickListValues) {
@@ -2676,11 +2890,11 @@ global class FObject {
     return values;
   }
 
- /**
-  * @description Creates random streets.
-  * @param addressGroup The group of this address.
-  * @return Returns a list of string values.
-  */
+  /**
+   * @description Creates random streets.
+   * @param addressGroup The group of this address.
+   * @return Returns a list of string values.
+   */
   private List<String> getRandomStreets(String addressGroup) {
     List<String> values = new List<String>();
 
@@ -2698,10 +2912,10 @@ global class FObject {
 
     for (Integer counter = 0; counter < this.records; counter++) {
       street = groupAddresses[counter].Street;
-      rnd = (Math.random() * 20).intValue() + 1; // get a random number from 1 to 20
+      rnd = (FObject.random * 20).intValue() + 1; // get a random number from 1 to 20
       if (FObject.streetNumberAfterStreet) { // number is after street
         street = street + ' ' + String.valueOf(rnd);
-      } else { // // number is before street
+      } else { // number is before street
         street = String.valueOf(rnd) + ' ' + street;
       }
       values.add(street);
@@ -2719,8 +2933,8 @@ global class FObject {
    * @return Returns a list of string values.
    */
   private List<String> getRandomStrings(
-      Integer minlength, Integer maxlength,
-      String startsWith, List<String> includes, Definition definition) {
+    Integer minlength, Integer maxlength,
+    String startsWith, List<String> includes, Definition definition) {
     List<String> values = new List<String>();
     String lowerChars = 'abcdefghijklmnopqrstuvwxyz';
     String upperChars = 'ABCDEFGHIJKLMNOPQRSUVWXYZ';
@@ -2728,11 +2942,11 @@ global class FObject {
     String charsToSelect = ''; // the selection chars for the rest of the string
 
     // check arguments
-    if (minLength <= 0) {
+    if (minlength <= 0) {
       addError(definition.fieldApiName, 'The minimum length should be greater than or equal to 1 ' +
         'in definition [' + definition.definitionString + ']');
     }
-    if (minLength > maxLength) {
+    if (minlength > maxlength) {
       addError(definition.fieldApiName, 'The minimum length should be less than or equal to ' +
         'the maximum length in definition [' + definition.definitionString + ']');
     }
@@ -2756,7 +2970,7 @@ global class FObject {
     String restChars = ''; // the rest chars of the string
 
     for (Integer counter1 = 0; counter1 < this.records; counter1++) {
-      resultLength = minlength + (Math.random() * (maxlength - minlength + 1)).intValue();
+      resultLength = minlength + (FObject.random * (maxlength - minlength + 1)).intValue();
       // get 1st char
       if (startsWith == 'lower') {
         selectionsForFirstChar = lowerChars;
@@ -2766,12 +2980,12 @@ global class FObject {
         selectionsForFirstChar = digits;
       }
       size = selectionsForFirstChar.length();
-      rnd = (Math.random() * size).intValue();
+      rnd = (FObject.random * size).intValue();
       firstChar = selectionsForFirstChar.substring(rnd, rnd + 1);
       size = charsToSelect.length();
       restChars = '';
       for (Integer counter2 = 1; counter2 < resultLength; counter2++) {
-        rnd = (Math.random() * size).intValue();
+        rnd = (FObject.random * size).intValue();
         restChars += charsToSelect.substring(rnd, rnd + 1);
       }
       values.add(firstChar + restChars);
@@ -2789,22 +3003,46 @@ global class FObject {
    */
   private List<String> getRandomTexts(Integer minLength, Integer maxLength, Definition definition) {
     List<String> values = new List<String>();
-    List<String> words = new List<String> { 'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'tempor', 'aboreant',
+    List<String> words = new List<String>{
+      'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'tempor', 'aboreant',
       'instructor', 'eu', 'nos', 'a', 'quo', 'magna', 'primis', 'labore', 'usi', 'virtute', 'fabellas', 'vis', 'duis',
       'scripta', 'salutandi', 'laudem', 'commune', 'nam', 'laoreet', 'propriae', 'corrumpit', 'ea', 'partem',
-      'inermis', 'conclusion', 'ius', 'sint', 'impedit', 'deterruis', 'eam', 'elit', 'nusquam' };
-    Map<Integer, List<String>> wordsMap = new Map<Integer, List<String>> {
-      0 => new List<String> { '' },
-      1 => new List<String> { 'a' },
-      2 => new List<String> { 'eu', 'ea' },
-      3 => new List<String> { 'sit', 'nos', 'usi', 'nam', 'eam', 'vis', 'quo', 'ius' },
-      4 => new List<String> { 'amet', 'duis', 'elit', 'sint' },
-      5 => new List<String> { 'lorem', 'ipsum', 'dolor', 'magna' },
-      6 => new List<String> { 'tempor', 'partem', 'labore', 'primis', 'nusquam', 'laudem' },
-      7 => new List<String> { 'inermis', 'laoreet', 'commune', 'scripta', 'virtute', 'impedit' },
-      8 => new List<String> { 'aboreant', 'fabellas', 'propriae' },
-      9 => new List<String> { 'deterruis', 'corrumpit', 'salutandi' },
-      10 => new List<String> { 'instructor', 'conclusion' }
+      'inermis', 'conclusion', 'ius', 'sint', 'impedit', 'deterruis', 'eam', 'elit', 'nusquam'
+    };
+    Map<Integer, List<String>> wordsMap = new Map<Integer, List<String>>{
+      0 => new List<String>{
+        ''
+      },
+      1 => new List<String>{
+        'a'
+      },
+      2 => new List<String>{
+        'eu', 'ea'
+      },
+      3 => new List<String>{
+        'sit', 'nos', 'usi', 'nam', 'eam', 'vis', 'quo', 'ius'
+      },
+      4 => new List<String>{
+        'amet', 'duis', 'elit', 'sint'
+      },
+      5 => new List<String>{
+        'lorem', 'ipsum', 'dolor', 'magna'
+      },
+      6 => new List<String>{
+        'tempor', 'partem', 'labore', 'primis', 'nusquam', 'laudem'
+      },
+      7 => new List<String>{
+        'inermis', 'laoreet', 'commune', 'scripta', 'virtute', 'impedit'
+      },
+      8 => new List<String>{
+        'aboreant', 'fabellas', 'propriae'
+      },
+      9 => new List<String>{
+        'deterruis', 'corrumpit', 'salutandi'
+      },
+      10 => new List<String>{
+        'instructor', 'conclusion'
+      }
     };
     String result = '';
     Integer rnd = 0;
@@ -2830,9 +3068,9 @@ global class FObject {
     Integer numWords = words.size();
     for (Integer counter = 0; counter < this.records; counter++) {
       result = '';
-      randomLength = (Math.random() * (maxLength - minLength)).intValue() + minlength;
+      randomLength = (FObject.random * (maxLength - minLength)).intValue() + minLength;
       do {
-        rnd = (Math.random() * numWords).intValue();
+        rnd = (FObject.random * numWords).intValue();
         selectedWord = words[rnd];
         newLength = result.length() + selectedWord.length();
         if (previousWord != selectedWord && newLength <= randomLength) {
@@ -2844,7 +3082,7 @@ global class FObject {
       if (result.length() < randomLength) {
         Integer additionalLength = randomLength - result.length() - 1;
         List<String> additionalWords = wordsMap.get(additionalLength);
-        rnd = (Math.random() * additionalWords.size()).intValue();
+        rnd = (FObject.random * additionalWords.size()).intValue();
         result += ' ' + additionalWords[rnd];
       }
 
@@ -2876,7 +3114,7 @@ global class FObject {
    * @param recordCounter The number of the record.
    * @return Returns an sObject object.
    */
-  private SObject getRecord(Integer recordCounter) {
+  protected SObject getRecord(Integer recordCounter) {
     SObject result = this.sObjType.newSObject(); // create a new object
     String fieldApiName = '';
     String fieldValue = ''; // the value of a field
@@ -2884,36 +3122,39 @@ global class FObject {
 
     for (Integer fieldCounter = 0; fieldCounter < this.fields.size(); fieldCounter++) { // for every defined field
       fieldApiName = this.fields[fieldCounter]; // get field
-      fieldValue = this.fieldValuesMatrix[fieldCounter][recordCounter]; // get the field value
+      fieldValue = this.fieldValuesMatrix.get(fieldCounter).get(recordCounter); // get the field value
       valueType = this.objectFieldsMap.get(this.fields[fieldCounter].toLowerCase()).dataType; // get the field data type
 
       // set field value
-      if (valueType == Schema.DisplayType.Double) {
-        result.put(fieldApiName, Double.valueOf(fieldValue));
-      } else if (valueType == Schema.DisplayType.Currency) {
-        result.put(fieldApiName, Decimal.valueOf(fieldValue));
-      } else if (valueType == Schema.DisplayType.Date) {
-        result.put(fieldApiName, Date.valueOf(fieldValue));
-      } else if (valueType == Schema.DisplayType.Boolean) {
-        result.put(fieldApiName, Boolean.valueOf(fieldValue));
-      } else if (valueType == Schema.DisplayType.Percent) {
-        result.put(fieldApiName, Decimal.valueOf(fieldValue));
-      } else if (valueType == Schema.DisplayType.Datetime) {
-        result.put(fieldApiName, Datetime.valueOf(fieldValue));
-      } else if (valueType == Schema.DisplayType.Integer) {
-        result.put(fieldApiName, Integer.valueOf(fieldValue));
-      } else if (valueType == Schema.DisplayType.Time) {
-        fieldValue = '2018-01-01 ' + fieldValue;
-        Datetime valueDatetime = Datetime.valueOf(fieldValue);
-        Time valueTime = valueDatetime.time();
-        result.put(fieldApiName, valueTime);
-      } else if (valueType == Schema.DisplayType.Base64) {
-        result.put(fieldApiName, Blob.valueOf(fieldValue));
-      } else {
-        result.put(fieldApiName, fieldValue);
+      try {
+        if (valueType == Schema.DisplayType.Double) {
+          result.put(fieldApiName, Double.valueOf(fieldValue));
+        } else if (valueType == Schema.DisplayType.Currency) {
+          result.put(fieldApiName, Decimal.valueOf(fieldValue));
+        } else if (valueType == Schema.DisplayType.Date) {
+          result.put(fieldApiName, Date.valueOf(fieldValue));
+        } else if (valueType == Schema.DisplayType.Boolean) {
+          result.put(fieldApiName, Boolean.valueOf(fieldValue));
+        } else if (valueType == Schema.DisplayType.Percent) {
+          result.put(fieldApiName, Decimal.valueOf(fieldValue));
+        } else if (valueType == Schema.DisplayType.Datetime) {
+          result.put(fieldApiName, Datetime.valueOf(fieldValue));
+        } else if (valueType == Schema.DisplayType.Integer) {
+          result.put(fieldApiName, Integer.valueOf(fieldValue));
+        } else if (valueType == Schema.DisplayType.Time) {
+          Time valueTime;
+          valueTime = Datetime.valueOf('2018-01-01 ' + fieldValue).time();
+          result.put(fieldApiName, valueTime);
+        } else if (valueType == Schema.DisplayType.Base64) {
+          result.put(fieldApiName, Blob.valueOf(fieldValue));
+        } else { // any other type
+          result.put(fieldApiName, fieldValue);
+        }
+      } catch (TypeException ex) {
+        addError(fieldApiName, 'Invalid value for record #' + recordCounter + ' of field [' + fieldApiName + ']');
       }
     }
-        
+
     return result;
   }
 
@@ -2922,9 +3163,10 @@ global class FObject {
    * @param None.
    * @return Returns a list of sObject records.
    */
-  global List<SObject> getRecords() {
+  public List<SObject> getRecords() {
     createNewRecords();
     List<SObject> results = new List<SObject>(this.createdRecords);
+
     return results;
   }
 
@@ -3013,7 +3255,7 @@ global class FObject {
     List<String> values = new List<String>();
     String fieldApiName = definition.fieldApiName;
     String argumentToLowercase = argument.toLowerCase();
-    
+
     // get field object
     Field depField = this.objectFieldsMap.get(fieldApiName.toLowerCase());
 
@@ -3032,7 +3274,7 @@ global class FObject {
     }
 
     if (depField.dataType != Schema.DisplayType.Picklist &&
-        depField.dataType != Schema.DisplayType.MultiPicklist) { // the field is not picklist
+      depField.dataType != Schema.DisplayType.MultiPicklist) { // the field is not picklist
       for (Integer counter = 0; counter < this.records; counter++) {
         values.add(argument);
       }
@@ -3041,18 +3283,19 @@ global class FObject {
 
     // get all picklist values
     List<String> picklistValues = new List<String>();
-    for (Schema.PicklistEntry picklistEntry : depField.pickListValues) {
+    for (Schema.PicklistEntry picklistEntry : depField.picklistValues) {
       picklistValues.add(picklistEntry.getValue());
     }
 
     String ctrlFieldApiName = depField.controllingFieldApiName; // get controlling field's API name
-    List<String> arguments = new List<String> { argument }; // set arguments list
-
+    List<String> arguments = new List<String>{
+      argument
+    }; // set arguments list
     if (depField.isRestrictedPicklist) { // if the field is restricted
       arguments = keepValuesInList(arguments, picklistValues); // remove argument if not a valid picklist value
     }
     if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-        this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
+      this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.Boolean) {
       values = getPicklistValuesWithoutRespect(arguments);
     } else { // there is a controlling field
       values = getPicklistValuesWithRespect(fieldApiName, ctrlFieldApiName, arguments, null);
@@ -3066,9 +3309,9 @@ global class FObject {
    * @param None.
    * @return None.
    */
-  private void initializeFieldValuesMatrix() {
+  protected void initializeFieldValuesMatrix() {
     this.fieldValuesMatrix.clear();
-    for (Integer counter1 = 0; counter1 < this.fieldsSet.size(); counter1++) {
+    for (Integer counter1 = 0; counter1 < this.fields.size(); counter1++) {
       this.fieldValuesMatrix.add(new List<String>());
       for (Integer counter2 = 0; counter2 < this.records; counter2++) {
         this.fieldValuesMatrix[counter1].add('');
@@ -3077,13 +3320,13 @@ global class FObject {
   }
 
   /**
-   * @description Inserts the created records. 
+   * @description Inserts the created records.
    * @param allOrNone Specifies whether the operation allows partial success. If you specify false
    *   for this parameter and a record fails, the remainder of the DML operation can still succeed.
    * @param groupName The group name of the inserted records.
    * @return A list of Database.SaveResult objects.
    */
-  global List<Database.SaveResult> insertRecords(Boolean allOrNone, String groupName) {
+  public virtual List<Database.SaveResult> insertRecords(Boolean allOrNone, String groupName) {
     List<Database.SaveResult> results = new List<Database.SaveResult>();
     List<SObject> insertedRecords = new List<SObject>(); // the successfully inserted records
     Integer numRecordsInserted = 0; // the number of successfully inserted records
@@ -3099,6 +3342,7 @@ global class FObject {
       this.mustCreateNewRecords = false;
     }
     createNewRecords();
+
     if (processMustTerminate()) {
       return results;
     }
@@ -3120,7 +3364,7 @@ global class FObject {
       counter++;
       if (sr.isSuccess()) {
         numRecordsInserted++;
-        insertedRecords.add(this.recordsToInsert[counter-1]);
+        insertedRecords.add(this.recordsToInsert[counter - 1]);
       } else { // failure
         errors++;
         if (errors <= FObject.maxErrorRecordsToDisplay) {
@@ -3136,7 +3380,7 @@ global class FObject {
       addError(this.objectApiName, 'Found ' + errors + ' errors inserting ' +
         this.recordsToInsert.size() + ' records for object [' + this.objectApiName + ']');
     }
-    
+
     // add the inserted records to global records map
     List<SObject> objectRecords = new List<SObject>();
     if (FObject.globalInsertedRecordsMap.containsKey(this.objectApiName.toLowerCase())) { // if there are inserted records
@@ -3144,7 +3388,7 @@ global class FObject {
     }
     objectRecords.addAll(insertedRecords);
     FObject.globalInsertedRecordsMap.put(this.objectApiName.toLowerCase(), objectRecords);
-    
+
     // add the inserted group records to global records map
     List<SObject> objectRecordsPerGroup = new List<SObject>();
     groupName = (groupName == null) ? '' : groupName; // set group name to an empty string if it is null
@@ -3162,23 +3406,18 @@ global class FObject {
     } else {
       resetMilestoneTimer('Inserted ' + numRecordsInserted + ' records of group [' + groupName.trim() + ']');
     }
-    
+
     return results;
   }
 
   /**
-   * @description Inserts the created records. 
+   * @description Inserts the created records.
    * @param allOrNone Specifies whether the operation allows partial success. If you specify false
    *   for this parameter and a record fails, the remainder of the DML operation can still succeed.
    * @return A list of Database.SaveResult objects.
    */
-  global List<Database.SaveResult> insertRecords(Boolean allOrNone) {
+  public List<Database.SaveResult> insertRecords(Boolean allOrNone) {
     return insertRecords(allOrNone, '');
-  }
-
-  // DEPRECATED
-  global List<Database.SaveResult> insertRecords() {
-    return insertRecords(false);
   }
 
   /**
@@ -3210,11 +3449,11 @@ global class FObject {
     return results;
   }
 
- /**
-  * @description The main method for loading addresses.
-  * @param None.
-  * @return None.
-  */
+  /**
+   * @description The main method for loading addresses.
+   * @param None.
+   * @return None.
+   */
   @TestVisible
   private static void loadAddresses() {
     FObject.language = FObject.language.toLowerCase();
@@ -3224,7 +3463,7 @@ global class FObject {
       // loadAddressesFromItalyInItalian();
     } else if (FObject.locality == 'france' && FObject.language == 'french') {
       // loadAddressesFromFranceInFrench();
-    } else if (FObject.locality == 'spain'&& FObject.language == 'spanish') {
+    } else if (FObject.locality == 'spain' && FObject.language == 'spanish') {
       // loadAddressesFromSpainInSpanish();
     } else if (FObject.locality == 'greece' && FObject.language == 'greek') {
       loadAddressesFromGreeceInGreek();
@@ -3329,7 +3568,7 @@ global class FObject {
       //loadNamesFromItalyInItalian();
     } else if (FObject.locality == 'france' && FObject.language == 'french') {
       //loadNamesFromFranceInFrench();
-    } else if (FObject.locality == 'spain'&& FObject.language == 'spanish') {
+    } else if (FObject.locality == 'spain' && FObject.language == 'spanish') {
       //loadNamesFromSpainInSpanish();
     } else if (FObject.locality == 'greece' && FObject.language == 'greek') {
       loadNamesFromGreeceInGreek();
@@ -3357,14 +3596,14 @@ global class FObject {
 
     // female names
     gender = 'f';
-    List<String> fFirstNames = new List<String> { // add 50 first names
+    List<String> fFirstNames = new List<String>{ // add 50 first names
       'Νάντια', 'Διονυσία', 'Τάνια', 'Αδαμαντία', 'Αλίκη', 'Βασιλική', 'Φανή', 'Καίτη', 'Χρύσα', 'Μάγδα', 'Ηλιάνα',
       'Όλγα', 'Γεωργία', 'Μαριάνθη', 'Άρτεμις', 'Άντζελα', 'Στέλλα', 'Ζωή', 'Ανθή', 'Ευθυμία', 'Αγγελική', 'Τόνια',
       'Ντίνα', 'Ρίτα', 'Ντόρα', 'Αλεξία', 'Παυλίνα', 'Ρένα', 'Σοφία', 'Στεφανία', 'Λένα', 'Τζίνα', 'Γιούλη', 'Νεκταρία',
       'Ρέα', 'Γιώτα', 'Λίζα', 'Ελένη', 'Άννα', 'Έλενα', 'Αικατερίνη', 'Ρούλα', 'Παναγιώτα',
       'Ευγενία', 'Εμμανουέλα', 'Μαριέττα', 'Μυρσίνη', 'Μαρκέλλα', 'Τριανταφυλλιά', 'Αφροδίτη'
     };
-    List<String> fLastNames = new List<String> { // add 200 last names
+    List<String> fLastNames = new List<String>{ // add 200 last names
       'Βαλαέτη', 'Σφακάκη', 'Καλογιάννη', 'Παυλίδου', 'Οικονόμου', 'Ανέστου', 'Κολάρου', 'Θανασούλια', 'Μωραίτη',
       'Κανατούλα', 'Τσιλιδέλου', 'Ανάγνου', 'Μαρινέα', 'Πατέρου', 'Μυρτσίδου', 'Μποτονάκη', 'Μυλωνάκη', 'Αρβανίτη',
       'Κυριαζή', 'Πασχαλίδη', 'Καμηλιέρη', 'Παπαμιχάλη', 'Σούρτζη', 'Κωφοτόλη', 'Μακρίδου', 'Γιαννιού', 'Λεοτσάκου',
@@ -3393,13 +3632,13 @@ global class FObject {
 
     // male names
     gender = 'm';
-    List<String> mFirstNames = new List<String> { // add 50 first names
+    List<String> mFirstNames = new List<String>{ // add 50 first names
       'Αδάμ', 'Ευγένιος', 'Αλέκος', 'Νώντας', 'Φάνης', 'Αργύρης', 'Άλκης', 'Διαμαντής', 'Θάνος', 'Παύλος', 'Φίλιππος', 'Αλέξης', 'Γιώργος', 'Κώστας',
       'Μάρκος', 'Θωμάς', 'Νίκος', 'Δήμος', 'Θεοδόσης', 'Στάθης', 'Φώτης', 'Κυριάκος', 'Χάρης', 'Λάμπρος', 'Άγγελος', 'Πέτρος', 'Στράτος', 'Γρηγόρης',
       'Μανώλης', 'Τάσος', 'Μιχάλης', 'Αντώνης', 'Ανδρέας', 'Δημήτρης', 'Γιάννης', 'Βαγγέλης', 'Νικήτας', 'Ηλίας', 'Αχιλλέας', 'Σταύρος',
       'Παναγιώτης', 'Φαίδων', 'Σάββας', 'Βασίλης', 'Ορέστης', 'Νεκτάριος', 'Πάνος', 'Στέφανος', 'Θεόφιλος', 'Στέλιος'
     };
-    List<String> mLastNames = new List<String> { // add 200 last names
+    List<String> mLastNames = new List<String>{ // add 200 last names
       'Ψαλτήρας', 'Κονδύλης', 'Μοσχοβής', 'Κολώνιας', 'Μουρίκης', 'Μερτύκας', 'Χαρατσής', 'Μανιάτης', 'Τσιλίκης', 'Ταπάκης', 'Μανίκας', 'Χάλαρης',
       'Πούρνος', 'Κυρίδης', 'Ρέμπελος', 'Θανασάς', 'Τρυφέρης', 'Παράσχος', 'Κουρελάς', 'Νταλάκας', 'Μπίλιας', 'Σκαφίδας', 'Ψυράκης', 'Πανούσης',
       'Χαλικάς', 'Προβατάς', 'Λουκέρης', 'Καρλάκης', 'Τσαμάτης', 'Σέρτσος', 'Πλυμένος', 'Κολόνιας', 'Ηλιάδης', 'Σουλελές', 'Μαγουλάς', 'Λαζάρου',
@@ -3439,14 +3678,14 @@ global class FObject {
 
     // female names
     gender = 'f';
-    List<String> fFirstNames = new List<String> { // add 50 first names
+    List<String> fFirstNames = new List<String>{ // add 50 first names
       'Tracey', 'Amelia', 'Leah', 'Nicola', 'Theresa', 'Sophie', 'Olivia', 'Sally', 'Wendy', 'Fiona',
       'Deirdre', 'Jane', 'Lillian', 'Abigail', 'Ella', 'Claire', 'Lauren', 'Bernadette', 'Karen', 'Vanessa',
       'Grace', 'Alison', 'Rachel', 'Heather', 'Ava', 'Wanda', 'Natalie', 'Victoria', 'Joan', 'Dorothy',
       'Una', 'Rebecca', 'Donna', 'Emma', 'Sarah', 'Sonia', 'Samantha', 'Lily', 'Bella', 'Penelope', 'Julia',
       'Caroline', 'Felicity', 'Anne', 'Faith', 'Diane', 'Sue', 'Joanne', 'Kylie', 'Jasmine'
     };
-    List<String> fLastNames = new List<String> { // add 200 last names
+    List<String> fLastNames = new List<String>{ // add 200 last names
       'Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor',
       'Anderson', 'Thomas', 'Jackson', 'White', 'Harris', 'Martin', 'Thompson', 'Garcia', 'Martinez',
       'Robinson', 'Clark', 'Rodriguez', 'Lewis', 'Lee', 'Walker', 'Hall', 'Allen', 'Young', 'Hernandez',
@@ -3473,7 +3712,7 @@ global class FObject {
 
     // male names
     gender = 'm';
-    List<String> mFirstNames = new List<String> { // add 50 first names
+    List<String> mFirstNames = new List<String>{ // add 50 first names
       'Sebastian', 'Boris', 'Andrew', 'Paul', 'Jake', 'Edward', 'Neil', 'Ryan', 'Christian', 'Ian', 'Max',
       'Gavin', 'Matt', 'Jonathan', 'Nicholas', 'Adam', 'Frank', 'Brandon', 'Julian', 'Richard', 'Steven',
       'Colin', 'James', 'Trevor', 'Anthony', 'Victor', 'Nathan', 'Adrian', 'John', 'Joshua', 'Stewart',
@@ -3510,7 +3749,6 @@ global class FObject {
     String fieldApiName = definition.fieldApiName;
     String script = '';
     String errorMessage = '';
-    String chr = ''; // a definition string character
     definition.isValid = true;
     definition.isValidated = true;
 
@@ -3531,6 +3769,7 @@ global class FObject {
     do {
       script = parseCluster(definition, script);
     } while (String.isNotEmpty(script));
+
   }
 
   private String parseCluster(Definition definition, String script) {
@@ -3598,7 +3837,7 @@ global class FObject {
           }
           arguments.add(argument); // add argument to a list
         }
-        
+
         chr = result.left(1); // get next char - it should be , or )
         if (chr == ')') { // found (
           result = result.removeStart(chr).trim(); // remove the )
@@ -3684,8 +3923,6 @@ global class FObject {
       System.debug(LoggingLevel.INFO, 'FORCEEA ' + message);
     } else if (errorLevel == DEBUG && verboseLevel.ordinal() == 1) {
       System.debug(LoggingLevel.DEBUG, 'FORCEEA ' + message);
-    } else if (errorLevel == FINE && ERROR_LEVEL.ordinal() == 1 && verboseLevel.ordinal() >= 1) {
-      System.debug(LoggingLevel.FINE, 'FORCEEA ' + message);
     }
   }
 
@@ -3695,7 +3932,7 @@ global class FObject {
    * @return True, if the process is invalid.
    * @throws Returns true if the process is invalid.
    */
-  private Boolean processMustTerminate() {
+  protected Boolean processMustTerminate() {
     final String MESSAGE = 'Process is invalid and will terminate';
 
     if (!FObject.processIsValid) {
@@ -3721,7 +3958,6 @@ global class FObject {
    */
   private List<String> removeValuesFromList(List<String> listToProcess, List<String> valuesToRemove) {
     List<String> results = new List<String>();
-    List<String> valuesToRemoveLowercase = new List<String>();
     String valueLowercase = '';
     Boolean mustInclude = true;
 
@@ -3748,9 +3984,9 @@ global class FObject {
    * @param infoText The information message to display.
    * @return None.
    */
-  private void resetMilestoneTimer(String infoText) {
+  protected void resetMilestoneTimer(String infoText) {
     forceeaDebug(INFO, '>> ' + infoText + ' for object [' + this.objectApiName + '] in ' +
-      this.milestoneDuration +  ' ms. Transaction duration: ' + Limits.getCpuTime() + ' ms');
+      this.milestoneDuration + ' ms. Transaction duration: ' + Limits.getCpuTime() + ' ms');
     this.milestoneStartTime = Limits.getCpuTime();
   }
 
@@ -3760,19 +3996,8 @@ global class FObject {
    * @param definition The field definition (command + script).
    * @return None.
    */
-  global void setDefinition(String fieldName, String definition) {
-    setDefinition(fieldName, false, definition, -1);
-  }
-
-  /**
-   * @description Declares a field definition.
-   * @param fieldName The API name of a field.
-   * @param isSystemDeclared True if the definition is defined by Forceea.
-   * @param definition The field definition (command + script).
-   * @return None.
-   */
-  private void setDefinition(String fieldName, Boolean isSystemDeclared, String definition) {
-    setDefinition(fieldName, isSystemDeclared, definition, -1);
+  public void setDefinition(String fieldName, String definition) {
+    setDefinition(fieldName, false, definition);
   }
 
   /**
@@ -3782,7 +4007,7 @@ global class FObject {
    * @param position The position of the definition.
    * @return None.
    */
-  private void setDefinition(String fieldName, Boolean isSystemDeclared, String definitionString, Integer position) {
+  protected virtual void setDefinition(String fieldName, Boolean isSystemDeclared, String definitionString) {
     String thisFieldName = fieldName.trim();
     String userFieldName = thisFieldName;
 
@@ -3792,15 +4017,30 @@ global class FObject {
 
     if (String.isBlank(fieldApiName)) { // field is invalid
       addError(this.objectApiName, 'Invalid field [' + userFieldName + '] for definition [' + definitionString + ']');
-    } else { // field is valid, declare definition
+    } else { // field is valid
+      // declare a new definition
       Definition def = new Definition(thisFieldName, fieldApiName, isSystemDeclared, definitionString);
       def.fieldApiName = fieldApiName;
-      this.fieldsSet.add(fieldApiName);
-      if (position == -1) {
-        this.definitions.add(def);
-      } else {
-        this.definitions.add(position, def);
+      // initialize variables
+      Boolean fieldExists = false;
+      Integer counter = 0;
+      for (String field : this.fields) { // for each field
+        if (('.' + fieldApiName) == field) { // the field is inactive
+          this.fields[counter] = fieldApiName; // activate it
+          fieldExists = true;
+          break;
+        } else if (fieldApiName == field) { // the field is activated
+          fieldExists = true;
+          break;
+        }
+        counter++;
       }
+
+      if (!fieldExists) {
+        this.fields.add(fieldApiName); // add new field
+      }
+
+      this.definitions.add(def); // add new definition
 
       forceeaDebug(DEBUG, SUCCESS_SYMBOL + ' Registered field [' + def.fieldApiName +
         '] with definition [' + def.definitionString + ']');
@@ -3808,7 +4048,7 @@ global class FObject {
 
     this.definitionsAreValidated = false;
     this.mustCreateNewRecords = true;
-   }
+  }
 
   /**
    * @description Sets a field definition based on the field data type and the object.
@@ -3845,13 +4085,13 @@ global class FObject {
       String fromDate = String.valueOf(thisYear - 1) + '-01-01';
       String toDate = String.valueOf(thisYear + 1) + '-12-31';
       setDefinition(field.fieldName, true, 'random type(date) from(' + fromDate + ') to(' + toDate + ')');
-    } else if (field.dataType == Schema.DisplayType.DateTime) {
+    } else if (field.dataType == Schema.DisplayType.Datetime) {
       Integer thisYear = Date.today().year();
       String fromDate = String.valueOf(thisYear - 1) + '-01-01';
       String toDate = String.valueOf(thisYear + 1) + '-12-31';
       setDefinition(field.fieldName, true, 'random type(datetime) from(' + fromDate + ') to(' + toDate + ')');
     } else if (
-        field.dataType == Schema.DisplayType.Picklist ||
+      field.dataType == Schema.DisplayType.Picklist ||
         field.dataType == Schema.DisplayType.MultiPicklist ||
         field.dataType == Schema.DisplayType.Combobox) {
       setDefinition(field.fieldName, true, 'random type(picklist)');
@@ -3864,7 +4104,8 @@ global class FObject {
     } else if (field.dataType == Schema.DisplayType.Percent) {
       setDefinition(field.fieldName, true, 'random type(number) from(0) to(100) scale(2)');
     } else if (field.dataType == Schema.DisplayType.Reference) {
-      setDefinition(field.fieldName, true, 'random lookup(' + field.parents[0] + ') source(forceea)');
+      String source = (FObject.isAsync) ? 'salesforce' : 'forceea';
+      setDefinition(field.fieldName, true, 'random lookup(' + field.parents[0] + ') source(' + source + ')');
     } else if (field.dataType == Schema.DisplayType.Boolean) {
       setDefinition(field.fieldName, true, 'random type(boolean)');
     } else if (field.dataType == Schema.DisplayType.Email) {
@@ -3886,7 +4127,7 @@ global class FObject {
    * @param None.
    * @return None.
    */
-  private void setDefinitionOfRequiredFields() {
+  protected void setDefinitionOfRequiredFields() {
     if (this.setRequiredFields) {
       forceeaDebug(DEBUG, 'Setting the definition of required fields for object [' + this.objectApiName + ']');
     } else {
@@ -3916,7 +4157,7 @@ global class FObject {
       requiredFieldNames.add('EmailEncodingKey');
       requiredDefinitions.add('static value(UTF-8)');
       requiredFieldNames.add('TimeZonesIdKey');
-      requiredDefinitions.add('static value(GMT)'); 
+      requiredDefinitions.add('static value(GMT)');
       requiredFieldNames.add('LocalesIdKey');
       requiredDefinitions.add('static value(en_US)');
       requiredFieldNames.add('LanguageLocaleKey');
@@ -3925,14 +4166,14 @@ global class FObject {
       requiredDefinitions.add('static lookup(profile) field(name) value(Standard User) source(salesforce)');
       // set field definitions
       for (Integer counter = 0; counter < requiredFieldNames.size(); counter++) {
-        if (!this.fieldsSet.contains(requiredFieldNames[counter])) { // if field is not defined
+        if (!this.fields.contains(requiredFieldNames[counter])) { // if field is not defined
           setDefinition(requiredFieldNames[counter], true, requiredDefinitions[counter]);
         }
       }
     } else { // object is anything else
       for (Field field : this.objectFieldsMap.values()) { // for each field in the fields map
         // if field is required and is not defined yet
-        if (field.isRequired && (!this.fieldsSet.contains(field.fieldApiName))) {
+        if (field.isRequired && (!this.fields.contains(field.fieldApiName))) {
           setDefinitionFromField(field); // set a new definition for this Field
           requiredFieldNames.add(field.fieldApiName);
         }
@@ -4009,6 +4250,12 @@ global class FObject {
     // example: random type(email)
     dt = new DefinitionType(DefinitionTypeId.RANDOM_EMAIL, 'RandomEmail', 'random');
     dt.clusterTypes.add(new ClusterType('type', ValueType.TYPE_STRING, 'email', false));
+    FObject.definitionTypes.add(dt);
+
+    // example: random type(phone) format("(353) dd dd ddd")
+    dt = new DefinitionType(DefinitionTypeId.RANDOM_PHONE, 'RandomPhone', 'random');
+    dt.clusterTypes.add(new ClusterType('type', ValueType.TYPE_STRING, 'phone', false));
+    dt.clusterTypes.add(new ClusterType('format', ValueType.TYPE_STRING, null, false));
     FObject.definitionTypes.add(dt);
 
     // example: random type(firstname) group(billing)
@@ -4240,13 +4487,10 @@ global class FObject {
     dt = new DefinitionType(DefinitionTypeId.COPY_FIELD, 'CopyField', 'copy');
     dt.clusterTypes.add(new ClusterType('field', ValueType.TYPE_STRING, null, false));
     FObject.definitionTypes.add(dt);
-
-    // DEPRECATED
-    // example: serial from(10.2) step(1.2) scale(2)
-    dt = new DefinitionType(DefinitionTypeId.SERIAL_NUMBER_DEPRECATED, 'SerialDecimalDeprecated', 'serial');
-    dt.clusterTypes.add(new ClusterType('from', ValueType.TYPE_DECIMAL, null, false));
-    dt.clusterTypes.add(new ClusterType('step', ValueType.TYPE_DECIMAL, null, false));
-    dt.clusterTypes.add(new ClusterType('scale', ValueType.TYPE_INTEGER, null, false));
+    // example: copy field(AccountId) from(Account.Rating)
+    dt = new DefinitionType(DefinitionTypeId.COPY_LOOKUP, 'CopyLookupField', 'copy');
+    dt.clusterTypes.add(new ClusterType('field', ValueType.TYPE_STRING, null, false));
+    dt.clusterTypes.add(new ClusterType('from', ValueType.TYPE_STRING, null, false));
     FObject.definitionTypes.add(dt);
   }
 
@@ -4257,8 +4501,8 @@ global class FObject {
    */
   private void setDependentFields() {
     // initialize
-    Integer depFieldDefinitionPosition = -1; // the position of dependent field's definition
-    Integer ctrlFieldDefinitionPosition = -1; // the position of controlling field's definition
+    Integer depFieldPosition = -1; // the position of dependent field's definition
+    Integer ctrlFieldPosition = -1; // the position of controlling field's definition
     String depFieldApiName = ''; // the dependent field API name
     String ctrlFieldApiName = ''; // the controlling field API name
     Field field = new Field(); // the field details of the dependent field
@@ -4268,50 +4512,35 @@ global class FObject {
       depFieldApiName = def.fieldApiName;
       field = this.objectFieldsMap.get(depFieldApiName.toLowerCase()); // get field details
 
-      // if the field doesn't have a controlling field
-      if (String.isBlank(field.controllingFieldApiName)) {
+      if (String.isBlank(field.controllingFieldApiName)) { // field doesn't have a controlling field
         continue; // go to next definition
-      } else { // get controlling field API name
+      } else { // get controlling field's API name
         ctrlFieldApiName = field.controllingFieldApiName;
       }
 
       // the (dependent) field has a controlling field
       // and it respects field dependencies
-      Schema.DisplayType depFieldType = this.objectFieldsMap.get(depFieldApiName.toLowerCase()).dataType;
       Schema.DisplayType ctrlFieldType = this.objectFieldsMap.get(ctrlFieldApiName.toLowerCase()).dataType;
-      DefinitionType depFieldDefinitionType = def.type;
 
       // check the controlling field data type
       if (ctrlFieldType == Schema.DisplayType.Picklist || ctrlFieldType == Schema.DisplayType.MultiPicklist) {
         // get the position of dependent/controlling field definitions
-        depFieldDefinitionPosition = getFieldDefinitionPosition(depFieldApiName);
-        ctrlFieldDefinitionPosition = getFieldDefinitionPosition(ctrlFieldApiName);
+        depFieldPosition = this.fields.indexOf(depFieldApiName);
+        ctrlFieldPosition = this.fields.indexOf(ctrlFieldApiName);
       } else if (ctrlFieldType == Schema.DisplayType.Boolean) {
         forceeaDebug(WARN, 'The Checkbox field type is not supported ' +
           'for the controlling field of dependent field [' + depFieldApiName + ']');
         continue;
       }
 
-      if (ctrlFieldDefinitionPosition == -1) { // if the controlling field is not defined
+      if (ctrlFieldPosition == -1) { // controlling field is not defined
         String newDefinition = 'random type(picklist)';
         // create a new definition for the controlling field, before the definition of the dependent field
         forceeaDebug(INFO, 'Did not find a definition for the controlling field [' +
           ctrlFieldApiName + '] of dependent field [' + depFieldApiName + '] and will generate a definition');
-        setDefinition(ctrlFieldApiName, true, newDefinition, depFieldDefinitionPosition);
-      } else { // there is a definition for the controlling field
-        // if controlling field's definition is after dependent field's definition
-        if (ctrlFieldDefinitionPosition > depFieldDefinitionPosition) {
-          // set it before
-          Definition ctrlFieldDefinition = this.definitions.remove(ctrlFieldDefinitionPosition);
-          // add defintion to correct position
-          if (depFieldDefinitionPosition == 0) {
-            ctrlFieldDefinitionPosition = 0;
-          } else {
-            ctrlFieldDefinitionPosition = depFieldDefinitionPosition;
-          }
-          this.definitions.add(ctrlFieldDefinitionPosition, ctrlFieldDefinition);
-        }
+        setDefinition(ctrlFieldApiName, true, newDefinition);
       }
+      upsertFieldBeforePosition(ctrlFieldApiName, depFieldPosition);
     }
 
     validateDefinitions();
@@ -4322,7 +4551,7 @@ global class FObject {
    * @param mode The verbose mode (none, info, debug).
    * @return None.
    */
-  global static void setGlobalVerbose(String mode) {
+  public static void setGlobalVerbose(String mode) {
     mode = mode.toLowerCase();
 
     if (mode == 'none') {
@@ -4334,12 +4563,18 @@ global class FObject {
     }
   }
 
+  public static void resetLanguageLocality() {
+    FObject.firstNamesLibraryMap.clear();
+    FObject.lastNamesLibraryMap.clear();
+    FObject.addressesLibrary.clear();
+  }
+
   /**
-   * @description Stores object's field details to global fields map
+   * @description Stores the object's field details to the global fields map
    * @param objectApiName The object API name.
    * @return None.
    */
-  private static void setSObject(String objectApiName) {
+  private static void setObject(String objectApiName) {
     Map<String, Field> fieldsMap = new Map<String, Field>();
     Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectApiName); // get object type
 
@@ -4347,7 +4582,7 @@ global class FObject {
       Field field = FObject.getDetailsFromSObjectField(sof); // get the field object
       fieldsMap.put(field.fieldApiName.toLowerCase(), field); // add field to map
     }
-    
+
     FObject.globalObjectFieldsMap.put(objectApiName.toLowerCase(), fieldsMap); // add object fields to global map
   }
 
@@ -4356,7 +4591,7 @@ global class FObject {
    * @param mode The verbose mode (none, info, debug).
    * @return None.
    */
-  global void setVerbose(String mode) {
+  public void setVerbose(String mode) {
     mode = mode.toLowerCase();
 
     if (mode == 'none') {
@@ -4369,11 +4604,41 @@ global class FObject {
   }
 
   /**
+   * @description Inserts or moves a field before a specific position of the fields list.
+   *   If the field exists, it is moved before the position.
+   *   If it doesn't exist, it is inserted before the position.
+   * @param fieldApiName The field API name.
+   * @param position The position of the fields list.
+   * @return None.
+   */
+  private void upsertFieldBeforePosition(String fieldApiName, Integer position) {
+    Boolean mustAddField = false;
+
+    if (this.fields.contains(fieldApiName)) { // field exists
+      Integer fieldPosition = this.fields.indexOf(fieldApiName); // get field's position
+      if (position < fieldPosition) { // field must be moved
+        this.fields.remove(fieldPosition); // delete field
+        mustAddField = true;
+      }
+    } else { // field does not exist
+      mustAddField = true;
+    }
+
+    if (mustAddField) {
+      if (position == 0) {
+        this.fields.add(0, fieldApiName); // add field in the first position
+      } else {
+        this.fields.add(position - 1, fieldApiName); // add field in the previous position
+      }
+    }
+  }
+
+  /**
    * @description Validates the field definitions.
    * @param None.
    * @return None.
    */
-  private void validateDefinitions() {
+  protected void validateDefinitions() {
     if (this.definitionsAreValidated) {
       return;
     }
@@ -4416,8 +4681,8 @@ global class FObject {
 
     // Value has the correct number of arguments
     if ((String.isNotBlank(clusterType.value) && // if the parameter has a value
-        cluster.arguments.size() == 1 && // and there is only 1 argument
-        clusterType.value != cluster.arguments[0])) { // and this is not the expected value
+      cluster.arguments.size() == 1 && // and there is only 1 argument
+      clusterType.value != cluster.arguments[0])) { // and this is not the expected value
       return false;
     }
 

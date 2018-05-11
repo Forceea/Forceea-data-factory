@@ -80,6 +80,7 @@
         <fullName>All_fields</fullName>
         <columns>NAME</columns>
         <columns>TestDecimal__c</columns>
+        <columns>TestLookupUser__c</columns>
         <filterScope>Everything</filterScope>
         <label>All fields</label>
         <language>en_US</language>

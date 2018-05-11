@@ -3,13 +3,17 @@
     <types>
         <members>FObject</members>
         <members>FObjectTest</members>
-        <members>ForceeaExamples</members>
         <members>ForceeaException</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>ForceeaSetting.Default</members>
-        <name>CustomMetadata</name>
+        <members>Forceealogoapp1</members>
+        <name>ContentAsset</name>
+    </types>
+    <types>
+        <members>Forceea</members>
+        <members>ForceeaLightning</members>
+        <name>CustomApplication</name>
     </types>
     <types>
         <members>FObjectFour__c</members>
@@ -31,12 +35,23 @@
         <members>FObjectOne__c-FObjectOne Layout</members>
         <members>FObjectThree__c-FObjectThree Layout</members>
         <members>FObjectTwo__c-FObjectTwo Layout</members>
-        <members>ForceeaSetting__mdt-Forceea Setting Layout</members>
         <name>Layout</name>
     </types>
     <types>
-        <members>Admin</members>
-        <name>Profile</name>
+        <members>FObjectFour__c.All_fields</members>
+        <members>FObjectOne__c.Number_and_Date_fields</members>
+        <members>FObjectOne__c.Other_fields</members>
+        <members>FObjectOne__c.Picklist_fields</members>
+        <members>FObjectOne__c.Text_fields</members>
+        <members>FObjectThree__c.All_fields</members>
+        <members>FObjectTwo__c.Number_and_date_fields</members>
+        <members>FObjectTwo__c.Picklist_fields</members>
+        <members>FObjectTwo__c.Text_fields</members>
+        <name>ListView</name>
     </types>
-    <version>41.0</version>
+    <types>
+        <members>ForceeaUser</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>42.0</version>
 </Package>

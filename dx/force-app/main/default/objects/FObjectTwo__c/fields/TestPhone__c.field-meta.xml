@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>TestPercent__c</fullName>
+    <fullName>TestPhone__c</fullName>
     <externalId>false</externalId>
-    <label>TestPercent</label>
-    <precision>7</precision>
+    <label>TestPhone</label>
     <required>false</required>
-    <scale>2</scale>
     <trackTrending>false</trackTrending>
-    <type>Percent</type>
+    <type>Phone</type>
 </CustomField>
