@@ -35,6 +35,7 @@
         <members>FObjectOne__c-FObjectOne Layout</members>
         <members>FObjectThree__c-FObjectThree Layout</members>
         <members>FObjectTwo__c-FObjectTwo Layout</members>
+        <members>ForceeaSetting__mdt-Forceea Setting Layout</members>
         <name>Layout</name>
     </types>
     <types>
