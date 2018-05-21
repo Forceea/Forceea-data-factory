@@ -2,7 +2,7 @@
 <a href="https://githubsfdeploy.herokuapp.com">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
-</a>
+</a><br/>
 Forceea (forˈsēa) is a data factory framework for Salesforce. The framework creates data using a descriptive language called Sample Data Definition Language (SDDL) to define the nature of the data.
 
 Forceea was created with a double objective:
