@@ -9,6 +9,8 @@ Forceea was created with a double objective:
 * Allow developers to easily create SObject records for any Test Method.
 * Allow administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes.
 
+>Do you need to create millions of records? Have a look at [Forceeapp](Forceeapp.md).
+
 The following list describes the main capabilities of the framework. I encourage everyone to download the [User Guide](http://bit.ly/Forceea13_UserGuide), where you can find many examples and detailed information of the tools the framework offers. 
 *	Creates records for standard or custom objects, for any standard or custom field.
 *	Automatically definines the required fields.
