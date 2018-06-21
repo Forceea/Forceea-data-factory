@@ -18,7 +18,7 @@ obj.records = 200000;
 // giving a seed, you always get the same results
 obj.seed = 1;
 
-// for the moment you have to manually give the number of records of each job execution (batch)
+// currently you have to manually give the number of records of each job execution (batch)
 // depending on your org, first try 1000 (default) and then increase it up to 5000
 obj.batchSize = 2000;
 
