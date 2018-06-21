@@ -22,10 +22,11 @@ obj.seed = 1;
 // depending on your org, first try 1000 (default) and then increase it up to 5000
 obj.batchSize = 2000;
 
-// the default value is 20, but you may give any value from 1 to 50
+// the default value of the queueable jobs is 20, but you may give any value between 1 to 50
 obj.jobs = 30;
 
-// your SDDL definitions are the same definitions of Forceea, with some exceptions, for example source(forceea) should be converted to source(salesforce)
+// your SDDL definitions are the same definitions of Forceea, with some exceptions
+// for example source(forceea) should be converted to source(salesforce)
 obj.setDefinition('TestText__c', 'static value(Test)');
 obj.setDefinition('TestText__c', 'serial type(number) from(100001) step(1) scale(0)');
 obj.setDefinition('TestDecimal__c', 'serial type(number) from(1) step(1) scale(0)');
