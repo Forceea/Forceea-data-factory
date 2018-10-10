@@ -1,5 +1,5 @@
 /*
-  FORCEEA data factory framework (version 1.3)
+  FORCEEA data factory framework (version 1.3.1)
   Copyright (C) 2018 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -16,13 +16,13 @@
 
 /**
  * @description Forceea data factory framework
- * @version 1.3
+ * @version 1.3.1
  */
 public with sharing virtual class FObject {
 
   /* CONSTANTS */
 
-  private static final String VERSION = '1.3';
+  private static final String VERSION = '1.3.1';
   private static final String MESSSAGE_NAMES = 'Loaded first & last names from ';
   private static final String MESSSAGE_ADDRESSES = 'Loaded addresses from ';
   private static final String FAILURE_SYMBOL = '►';
@@ -3537,7 +3537,7 @@ public with sharing virtual class FObject {
     }
 
     FObject.streetNumberAfterStreet = false;
-    String country = 'USA';
+    String country = 'United States';
 
     // add data
     FObject.addressesLibrary.add(new FAddress('N Main Ave', '10013', 'New York', 'NY', country));

@@ -1,4 +1,4 @@
-# Forceea 1.3 #
+# Forceea 1.3.1 #
 <a href="https://githubsfdeploy.herokuapp.com">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
@@ -9,9 +9,7 @@ Forceea was created with a double objective:
 * Allow developers to easily create SObject records for any Test Method.
 * Allow administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes.
 
->Do you need to create millions of records? Have a look at [Forceeapp](Forceeapp.md).
-
-The following list describes the main capabilities of the framework. I encourage everyone to download the [User Guide](http://bit.ly/Forceea13_UserGuide), where you can find many examples and detailed information of the tools the framework offers. 
+The following list describes the main capabilities of the framework. I encourage everyone to download the [User Guide](http://bit.ly/Forceea131_UserGuide), where you can find many examples and detailed information of the tools the framework offers. 
 *	Creates records for standard or custom objects, for any standard or custom field.
 *	Automatically definines the required fields.
 *	Creates static or random data for fields of any data type: Integer, Currency, Double, Date, Datetime, Time, Boolean, String, TextArea, Percent, Reference, Email, Phone, URL, Base64 (BLOB), Picklist and MultiPicklist.
@@ -25,6 +23,5 @@ The following list describes the main capabilities of the framework. I encourage
 *	Validates the definitions based on the field data type.
 * Provides many methods to get/insert the created records, add/delete field definitions, get the errors, configure the amount of information returned during run-time (debug log) and more.
 *	Has an extended error messaging system.
-* Includes a Test Class with 320 test methods.
 
-Download [Forceea Examples](http://bit.ly/Forceea13_Examples) to see some examples of creating data for many standard objects.
+Download [Forceea Examples](http://bit.ly/Forceea131_Examples) to see some examples of creating data for many standard objects.

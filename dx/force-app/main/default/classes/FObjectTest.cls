@@ -1,5 +1,5 @@
 /*
-  FORCEEA data factory framework (version 1.3)
+  FORCEEA data factory framework (version 1.3.1)
   Copyright (C) 2018 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -16,7 +16,7 @@
 
 /**
  * @description FObject Test Class
- * @version 1.3
+ * @version 1.3.1
  */
 @IsTest
 public class FObjectTest {
