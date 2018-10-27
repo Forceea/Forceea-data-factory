@@ -1,4 +1,4 @@
-# Forceea 1.3.1 #
+# Forceea 1.3.1 (October 2018) #
 <a href="https://githubsfdeploy.herokuapp.com">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
@@ -25,3 +25,5 @@ The following list describes the main capabilities of the framework. I encourage
 *	Has an extended error messaging system.
 
 Download [Forceea Examples](http://bit.ly/Forceea131_Examples) to see some examples of creating data for many standard objects.
+
+Read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](http://bit.ly/PopulateWithForceeaAndCLI)
