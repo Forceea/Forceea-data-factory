@@ -3,9 +3,8 @@
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
 </a><br/>
-Forceea (forsèa) is a data factory framework for Salesforce and it creates data using a descriptive language to define the "nature" of  data.
+Forceea (forsèa) is a data factory framework for Salesforce and it creates data using a descriptive language to define the "nature" of  data. The framework was created with a double objective:
 
-Forceea was created with a double objective:
 * Allow developers to easily create SObject records for any Test Method.
 * Allow administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes.
 
