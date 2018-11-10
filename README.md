@@ -27,4 +27,6 @@ You can find many examples and detailed information of the tools the framework o
 
 Download [Forceea Examples](http://bit.ly/Forceea131_Examples) to see some examples of creating data for variou standard objects.
 
-Read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](http://bit.ly/PopulateWithForceeaAndCLI)
+Read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](https://acmantics.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
+
+Visit [acmantics.com](https://acmantics.com/forceea) to see all posted articles about Forceea.
