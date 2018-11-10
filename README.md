@@ -3,13 +3,13 @@
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
 </a><br/>
-Forceea (forˈsēa) is a data factory framework for Salesforce. The framework creates data using a descriptive language called Sample Data Definition Language (SDDL) to define the nature of the data.
+Forceea (forsèa) is a data factory framework for Salesforce and it creates data using a descriptive language to define the "nature" of  data.
 
 Forceea was created with a double objective:
 * Allow developers to easily create SObject records for any Test Method.
 * Allow administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes.
 
-The following list describes the main capabilities of the framework. I encourage everyone to download the [User Guide](http://bit.ly/Forceea131_UserGuide), where you can find many examples and detailed information of the tools the framework offers. 
+The following list describes its main capabilities:
 *	Creates records for standard or custom objects, for any standard or custom field.
 *	Automatically definines the required fields.
 *	Creates static or random data for fields of any data type: Integer, Currency, Double, Date, Datetime, Time, Boolean, String, TextArea, Percent, Reference, Email, Phone, URL, Base64 (BLOB), Picklist and MultiPicklist.
@@ -24,6 +24,8 @@ The following list describes the main capabilities of the framework. I encourage
 * Provides many methods to get/insert the created records, add/delete field definitions, get the errors, configure the amount of information returned during run-time (debug log) and more.
 *	Has an extended error messaging system.
 
-Download [Forceea Examples](http://bit.ly/Forceea131_Examples) to see some examples of creating data for many standard objects.
+You can find many examples and detailed information of the tools the framework offers in the [User Guide](http://bit.ly/Forceea131_UserGuide) 
+
+Download [Forceea Examples](http://bit.ly/Forceea131_Examples) to see some examples of creating data for variou standard objects.
 
 Read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](http://bit.ly/PopulateWithForceeaAndCLI)
