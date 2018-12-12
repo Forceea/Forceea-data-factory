@@ -1,9 +1,10 @@
-# Forceea v1.3.1 (18.2) #
+# Forceea 18.2 (v1.3.1) #
 <a href="https://githubsfdeploy.herokuapp.com">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
 </a>
-If the "Deploy to Salesforce" tool doesn't work (returns an OAuth error), you can install the unmanaged [package](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t580000003QlE)
+
+If the "Deploy to Salesforce" tool doesn't work (returns an OAuth error), you can install the unmanaged [package 18.2](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t580000003QlE).
 <hr/>
 Forceea (forsèa) is a data factory framework for Salesforce and it creates data using a descriptive language to define the "nature" of  data. The framework was created with a double objective:
 
