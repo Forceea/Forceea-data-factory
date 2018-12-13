@@ -28,7 +28,7 @@ The following list describes its main capabilities:
 
 You can find many examples and detailed information of the tools the framework offers in the [User Guide](http://bit.ly/Forceea131_UserGuide) 
 
-Download [Forceea Examples](http://bit.ly/Forceea131_Examples) to see some examples of creating data for variou standard objects.
+Download [Forceea Examples](https://acmantics.com/forceea-examples) to see some examples of creating data for variou standard objects.
 
 Read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](https://acmantics.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
 
