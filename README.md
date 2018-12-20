@@ -11,6 +11,12 @@ Forceea (forsèa) is a data factory framework for Salesforce and it creates data
 * Allow developers to easily create SObject records for any Test Method.
 * Allow administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes.
 
+To get familiar with Forceea, you can
+* find many examples and detailed information of the tools the framework offers in the [User Guide](http://bit.ly/Forceea131_UserGuide) 
+* download [Forceea Examples](https://acmantics.com/forceea-examples) to see some examples of creating data for variou standard objects.
+* read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](https://acmantics.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
+* visit [acmantics.com](https://acmantics.com/forceea) to see all posted articles.
+
 The following list describes its main capabilities:
 *	Creates records for standard or custom objects, for any standard or custom field.
 *	Automatically definines the required fields.
@@ -25,11 +31,3 @@ The following list describes its main capabilities:
 *	Validates the definitions based on the field data type.
 * Provides many methods to get/insert the created records, add/delete field definitions, get the errors, configure the amount of information returned during run-time (debug log) and more.
 *	Has an extended error messaging system.
-
-You can find many examples and detailed information of the tools the framework offers in the [User Guide](http://bit.ly/Forceea131_UserGuide) 
-
-Download [Forceea Examples](https://acmantics.com/forceea-examples) to see some examples of creating data for variou standard objects.
-
-Read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](https://acmantics.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
-
-Visit [acmantics.com](https://acmantics.com/forceea) to see all posted articles about Forceea.
