@@ -18,7 +18,7 @@ Forceea (forsèa) is a data factory framework for Salesforce, using the data gen
 * facilitate administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes
 
 To get familiar with Forceea, you can
-* find many examples and detailed information in the [User Guide](https://rebrand.ly/Forceea131-user-guide) 
+* find many examples and detailed information in the [User Guide](https://rebrand.ly/Forceea-user-guide) 
 * download [Forceea Examples](https://acmantics.com/forceea-examples) to see how you can create data
 for various standard objects
 * read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI:a step-by-step guide](https://acmantics.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
