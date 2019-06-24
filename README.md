@@ -19,10 +19,10 @@ Forceea (forsèa) is a data factory framework for Salesforce, using the data gen
 
 To get familiar with Forceea, you can
 * find many examples and detailed information in the [User Guide](https://nmitrakis.com/Forceea131-user-guide) 
-* download [Forceea Examples](https://acmantics.com/forceea-examples) to see how you can create data
+* download [Forceea Examples](https://passionforsalesforce.com/forceea-examples) to see how you can create data
 for various standard objects
-* read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI:a step-by-step guide](https://acmantics.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
-* visit [acmantics.com](https://acmantics.com/forceea) to see all posted articles
+* read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI:a step-by-step guide](https://passionforsalesforce.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
+* visit [acmantics.com](https://passionforsalesforce.com/forceea) to see all posted articles
 
 The following list describes its main capabilities:
 *	creates records for standard or custom objects, for any standard or custom field
