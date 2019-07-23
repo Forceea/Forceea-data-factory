@@ -3,7 +3,7 @@
 # Forceea v1.3.1
 <a href="https://githubsfdeploy.herokuapp.com">
   <img alt="Deploy to Salesforce"
-       src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
+       src="http://nmitrakis.com/DeployForceea">
 </a>
 
 If the "Deploy to Salesforce" tool doesn't work (returns an OAuth error),
