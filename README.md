@@ -7,7 +7,7 @@
 </a>
 
 If the "Deploy to Salesforce" tool doesn't work (returns an OAuth error),
-you can install the unmanaged [package 18.2](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t580000003QlE).
+you can install the unmanaged [package](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t580000003QlE).
 <br/><br/>
 
 Forceea (forsèa) is a data factory framework for Salesforce, using the data generation language
@@ -21,10 +21,10 @@ To get familiar with Forceea, you can
 * find many examples and detailed information in the [User Guide](https://nmitrakis.com/Forceea131-user-guide) 
 * download [Forceea Examples](https://passionforsalesforce.com/forceea-examples) to see how you can create data
 for various standard objects
-* read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI:a step-by-step guide](https://passionforsalesforce.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
-* visit [acmantics.com](https://passionforsalesforce.com/forceea) to see all posted articles
+* read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](https://passionforsalesforce.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
+* visit [passion-for-salesforce.com](https://passionforsalesforce.com/forceea) to see all posted articles
 
-The following list describes its main capabilities:
+The following list describes framework's main capabilities:
 *	creates records for standard or custom objects, for any standard or custom field
 *	automatically definines the required fields
 *	creates static or random data for fields of any data type: Integer, Currency, Double,
