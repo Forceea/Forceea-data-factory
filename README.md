@@ -1,5 +1,5 @@
-### Read the new post: [How to create an Apex reusable Data Factory Library using Forceea Templates](https://passionforsalesforce.com/2019/08/26/how-to-create-an-apex-data-factory-library-using-forceea-templates/)
----
+> ### Do you want to contribute to this project?
+> If you are a Salesforce developer and you want to contribute, join the Forceea team by sending an email to nikos@acmantics.com
 
 # Forceea v1.3.1
 
@@ -41,6 +41,7 @@ To get familiar with Forceea, you can
 * find many examples and detailed information in the [User Guide](https://nmitrakis.com/Forceea131-user-guide) 
 * download [Forceea Examples](https://passionforsalesforce.com/forceea-examples) to see how you can create data
 for various standard objects
+* read the article [How to create an Apex reusable Data Factory Library using Forceea Templates](https://passionforsalesforce.com/2019/08/26/how-to-create-an-apex-data-factory-library-using-forceea-templates/)
 * read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](https://passionforsalesforce.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
 * visit [passion-for-salesforce.com](https://passionforsalesforce.com/forceea) to see all posted articles
 
