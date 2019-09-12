@@ -38,9 +38,9 @@ configure the amount of information returned during run-time (debug log) and mor
 
 ### How can you find more information?
 To get familiar with Forceea, you can
-* find many examples and detailed information in the [User Guide](https://nmitrakis.com/Forceea131-user-guide) 
-* download [Forceea Examples](https://passionforsalesforce.com/forceea-examples) to see how you can create data
-for various standard objects
+* find details in the [User Guide](https://nmitrakis.com/Forceea131-user-guide) 
+* see [examples](https://acmantics.atlassian.net/wiki/spaces/FOR/pages/768147457/Examples) to find out how you can create data
+for standard objects
 * read the article [How to create an Apex reusable Data Factory Library using Forceea Templates](https://passionforsalesforce.com/2019/08/26/how-to-create-an-apex-data-factory-library-using-forceea-templates/)
 * read the article [Populate your Salesforce org with data using Forceea and Salesforce CLI: a step-by-step guide](https://passionforsalesforce.com/2018/10/23/populate-your-salesforce-org-with-data-using-forceea-and-salesforce-cli)
 * visit [passion-for-salesforce.com](https://passionforsalesforce.com/forceea) to see all posted articles
