@@ -13,7 +13,7 @@ Forceea (forsèa) is a data factory framework for Salesforce, using the data gen
 ### How can you use it?
 You can deploy Forceea in your org using this link:
 
-<a href="http://nmitrakis.com/DeployForcee">
+<a href="https://nmitrakis.com/DeployForceea">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png"">
 </a>
