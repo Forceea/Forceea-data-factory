@@ -10,13 +10,18 @@ Forceea (forsèa) is a data factory framework for Salesforce, using the data gen
 * allow developers to easily create SObject records for any Test Method
 * facilitate administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes
 
-### How can you use it?
-You can deploy Forceea in your org using this link:
+### How can you deploy it?
+You can deploy Forceea in your org with an unlocked package using this link:
 
 <a href="https://nmitrakis.com/DeployForceea">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png"">
 </a>
+                                                                                                                       
+ You may also use the Salesforce CLI command
+ ```
+ sfdx force:package:install -w 10 -b 10 -p 04t4I000000kpOsQAI -r -u YourOrg
+ ```
 
 ### What can Forceea do?
 The following list describes framework's main capabilities:
