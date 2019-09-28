@@ -18,10 +18,12 @@ You can deploy Forceea in your org with an unlocked package using this link:
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png"">
 </a>
                                                                                                                        
- You may also use the Salesforce CLI command
- ```
- sfdx force:package:install -w 10 -b 10 -p 04t4I000000kpOsQAI -r -u YourOrg
- ```
+**NOTE** If you deploy to a sandbox, replace `login.salesforce.com` with `test.salesforce.com`
+                                                                                                                       
+You may also use the Salesforce CLI command
+```
+sfdx force:package:install -w 10 -b 10 -p 04t4I000000kpOsQAI -r -u YourOrg
+```
 
 ### What can Forceea do?
 The following list describes framework's main capabilities:
