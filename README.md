@@ -1,6 +1,8 @@
-> ### Do you want to contribute to this project?
-> If you are a Salesforce developer and you want to contribute, join the Forceea team by sending an email to nikos@acmantics.com
+> ### Forceea v1.4 is near to release
+> with virtual fields, record ID mocking and the new serial lookup field definition. Stay tuned..
 
+<img alt="Deploy to Salesforce"
+       src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG">
 # Forceea v1.3.1
 
 ### What is Forceea?
