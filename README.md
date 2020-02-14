@@ -1,7 +1,4 @@
-> ### Forceea v1.4 is near to release
-> with virtual fields, record ID mocking and the new serial lookup field definition. Stay tuned..
-
-<img alt="Deploy to Salesforce"
+<img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG">
 # Forceea v1.3.1
 
