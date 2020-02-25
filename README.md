@@ -1,13 +1,13 @@
 <img alt="Forceea Logo"
-       src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG">
+       src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
 # Forceea v1.3.1
 
 ### What is Forceea?
 Forceea (forsèa) is a data factory framework for Salesforce, using the data generation language
  [Dadela](https://github.com/nmitrakis/Dadela).
  The framework was created with the following objectives:
-* allow developers to easily create SObject records for any Test Method
-* facilitate administrators to populate any Developer/Sandbox Org with SObject records for testing or demonstration purposes
+* allow developers to easily create SObject records for any test method
+* facilitate administrators to populate any Developer/Sandbox org with SObject records for testing or demonstration purposes
 
 ### How can you deploy it?
 You can deploy Forceea in your org with an unlocked package using this link:
