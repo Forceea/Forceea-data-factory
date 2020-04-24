@@ -3,7 +3,9 @@
     <fullName>Number_and_Date_fields</fullName>
     <columns>NAME</columns>
     <columns>RECORDTYPE</columns>
+    <columns>ForceeaPartition__c</columns>
     <columns>TestInteger__c</columns>
+    <columns>TestIntegerUnique__c</columns>
     <columns>TestDecimal__c</columns>
     <columns>TestCurrency__c</columns>
     <columns>TestPercent__c</columns>
@@ -12,5 +14,4 @@
     <columns>TestTime__c</columns>
     <filterScope>Everything</filterScope>
     <label>Number and Date fields</label>
-    <language>en_US</language>
 </ListView>

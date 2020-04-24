@@ -2,12 +2,18 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>FObject</members>
+        <members>FObjectAsync</members>
+        <members>FObjectAsyncTest</members>
+        <members>FObjectDadelaTest</members>
         <members>FObjectTest</members>
-        <members>ForceeaException</members>
+        <members>ForceeaQueueable</members>
+        <members>ForceeaQueueableTest</members>
+        <members>ForceeaService</members>
+        <members>ForceeaUtilityTest</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>Forceealogoapp1</members>
+        <members>ForceeaLogo2</members>
         <name>ContentAsset</name>
     </types>
     <types>
@@ -21,6 +27,8 @@
         <members>FObjectThree__c</members>
         <members>FObjectTwo__c</members>
         <members>ForceeaSetting__mdt</members>
+        <members>ForceeaAsyncNotification__e</members>
+        <members>ForceeaProcess__c</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -28,6 +36,7 @@
         <members>FObjectOne__c</members>
         <members>FObjectThree__c</members>
         <members>FObjectTwo__c</members>
+        <members>ForceeaDataFactory</members>
         <name>CustomTab</name>
     </types>
     <types>
@@ -54,5 +63,18 @@
         <members>ForceeaUser</members>
         <name>PermissionSet</name>
     </types>
-    <version>42.0</version>
+    <types>
+        <members>forceeaDataFactory</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>ForceeaDataFactory</members>
+        <name>FlexiPage</name>
+    </types>
+    <types>
+        <members>SharedDocuments</members>
+        <members>SharedDocuments/ForceeaLogo2.png</members>
+        <name>Document</name>
+    </types>
+    <version>48.0</version>
 </Package>

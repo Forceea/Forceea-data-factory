@@ -13,14 +13,39 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FObjectAsync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FObjectAsyncTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FObjectTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>ForceeaException</apexClass>
+        <apexClass>ForceeaQueueable</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <description>Enable Forceea data factory framework</description>
+    <classAccesses>
+        <apexClass>ForceeaService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <customMetadataTypeAccesses>
+        <enabled>true</enabled>
+        <name>ForceeaSetting__mdt</name>
+    </customMetadataTypeAccesses>
+    <customSettingAccesses>
+        <enabled>true</enabled>
+        <name>ForceeaProcess__c</name>
+    </customSettingAccesses>
+    <description>Enable Forceea</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectFour__c.ForceeaPartition__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FObjectFour__c.TestDecimal__c</field>
@@ -29,6 +54,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FObjectFour__c.TestLookupUser__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectOne__c.ForceeaPartition__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -79,6 +109,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FObjectOne__c.TestGeolocation__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectOne__c.TestIntegerUnique__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -158,7 +193,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FObjectThree__c.ForceeaPartition__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FObjectThree__c.TestText__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.ForceeaPartition__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -189,6 +234,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FObjectTwo__c.TestEmail__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestIntegerUnique__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestLookup__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -224,6 +279,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FObjectTwo__c.TestPicklistFUnrestricted__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FObjectTwo__c.TestTextUnique__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -280,6 +340,15 @@
         <object>FObjectTwo__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>ForceeaAsyncNotification__e</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
     <recordTypeVisibilities>
         <recordType>FObjectOne__c.RecordTypeA</recordType>
         <visible>true</visible>
@@ -322,6 +391,10 @@
     </tabSettings>
     <tabSettings>
         <tab>FObjectTwo__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>ForceeaDataFactory</tab>
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>

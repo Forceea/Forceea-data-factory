@@ -1,0 +1,45 @@
+<template>
+
+    <div class="c-container">
+        <lightning-layout>
+            <lightning-layout-item size="6">
+                <div class="slds-p-bottom_medium">
+                    <lightning-card title="Progress" slot="actions">
+                        <lightning-button label="Terminate" slot="actions" variant="destructive"
+                                          onclick={handleClick}></lightning-button>
+                        <template if:true={isInsert}>
+                            <p class="slds-p-horizontal_small">
+                                <lightning-progress-bar value={progress} size="large"
+                                                        variant="circular"></lightning-progress-bar>
+                            </p>
+                        </template>
+                        <p slot="footer">{progressFooterMessage}</p>
+                    </lightning-card>
+                </div>
+                <lightning-card title="Job Status">
+                    <div class="slds-p-horizontal_small">
+                        <lightning-formatted-rich-text value={statusMessage}></lightning-formatted-rich-text>
+                    </div>
+                </lightning-card>
+                <div class="slds-p-top_medium">
+                    <lightning-card title="Messages">
+                        <div class="slds-p-horizontal_small">
+                            <lightning-formatted-rich-text value={userMessage}></lightning-formatted-rich-text>
+                        </div>
+                    </lightning-card>
+                </div>
+            </lightning-layout-item>
+
+            <lightning-layout-item class="slds-p-left_medium" size="6">
+                <lightning-card title="Log">
+                    <div class="slds-scrollable_y" style="height:25rem;">
+                        <div class="slds-p-horizontal_small">
+                            <lightning-formatted-rich-text value={logMessage}></lightning-formatted-rich-text>
+                        </div>
+                    </div>
+                </lightning-card>
+            </lightning-layout-item>
+        </lightning-layout>
+    </div>
+
+</template>

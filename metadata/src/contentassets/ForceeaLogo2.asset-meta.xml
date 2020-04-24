@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ContentAsset xmlns="http://soap.sforce.com/2006/04/metadata">
+    <isVisibleByExternalUsers>false</isVisibleByExternalUsers>
     <language>en_US</language>
-    <masterLabel>Forceealogoapp1</masterLabel>
+    <masterLabel>ForceeaLogo2</masterLabel>
     <relationships>
         <organization>
             <access>VIEWER</access>
@@ -10,7 +11,7 @@
     <versions>
         <version>
             <number>1</number>
-            <pathOnClient>Forceea-logo-app.png</pathOnClient>
+            <pathOnClient>ForceeaLogo2.png</pathOnClient>
         </version>
     </versions>
 </ContentAsset>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>TestPicklistFUnrestricted__c</fullName>
-    <description>This field has TestPicklistEUnrestricted as a controlling field and its values aren't restricted.</description>
+    <description>This field has TestPicklistEUnrestricted as a controlling field and its values aren&#39;t restricted.</description>
     <externalId>false</externalId>
-    <inlineHelpText>This field has TestPicklistEUnrestricted as a controlling field and its values aren't restricted.</inlineHelpText>
+    <inlineHelpText>This field has TestPicklistEUnrestricted as a controlling field and its values aren&#39;t restricted.</inlineHelpText>
     <label>TestPicklistFUnrestricted</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

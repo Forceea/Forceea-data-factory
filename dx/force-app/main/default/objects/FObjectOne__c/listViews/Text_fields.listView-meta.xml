@@ -3,6 +3,7 @@
     <fullName>Text_fields</fullName>
     <columns>NAME</columns>
     <columns>RECORDTYPE</columns>
+    <columns>ForceeaPartition__c</columns>
     <columns>TestText__c</columns>
     <columns>TestTextRequired__c</columns>
     <columns>TestTextArea__c</columns>
