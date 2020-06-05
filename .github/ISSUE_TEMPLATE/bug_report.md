@@ -4,8 +4,11 @@ about: Create a report to help us improve
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+**Summary**
+A description of what the bug is.
 
-**To Reproduce**
-Steps or script to reproduce the behavior
+**Repro**
+Steps or code to reproduce the bug.
+
+**Workaround**
+A permanent or temporary solution.
