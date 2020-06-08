@@ -3,7 +3,7 @@
 # Forceea 2.0
 
 ### What is Forceea?
-Forceea (forsèa) is a data factory for Salesforce based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
+Forceea (forsi:a) is a data factory for Salesforce based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
 * allows developers to easily create SObject records for test methods.
 * facilitates administrators or business users to populate any org with SObject records for testing or demonstration purposes.
 
