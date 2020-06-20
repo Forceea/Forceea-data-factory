@@ -1,3 +1,6 @@
+> Join our [LinkedIn](https://www.linkedin.com/groups/8943965) group
+
+
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
 # Forceea 2.0
