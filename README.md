@@ -1,4 +1,4 @@
-> Join our [LinkedIn](https://www.linkedin.com/groups/8943965) group
+### Are you a Forceea user? Join our [LinkedIn](https://www.linkedin.com/groups/8943965) group!
 
 
 <img alt="Forceea Logo"
