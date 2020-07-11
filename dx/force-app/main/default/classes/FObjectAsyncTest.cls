@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.0.0)
+  Forceea data factory (v2.1.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -13,17 +13,11 @@
   You can find a copy of the GNU General Public License at
   https://github.com/nmitrakis/Forceea/blob/master/LICENSE
 */
-
-/**
- * @description FObjectAsync Test Class
- */
 @IsTest
 public class FObjectAsyncTest {
     private static final Integer FOBJECT1_NUM_RECORDS = 10;
     private static final Integer FOBJECT2_NUM_RECORDS = 10;
     private static final String PARTITION_FIELD_VALUE = 'df';
-
-    /* insert records */
 
     @IsTest
     private static void insertRecords_maxIterationsPerBatchDefault_expectSuccess() {
@@ -85,10 +79,9 @@ public class FObjectAsyncTest {
         Integer maxIterationsPerBatch = -999;
         Integer numIterations = 10;
         Integer numJobs = 1;
-        Map<String, FObject> template = template1();
 
         Test.startTest();
-        getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+        getFObjectAsync(template1(), maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
             .insertRecords();
         Test.stopTest();
 
@@ -171,7 +164,19 @@ public class FObjectAsyncTest {
         System.assert(processIsValid() & errors == 0, 'insertRecords - errors found');
     }
 
-    /* delete records */
+    @IsTest
+    private static void insertRecords_setRequiredFields_expectSuccess() {
+        Integer maxIterationsPerBatch = 1;
+        Integer numIterations = 10;
+        Integer numJobs = 1;
+
+        Test.startTest();
+        getFObjectAsync(templateNoRequiredField(), maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+            .insertRecords();
+        Test.stopTest();
+
+        System.assert(!processIsValid(), 'insertRecords - errors found');
+    }
 
     @IsTest
     private static void deleteRecords_hasNoRecordsToDelete_expectSuccess() {
@@ -202,7 +207,7 @@ public class FObjectAsyncTest {
             .insertRecords(true);
         template.get('FObjectTwos')
             .setNumberOfRecords(201)
-            .deleteFieldDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
             .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '2)')
             .insertRecords(true);
 
@@ -230,7 +235,7 @@ public class FObjectAsyncTest {
             .insertRecords(true);
         template.get('FObjectTwos')
             .setNumberOfRecords(1)
-            .deleteFieldDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
             .insertRecords(true);
 
         Test.startTest();
@@ -258,7 +263,7 @@ public class FObjectAsyncTest {
             .insertRecords(true);
         template.get('FObjectTwos')
             .setNumberOfRecords(201)
-            .deleteFieldDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
             .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '2)')
             .insertRecords(true);
 
@@ -322,8 +327,6 @@ public class FObjectAsyncTest {
         Boolean result = processIsValid() && records.size() == 101;
         System.assert(result == true, 'deleteRecords - errors found');
     }
-
-    /* other */
 
     @IsTest
     private static void getGroupName_invalidDefinitionWithValidationAndBenchmark_expectSuccess() {
@@ -391,14 +394,10 @@ public class FObjectAsyncTest {
         System.assert(FObjectAsync.processIsTerminated(), 'terminateAsyncProcess - errors found');
     }
 
-    /* methods */
+    /* METHODS */
 
-    private static FObjectAsync getFObjectAsync(
-        Map<String, FObject> template,
-        Integer maxIterationsPerBatch,
-        Integer numIterations,
-        Integer numJobs,
-        String partitionFieldValue
+    private static FObjectAsync getFObjectAsync(Map<String, FObject> template, Integer maxIterationsPerBatch,
+        Integer numIterations, Integer numJobs, String partitionFieldValue
     ) {
         if (maxIterationsPerBatch == -999) {
             return new FObjectAsync(template)
@@ -418,7 +417,7 @@ public class FObjectAsyncTest {
         return FObject.processIsValid() && FObjectAsync.processIsValid();
     }
 
-    /* templates */
+    /* TEMPLATES */
 
     public static Map<String, FObject> templatePartition() {
         Map<String, FObject> template = new Map<String, FObject>();
@@ -441,9 +440,7 @@ public class FObjectAsyncTest {
         return template;
     }
 
-    // Templates - FObjectOne
-
-    public static Map<String, FObject> template1() {
+    private static Map<String, FObject> template1() {
         Map<String, FObject> template = new Map<String, FObject>();
 
         template.putAll(template2());
@@ -476,9 +473,7 @@ public class FObjectAsyncTest {
         };
     }
 
-    // Templates - FObjectTwo
-
-    public static Map<String, FObject> template2() {
+    private static Map<String, FObject> template2() {
         Map<String, FObject> template = new Map<String, FObject>();
 
         template.put('FObjectTwos', new FObject('FObjectTwo__c')
@@ -491,33 +486,15 @@ public class FObjectAsyncTest {
         return template;
     }
 
-    public static Map<String, FObject> template2Serialization() {
-        return new Map<String, FObject>{
-            'FObjectTwosA' => template2Text().get('FObjectTwos')
-                .setDefinition(FObjectTwo__c.RecordTypeId,
-                    'static value(RecordTypeA)')
-                .setDefinition(FObjectTwo__c.TestIntegerUnique__c,
-                    'serial type(number) from(1) step(1) scale(0)')
-                .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c),
-            'FObjectTwosB' => template2Text().get('FObjectTwos')
-                .setDefinition(FObjectTwo__c.RecordTypeId,
-                    'static value(RecordTypeA)')
-                .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c),
-            'FObjectTwosC' => template2Text().get('FObjectTwos')
-                .setDefinition(FObjectTwo__c.RecordTypeId,
-                    'static value(RecordTypeA)')
-                .setDefinition(FObjectTwo__c.TestIntegerUnique__c,
-                    'serial type(number) from(1) step(1) scale(0)')
-                .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
-        };
-    }
+    private static Map<String, FObject> templateNoRequiredField() {
+        Map<String, FObject> template = new Map<String, FObject>();
+        template.put('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
+            .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
+            .setRequiredFields(false)
+            .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
+        );
 
-    public static Map<String, FObject> template2Text() {
-        return new Map<String, FObject>{
-            'FObjectTwos' => new FObject('FObjectTwo__c')
-                .setNumberOfRecords(FOBJECT2_NUM_RECORDS)
-                .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
-        };
+        return template;
     }
 
 }

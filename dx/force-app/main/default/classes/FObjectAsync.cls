@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.0.0)
+  Forceea data factory (v2.1.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -13,7 +13,6 @@
   You can find a copy of the GNU General Public License at
   https://github.com/nmitrakis/Forceea/blob/master/LICENSE
 */
-
 public with sharing class FObjectAsync {
 
     /* CONSTANTS */
@@ -44,7 +43,6 @@ public with sharing class FObjectAsync {
     private String partitionFieldValue { get; set; }
     private String processId { get; set; }
     private Boolean shouldBenchmark { get; set; }
-    private String templateName { get; set; }
 
     /* INITIALIZATION */
 
@@ -98,7 +96,7 @@ public with sharing class FObjectAsync {
      * @return An instance of FObjectAsync.
      */
     public FObjectAsync deleteRecords() {
-        if (FObjectAsync.anotherProcessIsActive()) {
+        if (FObjectAsync.anotherProcessIsActive() || ForceeaService.isProductionOrg()) {
             return this;
         }
 
@@ -185,10 +183,10 @@ public with sharing class FObjectAsync {
             obj.numOfRecords = template.get(key).getNumberOfRecords();
             obj.partitionFieldName = template.get(key).getPartitionFieldName();
             obj.sObjectApiName = template.get(key).getSObjectName();
+            obj.setRequiredFields = template.get(key).requiredFieldsShouldBeAutomaticallyConfigured();
 
-            // set field definitions
             obj.definitions = new List<ForceeaService.FieldDefinition>();
-            for (FObject.Definition def : template.get(key).definitions) {
+            for (ForceeaDefinition def : template.get(key).definitions) {
                 ForceeaService.FieldDefinition fd = new ForceeaService.FieldDefinition();
                 fd.definitionString = def.definitionString;
                 fd.fieldApiName = def.fieldApiName;
@@ -244,8 +242,10 @@ public with sharing class FObjectAsync {
 
         for (FObject obj : fObjects) {
             String sObjectApiName = obj.getSObjectName();
+
             Integer previousFirstRecord = results.get(sObjectApiName);
             Integer newFirstRecord = previousFirstRecord + obj.getNumberOfRecords() * this.asyncTrans.numJobUnitsToExecute;
+
             results.put(sObjectApiName, newFirstRecord);
         }
 

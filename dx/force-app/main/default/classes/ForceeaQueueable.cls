@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.0.0)
+  Forceea data factory (v2.1.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -13,7 +13,6 @@
   You can find a copy of the GNU General Public License at
   https://github.com/nmitrakis/Forceea/blob/master/LICENSE
 */
-
 public with sharing class ForceeaQueueable implements Queueable {
 
     /* CONSTANTS */
@@ -529,25 +528,22 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private FObject getNewFObject(ForceeaService.FObjectAsync async) {
         Integer numRecords = async.numOfRecords * this.numBatchUnitsToExecute;
-        FObject newFObject = new FObject(async.sObjectApiName, numRecords);
 
-        // set language and locality
+        FObject newFObject = new FObject(async.sObjectApiName, numRecords)
+            .setRequiredFields(async.setRequiredFields);
+
+        Long seed = this.seed + this.batchId;
+        FObject.setSeed(seed);
         FObject.setGlobalLanguage(this.language);
         FObject.setGlobalLocality(this.locality);
 
-        // set seed
-        Long seed = this.seed + this.batchId;
-        FObject.setSeed(seed);
-
-        // set field definitions
         for (ForceeaService.FieldDefinition def : async.definitions) {
             newFObject.setDefinition(def.fieldApiName, def.definitionString);
         }
 
-        // set partition field
         if (String.isNotBlank(async.partitionFieldName)) {
-            newFObject.setDefinition(async.partitionFieldName, 'static value(' +
-                this.partitionFieldValue + String.valueOf(this.sector) + ')');
+            newFObject.setDefinition(async.partitionFieldName,
+                'static value(' + this.partitionFieldValue + String.valueOf(this.sector) + ')');
         }
 
         return newFObject;

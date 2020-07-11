@@ -1,9 +1,0 @@
-<project name="Forceea retrieve" default="forceea" basedir="." xmlns:sf="antlib:com.salesforce">
-  <property file="build.properties"/>
-
-  <target name="deployForceea">
-    <sf:deploy username="${sf.username}" password="${sf.password}"
-      serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"
-      deployRoot="src" rollbackOnError="true"/>
-  </target>
-</project>

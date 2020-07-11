@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.0.0)
+  Forceea data factory (v2.1.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -13,10 +13,6 @@
   You can find a copy of the GNU General Public License at
   https://github.com/nmitrakis/Forceea/blob/master/LICENSE
 */
-
-/**
- * @description ForceeaQueueable Test Class
- */
 @IsTest
 public class ForceeaQueueableTest {
 

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>TestInteger__c</fullName>
+    <defaultValue>1</defaultValue>
+    <deprecated>false</deprecated>
     <externalId>false</externalId>
     <label>TestInteger</label>
     <precision>10</precision>
