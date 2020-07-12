@@ -1,5 +1,4 @@
-### Are you a Forceea user? Join our [LinkedIn](https://www.linkedin.com/groups/8943965) group!
-
+### New User Guide version 1
 
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
@@ -48,3 +47,4 @@ sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFGNQA2 -r -u YourOrgAlias
 ---
 
 ### Give you opinion about Forceea by completing this [Survey](https://www.surveymonkey.co.uk/r/M6BJMKT)
+### Are you a Forceea user? Join our [LinkedIn](https://www.linkedin.com/groups/8943965) group!
