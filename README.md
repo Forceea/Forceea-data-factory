@@ -26,7 +26,7 @@ or this link for **Sandboxes**:
                                                                                                                        
 You may also use the Salesforce CLI command
 ```
-sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFHLQA2 -r -u YourOrgAlias
+sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFHLQA2 -r -u <UsernameOrOrgAlias>
 ```
 
 ### What can Forceea do?
