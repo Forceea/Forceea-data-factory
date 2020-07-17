@@ -1,8 +1,8 @@
-### New User Guide version 1
+### New User Guide version 2
 
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
-# Forceea 2.1.0
+# Forceea 2.1.1
 
 ### What is Forceea?
 Forceea (forsi:a) is a data factory for Salesforce based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
@@ -14,19 +14,19 @@ You can deploy Forceea with an unlocked package using this link for **Production
 
 <a href="https://nmitrakis.com/ForceeaInstallProduction">
   <img alt="Deploy to Salesforce"
-       src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png"">
+       src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
 
 or this link for **Sandboxes**:
 
 <a href="https://nmitrakis.com/ForceeaInstallTest">
   <img alt="Deploy to Salesforce"
-       src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png"">
+       src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
                                                                                                                        
 You may also use the Salesforce CLI command
 ```
-sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFGNQA2 -r -u YourOrgAlias
+sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFHLQA2 -r -u YourOrgAlias
 ```
 
 ### What can Forceea do?

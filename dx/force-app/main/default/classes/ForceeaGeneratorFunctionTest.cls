@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.0)
+  Forceea data factory (v2.1.1)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -36,11 +36,13 @@ public class ForceeaGeneratorFunctionTest {
 
     @IsTest
     private static void functionAdd_refMixedField_expectSuccess() {
+        Datetime now = Datetime.now();
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setNumberOfRecords('auto')
             .setVariable('today', Date.today())
-            .setVariable('now', Datetime.now())
+            .setVariable('now', now)
             .setDefinition('$Integer', 'static value(1)')
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(1,{@today},{@now},Test) mode(permutation)')
             .setDefinition(FObjectOne__c.TestText__c, 'function-add field($Integer)');
@@ -57,7 +59,7 @@ public class ForceeaGeneratorFunctionTest {
         }
 
         String actualDatetime = records.get(2).TestText__c;
-        Decimal value = Datetime.now().getTime() + 86400 * 1000;
+        Decimal value = now.getTime() + 86400 * 1000;
         Datetime calculatedDatetime = Datetime.newInstance((Long) value);
         if (actualDatetime != String.valueOf(calculatedDatetime)) {
             errors += 4;

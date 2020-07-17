@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.0)
+  Forceea data factory (v2.1.1)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -481,21 +481,79 @@ public class FObjectFieldsTest {
     }
 
     @IsTest
-    private static void updateFields_dependentPicklists_expectFailure() {
+    private static void updateFields_dependentPicklistWithoutControlling_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestPicklistA__c, 'static value(a2)');
+        obj.insertRecords(true);
+
+        Test.startTest();
+        obj
+            .setDefinitionForUpdate(FObjectOne__c.TestPicklistB__c, 'random type(list) value(b1,b2)')
+            .updateFields()
+            .updateRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        List<String> values = new List<String>{
+            'b1', 'b2'
+        };
+        for (FObjectOne__c record : [SELECT TestPicklistA__c, TestPicklistB__c FROM FObjectOne__c]) {
+            if (record.TestPicklistA__c != 'a1' && !values.contains(record.TestPicklistB__c)) {
+                errors += 1;
+                break;
+            }
+        }
+        if (!FObject.processIsValid()) {
+            errors += 2;
+        }
+        System.assertEquals(0, errors, 'updateFields - errors found');
+    }
+
+    @IsTest
+    private static void updateFields_dependentPicklistExceptWithoutControlling_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestPicklistA__c, 'static value(a2)');
+        obj.insertRecords(true);
+
+        Test.startTest();
+        obj
+            .setDefinitionForUpdate(FObjectOne__c.TestPicklistB__c, 'random type(picklist) except(b0,b3)')
+            .updateFields()
+            .updateRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        List<String> values = new List<String>{
+            'b1', 'b2'
+        };
+        for (FObjectOne__c record : [SELECT TestPicklistA__c, TestPicklistB__c FROM FObjectOne__c]) {
+            if (record.TestPicklistA__c != 'a1' && !values.contains(record.TestPicklistB__c)) {
+                errors += 1;
+                break;
+            }
+        }
+        if (!FObject.processIsValid()) {
+            errors += 2;
+        }
+        System.assertEquals(0, errors, 'updateFields - errors found');
+    }
+
+    @IsTest
+    private static void updateFields_dependentPicklist_expectFailure() {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
         obj.insertRecords(true);
 
         Test.startTest();
-        String groupName = '';
-        String updatedValue = 'two';
         obj
             .setNumberOfRecords(1) // should be ignored
             .setNumberOfNextRecord(1)
-            .setDefinitionForUpdate(FObjectOne__c.TestText__c, 'static value(' + updatedValue + ')')
+            .setVariable('updatedValue', 'two')
+
+            .setDefinitionForUpdate(FObjectOne__c.TestText__c, 'static value({@updatedValue})')
             .setDefinitionForUpdate(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinitionForUpdate(FObjectOne__c.TestPicklistB__c, 'random type(picklist)')
-            .updateFields(groupName);
+            .updateFields();
 
         String errorMessage = '';
         try {

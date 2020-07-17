@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.0)
+  Forceea data factory (v2.1.1)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -36,7 +36,7 @@ public with sharing class FObject {
     private static final String SYMBOL_SUCCESS = '-';
 
     private static final VerboseLevel VERBOSE_MODE = VerboseLevel.VERBOSE_NONE;
-    private static final String VERSION = '2.1.0';
+    private static final String VERSION = '2.1.1';
 
     /* ENUMS */
 
@@ -745,7 +745,7 @@ public with sharing class FObject {
      */
     private FObject deleteAllDefinitionsOfField(String fieldName) {
         String fieldApiName = ForceeaService.getFieldApiName(
-            this, '', fieldName, '', 'deleteDefinitions');
+            this, '', this.sObjectApiName, fieldName, '', 'deleteDefinitions');
         if (String.isBlank(fieldApiName)) {
             return this;
         }
@@ -2452,7 +2452,7 @@ public with sharing class FObject {
 
         this.definitionsAreValidated = false;
         String fieldApiName = ForceeaService.getFieldApiName(
-            this, definitionString, fieldName, '', 'standard');
+            this, definitionString, this.sObjectApiName, fieldName, '', 'standard');
         if (String.isBlank(fieldApiName)) {
             return;
         }

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.0)
+  Forceea data factory (v2.1.1)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -18,7 +18,6 @@ public class ForceeaGeneratorSerialLookupTest {
 
     @IsTest
     private static void staticLookupForceea_valid_expectSuccess() {
-        FObject.setGlobalVerbose('debug');
         FObject.setSeed(1);
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 20)
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'random type(list) value(a1,a2)');

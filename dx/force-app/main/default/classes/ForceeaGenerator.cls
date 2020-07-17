@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.0)
+  Forceea data factory (v2.1.1)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -201,8 +201,8 @@ public with sharing class ForceeaGenerator {
     private List<String> getCopiedLookupValues(String referenceFieldName, String fromSObjectDotField) {
         List<String> results = new List<String>();
 
-        String fieldApiName = ForceeaService.getFieldApiName(
-            this.fObj, this.def.definitionString, referenceFieldName, this.def.fieldApiName, 'lookup');
+        String fieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
+            this.fObj.sObjectApiName, referenceFieldName, this.def.fieldApiName, 'copy-field');
         if (String.isBlank(fieldApiName)) {
             return results;
         }
@@ -214,16 +214,15 @@ public with sharing class ForceeaGenerator {
         }
 
         String lookupSObjectName = fromSObjectDotField.trim().substringBefore('.');
-        String lookupObjectApiName = ForceeaService.getSObjectApiName(
+        String lookupSObjectApiName = ForceeaService.getSObjectApiName(
             this.fObj, this.def.definitionString, lookupSObjectName, this.def.fieldApiName, 'lookup');
         if (this.fObj.processMustTerminate()) {
             return results;
         }
 
-        String lookupFieldApiName = ForceeaService.getFieldApiName(
-            this.fObj, this.def.definitionString,
-            fromSObjectDotField.trim().substringAfter('.'), this.def.fieldApiName, 'lookup');
-        if (String.isBlank(lookupFieldApiName)) {
+        String lookupFromFieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
+            lookupSObjectApiName, fromSObjectDotField.trim().substringAfter('.'), this.def.fieldApiName, 'copy-from');
+        if (String.isBlank(lookupFromFieldApiName)) {
             return results;
         }
 
@@ -233,8 +232,8 @@ public with sharing class ForceeaGenerator {
         List<String> lookupIds = new List<String>(this.fObj.fieldValuesMatrix.get(fieldPosition));
         Set<String> lookupIdsSet = new Set<String>(lookupIds);
 
-        String soqlQuery = 'SELECT Id, ' + lookupFieldApiName +
-            ' FROM ' + lookupObjectApiName +
+        String soqlQuery = 'SELECT Id, ' + lookupFromFieldApiName +
+            ' FROM ' + lookupSObjectApiName +
             ' WHERE Id IN :lookupIdsSet LIMIT ' + String.valueOf(this.fObj.queryLimit);
 
         Map<Id, SObject> lookupRecordsMap; // the lookup SObject's records map
@@ -242,7 +241,7 @@ public with sharing class ForceeaGenerator {
             lookupRecordsMap = new Map<Id, SObject>(Database.query(soqlQuery));
         } catch (QueryException ex) {
             this.fObj.addError(fieldApiName,
-                ForceeaService.MESSAGE_FOUND_ERRORS_SELECTING_FROM_LOOKUP + ' [' + lookupObjectApiName +
+                ForceeaService.MESSAGE_FOUND_ERRORS_SELECTING_FROM_LOOKUP + ' [' + lookupSObjectApiName +
                 '] of [' + this.fObj.sObjectApiName + ']: ' + ex.getMessage());
         } finally {
             if (lookupRecordsMap.isEmpty() || this.fObj.processMustTerminate()) {
@@ -258,7 +257,7 @@ public with sharing class ForceeaGenerator {
 
         if (valueType == Schema.DisplayType.DATETIME) { // the field is Datatime
             for (String lookupId : lookupIds) {
-                dt = (Datetime) lookupRecordsMap.get(lookupId).get(lookupFieldApiName); // get the datetime value
+                dt = (Datetime) lookupRecordsMap.get(lookupId).get(lookupFromFieldApiName); // get the datetime value
                 val = String.valueOf(dt);
                 if (String.isBlank(val)) {
                     results.add('');
@@ -268,7 +267,7 @@ public with sharing class ForceeaGenerator {
             }
         } else { // the field is not Datatime
             for (String lookupId : lookupIds) {
-                val = String.valueOf(lookupRecordsMap.get(lookupId).get(lookupFieldApiName));
+                val = String.valueOf(lookupRecordsMap.get(lookupId).get(lookupFromFieldApiName));
                 if (String.isBlank(val)) {
                     results.add('');
                 } else {
@@ -290,13 +289,13 @@ public with sharing class ForceeaGenerator {
         fieldName = fieldName.trim();
 
         String fieldApiName = ForceeaService.getFieldApiName(
-            this.fObj, this.def.definitionString, fieldName,
-            this.def.fieldApiName, 'copy');
+            this.fObj, this.def.definitionString, this.fObj.sObjectApiName, fieldName,
+            this.def.fieldApiName, 'copy-field');
         if (String.isBlank(fieldApiName)) {
             return results;
         }
 
-        if (fieldApiName == this.def.fieldApiName) {
+        if (fieldApiName.equalsIgnoreCase(this.def.fieldApiName)) {
             this.fObj.addError(this.def.fieldApiName, 'The field [' + fieldApiName + '] cannot be the same as ' +
                 'the definition field in definition [' + this.def.definitionString + ']');
             return results;
@@ -446,6 +445,23 @@ public with sharing class ForceeaGenerator {
         }
 
         return this.fObj.sObjectFieldsByFieldApiName.get(this.def.fieldApiName.toLowerCase()).dataType;
+    }
+
+    /**
+     * @description Retrieves the data type of a field.
+     * @param fieldApiName The field API name.
+     * @return The DisplayType of the definition field or ANYTYPE if it's a Virtual Field.
+     */
+    private Schema.DisplayType getFieldDataType(String fieldApiName) {
+        if (String.isBlank(fieldApiName)) {
+            return null;
+        }
+
+        if (ForceeaService.fieldIsVirtual(fieldApiName)) {
+            return Schema.DisplayType.ANYTYPE;
+        }
+
+        return this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName.toLowerCase()).dataType;
     }
 
     /**
@@ -644,6 +660,7 @@ public with sharing class ForceeaGenerator {
      */
     private List<SObject> getLookupRecordsFromSalesforce(
         String lookupSObjectApiName, String lookupFieldApiName, String whereClause) {
+
         Boolean isActiveFieldExists = existsIsActiveStandardField(lookupSObjectApiName);
 
         String soqlQuery = 'SELECT Id';
@@ -1198,10 +1215,11 @@ public with sharing class ForceeaGenerator {
             arguments = ForceeaService.convertToMasterValues(arguments, picklistValues);
         }
 
-        if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-            this.fObj.sObjectFieldsByFieldApiName.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.BOOLEAN) {
+        if (String.isBlank(ctrlFieldApiName) ||
+            getFieldDataType(ctrlFieldApiName) == Schema.DisplayType.BOOLEAN ||
+            this.fObj.isUpdate) {
             values = getRandomValuesFromList(arguments);
-        } else { // there is a controlling field
+        } else {
             values = getPicklistValuesWithRespectToDependencies(fieldApiName, ctrlFieldApiName, arguments, null);
         }
 

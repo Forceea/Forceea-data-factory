@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.0)
+  Forceea data factory (v2.1.1)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -283,12 +283,13 @@ public with sharing class ForceeaService {
      * @description Retrieves the API name of a specific SObject's field or a blank string if the field name is invalid.
      * @param fObj The FObject.
      * @param definitionString The definition string.
+     * @param sObjectApiName The SObject API Name.
      * @param fieldName The field name.
      * @param relatedFieldApiName The API name of the field that lookup field is related to.
      * @param category The field category for fields (standard/lookup) or methods (e.g.deleteDefinitions).
      * @return A string value.
      */
-    public static String getFieldApiName(FObject fObj, String definitionString, String fieldName,
+    public static String getFieldApiName(FObject fObj, String definitionString, String sObjectApiName, String fieldName,
         String relatedFieldApiName, String category) {
         String result = '';
 
@@ -296,12 +297,12 @@ public with sharing class ForceeaService {
             return fieldName;
         }
 
-        if (String.isBlank(fObj.sObjectApiName)) {
+        if (String.isBlank(sObjectApiName)) {
             return result;
         }
 
         fieldName = fieldName.trim();
-        Map<String, FObject.Field> fieldsByFieldApiName = FObject.globalFieldsMapBySObject.get(fObj.sObjectApiName.toLowerCase());
+        Map<String, FObject.Field> fieldsByFieldApiName = FObject.globalFieldsMapBySObject.get(sObjectApiName.toLowerCase());
         if (fieldsByFieldApiName.containsKey(fieldName.toLowerCase())) {
             result = fieldsByFieldApiName.get(fieldName.toLowerCase()).fieldApiName;
         }
@@ -315,13 +316,13 @@ public with sharing class ForceeaService {
                 fObj.addError(fObj.sObjectApiName,
                     'Invalid field [' + fieldName + '] in definition [' + definitionString + ']');
             }
-            when 'lookup' {
-                fObj.addError(relatedFieldApiName,
-                    'Invalid lookup field [' + fieldName + '] in definition [' + definitionString + ']');
-            }
-            when 'copy' {
+            when 'copy-field' {
                 fObj.addError(relatedFieldApiName,
                     'Invalid copy field [' + fieldName + '] in definition [' + definitionString + ']');
+            }
+            when 'copy-from' {
+                fObj.addError(relatedFieldApiName,
+                    'Invalid lookup field [' + sObjectApiName + '.' + fieldName + '] in definition [' + definitionString + ']');
             }
             when 'deletedefinitions' {
                 if (!fObj.isUpdate) {
