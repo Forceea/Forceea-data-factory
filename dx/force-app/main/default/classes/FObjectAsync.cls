@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.1)
+  Forceea data factory (v2.1.2)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -96,7 +96,7 @@ public with sharing class FObjectAsync {
      * @return An instance of FObjectAsync.
      */
     public FObjectAsync deleteRecords() {
-        if (FObjectAsync.anotherProcessIsActive() || ForceeaService.isProductionOrg()) {
+        if (FObjectAsync.anotherProcessIsActive() || !ForceeaService.recordsCanBeDeletedInThisOrg()) {
             return this;
         }
 

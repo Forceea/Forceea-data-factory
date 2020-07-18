@@ -1,8 +1,8 @@
-### New User Guide version 2
+### New User Guide version 3
 
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
-# Forceea 2.1.1
+# Forceea 2.1.2
 
 ### What is Forceea?
 Forceea (forsi:a) is a data factory for Salesforce based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
@@ -26,7 +26,7 @@ or this link for **Sandboxes**:
                                                                                                                        
 You may also use the Salesforce CLI command
 ```
-sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFHLQA2 -r -u <UsernameOrOrgAlias>
+sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFHVQA2 -r -u <UsernameOrOrgAlias>
 ```
 
 ### What can Forceea do?

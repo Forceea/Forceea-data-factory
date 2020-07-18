@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.1)
+  Forceea data factory (v2.1.2)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -481,24 +481,6 @@ public with sharing class ForceeaService {
     }
 
     /**
-     * @description Checks if the environment is Production org.
-     * @return True, if the org is Production.
-     */
-    public static Boolean isProductionOrg() {
-        Organization org = [
-            SELECT IsSandbox
-            FROM Organization
-            WHERE Id = :UserInfo.getOrganizationId()
-        ];
-
-        return (org.IsSandbox == true) ? false : true;
-    }
-
-    public static Boolean isVariable(String variable) {
-        return (variable.trim().left(1) == '@');
-    }
-
-    /**
      * @description Keeps some case-insensitive values in a list and removes anything else.
      * @param listToProcess The list to be processed.
      * @param valuesToKeep The values to keep in the list.
@@ -542,6 +524,23 @@ public with sharing class ForceeaService {
             OperationType__c = 'user-message'
         );
         EventBus.publish(platformEvent);
+    }
+
+    /**
+     * @description Checks if data are allowed to be deleted.
+     * @return True, if the data can be deleted.
+     */
+    public static Boolean recordsCanBeDeletedInThisOrg() {
+        Organization org = [
+            SELECT IsSandbox, OrganizationType, TrialExpirationDate
+            FROM Organization
+            WHERE Id = :UserInfo.getOrganizationId()
+        ];
+
+        Boolean isOtherThanProductionOrg = org.IsSandbox ||
+            org.OrganizationType.equalsIgnoreCase('Developer Edition') || org.TrialExpirationDate != null;
+
+        return Test.isRunningTest() || isOtherThanProductionOrg;
     }
 
     /**
