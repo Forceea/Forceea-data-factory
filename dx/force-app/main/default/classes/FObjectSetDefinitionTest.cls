@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class FObjectSetDefinitionTest {
@@ -1527,9 +1527,6 @@ public class FObjectSetDefinitionTest {
 		if (obj.getErrors().containsKey(field5)) {
 			errors += 16;
 		}
-		if (!FObject.processIsValid()) {
-			errors += 32;
-		}
 		System.assertEquals(0, errors, 'setDefinition - errors found');
 	}
 
@@ -1784,8 +1781,9 @@ public class FObjectSetDefinitionTest {
 	private static void setDefinition_fieldBelongsToAnotherSObject_expectFailure() {
 		Test.startTest();
 		FObject obj = new FObject(FObjectOne__c.SObjectType)
-			.setDefinition(FObjectOne__c.TestText__c, 'static value(test1-)')
-			.setDefinition(FObjectTwo__c.TestText__c, 'static value(test2)');
+			.setDefinition(FObjectOne__c.TestText__c, 'static  value(test1-)')
+			.setDefinition(FObjectOne__c.TestTextRequired__c, 'static  value(test)')
+			.setDefinition(FObjectTwo__c.TestText__c, 'static value(Invalid field)');
 		obj.insertRecords(true);
 		Test.stopTest();
 
@@ -2658,7 +2656,8 @@ public class FObjectSetDefinitionTest {
 		expectedDefinitions.add('static lookup(profile) field(name) value(Standard User) source(salesforce)');
 
 		Test.startTest();
-		FObject obj = new FObject(User.SObjectType,1);
+		FObject obj = new FObject(User.SObjectType,1)
+			.setRequiredFields(true);
 		List<User> users = obj.getRecords();
 		Test.stopTest();
 
@@ -2667,7 +2666,7 @@ public class FObjectSetDefinitionTest {
 			actualDefinitions.add(obj.getDefinitions(fieldApiName).get(0));
 		}
 
-		Boolean isValid = actualDefinitions.hashCode() == expectedDefinitions.hashCode() && FObject.processIsValid();
+		Boolean isValid = actualDefinitions.hashCode() == expectedDefinitions.hashCode();
 		System.assert(isValid, 'setDefinitionsOfRequiredFieldsForUser - errors found');
 	}
 
@@ -2706,12 +2705,8 @@ public class FObjectSetDefinitionTest {
 				errors++;
 			}
 		}
-
 		if (actualDefinitions.hashCode() != expectedDefinitions.hashCode()) {
 			errors += 16;
-		}
-		if (!FObject.processIsValid()) {
-			errors += 32;
 		}
 		System.assertEquals(0, errors, 'setDefinitionsOfRequiredFieldsForUser - errors found');
 	}

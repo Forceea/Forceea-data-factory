@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class ForceeaGeneratorRandomListTest {
@@ -23,8 +23,9 @@ public class ForceeaGeneratorRandomListTest {
         };
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestInteger__c', 'random type(list) value(1, 2, 3, 0)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('TestInteger__c', 'random type(list) value(1, 2, 3, 0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -41,8 +42,10 @@ public class ForceeaGeneratorRandomListTest {
         };
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestDecimal__c', 'random type(list) value(1, 2.22, 0.0, 3)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('TestDecimal__c', 'random type(list) value(1, 2.22, 0.0, 3)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -59,8 +62,9 @@ public class ForceeaGeneratorRandomListTest {
         };
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestDate__c', 'random type(list) value(2018-01-01, 2017-01-01, 2016-01-01, 2015-01-01)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('TestDate__c', 'random type(list) value(2018-01-01, 2017-01-01, 2016-01-01, 2015-01-01)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -79,9 +83,10 @@ public class ForceeaGeneratorRandomListTest {
         arguments.add(Datetime.newInstance(2015, 1, 1, 3, 3, 3));
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestDateTime__c',
-            'random type(list) value(2018-01-01 00:00:00, 2017-01-01 01:01:01, 2016-01-01 02:02:02, 2015-01-01 03:03:03)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('TestDateTime__c',
+                'random type(list) value(2018-01-01 00:00:00, 2017-01-01 01:01:01, 2016-01-01 02:02:02, 2015-01-01 03:03:03)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -98,8 +103,9 @@ public class ForceeaGeneratorRandomListTest {
         };
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestTime__c', 'random type(list) value(01:01:01, 02:02:02, 03:03:03, 04:04:04)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('TestTime__c', 'random type(list) value(01:01:01, 02:02:02, 03:03:03, 04:04:04)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -304,8 +310,9 @@ public class ForceeaGeneratorRandomListTest {
         };
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(One,Two,Three,Twenty One)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(One,Two,Three,Twenty One)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -374,17 +381,15 @@ public class ForceeaGeneratorRandomListTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random picklist - errors found');
     }
 
     @IsTest
     private static void randomList_unrestrictedIndependentPicklistField_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject('FObjectTwo__c');
-        obj.setDefinition('TestPicklistEUnrestricted__c', 'random type(list) value(e1, e4, e5, d1, d2)');
+        FObject obj = new FObject('FObjectTwo__c')
+            .setDefinition('TestPicklistEUnrestricted__c', 'random type(list) value(e1, e4, e5, d1, d2)')
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj.insertRecords(true);
         List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
         Test.stopTest();
@@ -400,8 +405,9 @@ public class ForceeaGeneratorRandomListTest {
     @IsTest
     private static void randomList_unrestrictedDependentPicklistField_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectTwo__c.SObjectType, 10);
-        obj.setDefinition('TestPicklistFUnrestricted__c', 'random type(list) value(f0, f1, f4, f5, e1, e2)');
+        FObject obj = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition('TestPicklistFUnrestricted__c', 'random type(list) value(f0, f1, f4, f5, e1, e2)')
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         List<Database.SaveResult> saveResults = obj.insertRecords(false);
         List<FObjectTwo__c> records = (List<FObjectTwo__c>) obj.getRecords();
         Test.stopTest();
@@ -412,18 +418,16 @@ public class ForceeaGeneratorRandomListTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random list - errors found');
     }
 
     @IsTest
     private static void randomList_controllingFieldIsCheckbox_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestCheckbox__c', 'static value(true)');
-        obj.setDefinition('TestpicklistD__c', 'random type(list) value(d2, d3)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestCheckbox__c', 'static value(true)')
+            .setDefinition('TestpicklistD__c', 'random type(list) value(d2, d3)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<Database.SaveResult> saveResults = obj.insertRecords(false);
         Test.stopTest();
 
@@ -433,17 +437,15 @@ public class ForceeaGeneratorRandomListTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random list - errors found');
     }
 
     @IsTest
     private static void randomList_oneRecordType_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('RecordTypeId', 'random type(list) value(RecordtypeA)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('RecordTypeId', 'random type(list) value(RecordtypeA)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -460,8 +462,9 @@ public class ForceeaGeneratorRandomListTest {
     @IsTest
     private static void randomList_manyRecordTypes_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('RecordTypeId', 'random type(list) value(RecordTypeA, RecordTypeB)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('RecordTypeId', 'random type(list) value(RecordTypeA, RecordTypeB)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -499,7 +502,8 @@ public class ForceeaGeneratorRandomListTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition('$Test1Integer', 'random type(list) value(1, 2, 3, 0)')
-            .setDefinition(FObjectOne__c.TestText__c, 'copy field($test1Integer)');
+            .setDefinition(FObjectOne__c.TestText__c, 'copy field($test1Integer)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -518,7 +522,8 @@ public class ForceeaGeneratorRandomListTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition('$TestDecimal', 'random type(list) value(1.1, 2.22, 3.335, 0)')
-            .setDefinition(FObjectOne__c.TestDecimal__c, 'copy field($TestDecimal)');
+            .setDefinition(FObjectOne__c.TestDecimal__c, 'copy field($TestDecimal)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -537,7 +542,8 @@ public class ForceeaGeneratorRandomListTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition('$TestDate', 'random type(list) value(2018-01-01, 2017-01-01, 2016-01-01, 2015-01-01)')
-            .setDefinition('TestDate__c', 'copy field($TestDate)');
+            .setDefinition('TestDate__c', 'copy field($TestDate)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -559,7 +565,8 @@ public class ForceeaGeneratorRandomListTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition('$TestDatetime',
                 'random type(list) value(2018-01-01 00:00:00, 2017-01-01 01:01:01, 2016-01-01 02:02:02, 2015-01-01 03:03:03)')
-            .setDefinition(FObjectOne__c.TestDatetime__c, 'copy field($TestDatetime)');
+            .setDefinition(FObjectOne__c.TestDatetime__c, 'copy field($TestDatetime)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -578,7 +585,8 @@ public class ForceeaGeneratorRandomListTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition('$TestTime', 'random type(list) value(01:01:01, 02:02:02, 03:03:03, 04:04:04)')
-            .setDefinition(FObjectOne__c.TestTime__c, 'copy field($TestTime)');
+            .setDefinition(FObjectOne__c.TestTime__c, 'copy field($TestTime)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();
@@ -597,7 +605,8 @@ public class ForceeaGeneratorRandomListTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition('$TestString', 'random type(list) value(One,Two,Three,Twenty One)')
-            .setDefinition(FObjectOne__c.TestText__c, 'copy field($TestString)');
+            .setDefinition(FObjectOne__c.TestText__c, 'copy field($TestString)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         Test.stopTest();

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class FObjectAsyncTest {
@@ -32,7 +32,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        Boolean resultIsValid = processIsValid() &&
+        Boolean resultIsValid = FObjectAsync.processIsValid() &&
             (records.size() == 1 * numJobs * FOBJECT1_NUM_RECORDS);
         System.assert(resultIsValid, 'insertRecords - errors found');
     }
@@ -50,7 +50,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        Boolean resultIsValid = processIsValid() &&
+        Boolean resultIsValid = FObjectAsync.processIsValid() &&
             (records.size() == maxIterationsPerBatch * numJobs * FOBJECT1_NUM_RECORDS);
         System.assert(resultIsValid, 'insertRecords - errors found');
     }
@@ -69,7 +69,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        Boolean resultIsValid = processIsValid() &&
+        Boolean resultIsValid = FObjectAsync.processIsValid() &&
             (records.size() == maxIterationsPerBatch * numJobs * FOBJECT1_NUM_RECORDS);
         System.assert(resultIsValid, 'insertRecords - errors found');
     }
@@ -86,7 +86,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        Boolean resultIsValid = processIsValid() && (records.isEmpty());
+        Boolean resultIsValid = FObjectAsync.processIsValid() && (records.isEmpty());
         System.assert(resultIsValid, 'insertRecords - errors found');
     }
 
@@ -102,7 +102,7 @@ public class FObjectAsyncTest {
             .insertRecords();
         Test.stopTest();
 
-        System.assert(!processIsValid(), 'insertRecords - errors found');
+        System.assert(!FObject.processIsValid(), 'insertRecords - errors found');
     }
 
     @IsTest
@@ -118,7 +118,7 @@ public class FObjectAsyncTest {
             .insertRecords();
         Test.stopTest();
 
-        System.assert(!processIsValid(), 'insertRecords - errors found');
+        System.assert(!FObject.processIsValid(), 'insertRecords - errors found');
     }
 
     @IsTest
@@ -130,6 +130,7 @@ public class FObjectAsyncTest {
         Map<String, FObject> template = new Map<String, FObject>{
             'FObjectTwos' => new FObject('FObjectTwo__c')
                 .setNumberOfRecords(FOBJECT2_NUM_RECORDS)
+                .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
                 .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
                 .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
         };
@@ -161,7 +162,7 @@ public class FObjectAsyncTest {
             counter++;
         }
 
-        System.assert(processIsValid() & errors == 0, 'insertRecords - errors found');
+        System.assert(FObjectAsync.processIsValid() & errors == 0, 'insertRecords - errors found');
     }
 
     @IsTest
@@ -175,7 +176,7 @@ public class FObjectAsyncTest {
             .insertRecords();
         Test.stopTest();
 
-        System.assert(!processIsValid(), 'insertRecords - errors found');
+        System.assert(!FObjectAsync.processIsValid(), 'insertRecords - errors found');
     }
 
     @IsTest
@@ -189,7 +190,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        Boolean result = processIsValid() && records.size() == 0;
+        Boolean result = FObjectAsync.processIsValid() && records.size() == 0;
         System.assert(result == true, 'deleteRecords - errors found');
     }
 
@@ -217,7 +218,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        Boolean result = processIsValid() && records.size() == 1;
+        Boolean result = records.size() == 1;
         System.assert(result == true, 'deleteRecords - errors found');
     }
 
@@ -245,8 +246,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        Boolean result = processIsValid() && records.size() == 1;
-        System.assert(result == true, 'deleteRecords - errors found');
+        System.assert(records.size() == 1, 'deleteRecords - errors found');
     }
 
     @IsTest
@@ -274,8 +274,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        Boolean result = processIsValid() && records.size() == 11;
-        System.assert(result == true, 'deleteRecords - errors found');
+        System.assert(records.size() == 11, 'deleteRecords - errors found');
     }
 
     @IsTest
@@ -299,8 +298,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        Boolean result = processIsValid() && records.size() == 101;
-        System.assert(result == true, 'deleteRecords - errors found');
+        System.assert(records.size() == 101, 'deleteRecords - errors found');
     }
 
     @IsTest
@@ -324,8 +322,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        Boolean result = processIsValid() && records.size() == 101;
-        System.assert(result == true, 'deleteRecords - errors found');
+        System.assert(records.size() == 101, 'deleteRecords - errors found');
     }
 
     @IsTest
@@ -343,8 +340,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        Boolean result = processIsValid() && records.isEmpty();
-        System.assert(result == true, 'getGroupName - errors found');
+        System.assert(records.isEmpty(), 'getGroupName - errors found');
     }
 
     @IsTest
@@ -413,10 +409,6 @@ public class FObjectAsyncTest {
         }
     }
 
-    private static Boolean processIsValid() {
-        return FObject.processIsValid() && FObjectAsync.processIsValid();
-    }
-
     /* TEMPLATES */
 
     public static Map<String, FObject> templatePartition() {
@@ -427,6 +419,7 @@ public class FObjectAsyncTest {
             .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
             .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
         );
         template.put('FObjectOnes', new FObject('FObjectOne__c')
             .setNumberOfRecords(100)
@@ -435,6 +428,7 @@ public class FObjectAsyncTest {
             .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinition(FObjectOne__c.TestText__c,
                 'random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
         );
 
         return template;
@@ -450,6 +444,7 @@ public class FObjectAsyncTest {
             .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FobjectTwo__c) source(forceea)')
             .setDefinition(FObjectOne__c.TestText__c,
                 'random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
             .setGroupName('Group1')
         );
@@ -463,6 +458,7 @@ public class FObjectAsyncTest {
                 .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
                 .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
                 .setDefinition(FObjectOne__c.TestText__c, 'static value(test)')
+                .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
         };
     }
 
@@ -480,6 +476,7 @@ public class FObjectAsyncTest {
             .setNumberOfRecords(FOBJECT2_NUM_RECORDS)
             .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setGroupName('Group2')
         );
 

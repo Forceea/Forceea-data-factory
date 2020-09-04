@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class ForceeaService {
 
@@ -66,8 +66,6 @@ public with sharing class ForceeaService {
     public static final String MESSAGE_WILL_DISPLAY_CREATED_FIELD_VALUES = 'Will display the created field values';
     public static final String MESSAGE_WILL_INSERT_CREATED_RECORDS = 'Will insert the created records';
     public static final String MESSAGE_WILL_NOT_INSERT_RECORDS = 'Will not insert records';
-    public static final String MESSAGE_WILL_NOT_SET_DEFINITIONS_OF_REQUIRED_FIELDS =
-        'Will not set the definition of required fields';
     public static final String MESSAGE_WILL_SET_DEFINITIONS_OF_REQUIRED_FIELDS =
         'Will set the definition of required fields';
     public static final String MESSAGE_WILL_STORE_CREATED_RECORDS = 'Will store the created records with mocked IDs';
@@ -85,6 +83,17 @@ public with sharing class ForceeaService {
         ASYNC_INSERT, ASYNC_DELETE
     }
 
+    /* STATIC COLLECTIONS */
+
+    // the map of all sObject names (keys) to sObject tokens (values) for the standard and custom objects defined
+    public static Map<String, SObjectInfo> sObjectInfosByApiName = new Map<String, SObjectInfo>();
+    //
+    public static Map<Schema.SObjectType, SObjectInfo> sObjectInfosBySObjectType =
+        new Map<Schema.SObjectType, SObjectInfo>();
+    //
+    public static Map<String, Map<String, Schema.SObjectField>> sObjectFieldsBySObject =
+        new Map<String, Map<String, Schema.SObjectField>>();
+
     /* STATIC VARIABLES & PROPERTIES */
 
     // the ID of the ForceeaQueueable class
@@ -101,19 +110,6 @@ public with sharing class ForceeaService {
     public static String processId = '';
 
     /* CLASSES */
-
-    public class FieldDefinition {
-        public String definitionString = '';
-        public String fieldApiName = '';
-    }
-
-    public class FObjectAsync {
-        public List<FieldDefinition> definitions = new List<FieldDefinition>();
-        public Boolean setRequiredFields = true;
-        public Integer numOfRecords = 0;
-        public String sObjectApiName = '';
-        public String partitionFieldName = '';
-    }
 
     public class AsyncTransaction {
         public Map<String, Integer> numFirstRecordsBySObject = new Map<String, Integer>();
@@ -140,6 +136,24 @@ public with sharing class ForceeaService {
         public Integer sector = 0;
         public Integer sObjectToDeleteIndex = 0;
         public String sObjectApiName = '';
+    }
+
+    public class FieldDefinition {
+        public String definitionString = '';
+        public String fieldApiName = '';
+    }
+
+    public class FObjectAsync {
+        public List<FieldDefinition> definitions = new List<FieldDefinition>();
+        public Boolean setRequiredFields = true;
+        public Integer numOfRecords = 0;
+        public String sObjectApiName = '';
+        public String partitionFieldName = '';
+    }
+
+    public class SObjectInfo {
+        public String sObjectApiName { get; set; }
+        public Schema.SObjectType sObjType { get; set; }
     }
 
     public class Variable {
@@ -271,40 +285,48 @@ public with sharing class ForceeaService {
     }
 
     /**
-     * @description Determines is the field has multiple definitions.
+     * @description Determines is the field is virtual.
      * @param fieldName The API name of the field.
      * @return A boolean value.
      */
     public static Boolean fieldIsVirtual(String fieldName) {
-        return (fieldName.toLowerCase().left(1) == '$');
+        return (fieldName.left(1) == '$');
     }
 
     /**
-     * @description Retrieves the API name of a specific SObject's field or a blank string if the field name is invalid.
+     * @description Retrieves the FObject.Field object from global fields map.
+     * @param sObjectApiName The SObject API Name.
+     * @param fieldApiName The field API name.
+     * @return An FObject.Field.
+     */
+    public static FObject.Field getField(String sObjectApiName, String fieldApiName) {
+        return FObject.globalFieldsMapBySObject.get(sObjectApiName.toLowerCase()).get(fieldApiName.toLowerCase());
+    }
+
+    /**
+     * @description Retrieves the field API name or a blank string if the field name is invalid.
      * @param fObj The FObject.
      * @param definitionString The definition string.
      * @param sObjectApiName The SObject API Name.
      * @param fieldName The field name.
+     * @param sObjectField The Schema SObject field.
      * @param relatedFieldApiName The API name of the field that lookup field is related to.
      * @param category The field category for fields (standard/lookup) or methods (e.g.deleteDefinitions).
      * @return A string value.
      */
-    public static String getFieldApiName(FObject fObj, String definitionString, String sObjectApiName, String fieldName,
-        String relatedFieldApiName, String category) {
-        String result = '';
+    public static String getFieldApiName(FObject fObj, String definitionString, String sObjectApiName,
+        String fieldName, Schema.SObjectField sObjectField, String relatedFieldApiName, String category) {
+       //System.debug('> getFieldApiName - fieldName: ' + fieldName + ', sObjectField: ' + sObjectField + ', relatedFieldApiName: ' + relatedFieldApiName);
 
-        if (ForceeaService.fieldIsVirtual(fieldName)) {
-            return fieldName;
-        }
+        String result = getFieldApiNameFromKey(sObjectApiName, fieldName, sObjectField);
 
-        if (String.isBlank(sObjectApiName)) {
-            return result;
-        }
-
-        fieldName = fieldName.trim();
-        Map<String, FObject.Field> fieldsByFieldApiName = FObject.globalFieldsMapBySObject.get(sObjectApiName.toLowerCase());
-        if (fieldsByFieldApiName.containsKey(fieldName.toLowerCase())) {
-            result = fieldsByFieldApiName.get(fieldName.toLowerCase()).fieldApiName;
+        if (sObjectField != null) {
+            String fieldApiName = sObjectField.getDescribe().getName();
+            SObjectField fieldInfo = ForceeaService.getSObjectFieldsByName(sObjectApiName.toLowerCase()).get(fieldApiName);
+            if (fieldInfo != sObjectField) {
+                fObj.addError(fObj.sObjectApiName, ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldApiName +
+                    '] for SObject [' + fObj.sObjectApiName + ']');
+            }
         }
 
         if (String.isNotBlank(result)) {
@@ -333,6 +355,39 @@ public with sharing class ForceeaService {
         }
 
         return result;
+    }
+
+    public static String getFieldApiNameFromKey(
+        String sObjectApiName, String fieldApiName, Schema.SObjectField sObjectField) {
+       //System.debug('> getFieldApiNameFromKey - sObjectApiName: ' + sObjectApiName + ', fieldApiName: ' + fieldApiName + '/' + sObjectField);
+        if (ForceeaService.fieldIsVirtual(fieldApiName)) {
+            return fieldApiName;
+        }
+
+        String sObjectApiNameToLower = sObjectApiName.toLowerCase();
+
+        if (sObjectField == null) {
+            Map<String, Schema.SObjectField> sObjectFieldsByName = ForceeaService.getSObjectFieldsByName(sObjectApiName);
+            if (!sObjectFieldsByName.containsKey(fieldApiName)) {
+                return '';
+            }
+            sObjectField = sObjectFieldsByName.get(fieldApiName);
+        }
+
+        FObject.Field field = FObject.getDetailsFromSObjectField(sObjectField);
+        String fieldApiNameToLower = field.fieldApiName.toLowerCase();
+
+        if (!globalFieldsMapContains(sObjectApiNameToLower, fieldApiNameToLower)) {
+            if (!FObject.globalFieldsMapBySObject.containsKey(sObjectApiNameToLower)) {
+                FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, new Map<String, FObject.Field>());
+            }
+
+            Map<String, FObject.Field> fieldsByName = FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower);
+            fieldsByName.put(fieldApiNameToLower, field);
+            FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, fieldsByName);
+        }
+
+        return field.fieldApiName;
     }
 
     /**
@@ -389,6 +444,10 @@ public with sharing class ForceeaService {
         ];
     }
 
+    public static String getKey(String majorValue, String minorValue) {
+        return getStringValueToLower(majorValue) + '.' + getStringValueToLower(minorValue);
+    }
+
     /**
      * @description The recursive calculation of permutation values.
      * @param lists The permutation lists.
@@ -432,23 +491,11 @@ public with sharing class ForceeaService {
      */
     public static String getSObjectApiName(
         FObject fObj, String definitionString, String sObjectName, String relatedFieldApiName, String category) {
-        String result = '';
         sObjectName = sObjectName.trim();
 
-        if (String.isBlank(sObjectName)) {
-            fObj.addError(sObjectName, ForceeaService.MESSAGE_INVALID_SOBJECT + ' [' + sObjectName + ']');
-            return result;
-        }
-
-        for (String name : FObject.sObjectApiNames) {
-            if (name.equalsIgnoreCase(sObjectName)) {
-                result = name;
-                break;
-            }
-        }
-
-        if (String.isNotBlank(result)) {
-            return result;
+        String sObjectApiName = ForceeaService.getSObjectApiName(sObjectName);
+        if (String.isNotBlank(sObjectApiName)) {
+            return sObjectApiName;
         }
 
         switch on category.toLowerCase() {
@@ -462,11 +509,133 @@ public with sharing class ForceeaService {
             }
         }
 
+        return '';
+    }
+
+    /**
+     * @description Retrieves the SObject API name or an empty string if invalid.
+     * @param sObjectName The SObject name.
+     * @return The string of SObject API name.
+     */
+    public static String getSObjectApiName(String sObjectName) {
+        SObjectInfo info = ForceeaService.getSObjectInfo(sObjectName);
+        if (info == null) {
+            return '';
+        }
+
+        return info.sObjectApiName;
+    }
+
+    /**
+     * @description Retrieves the Schema.SObjectField map for an SObject.
+     * @param sObjectApiName The SObject API name.
+     * @return A Schema.SObjectField map.
+     */
+    public static Map<String, Schema.SObjectField> getSObjectFieldsByName(String sObjectApiName) {
+        String sObjectApiNameToLower = sObjectApiName.toLowerCase();
+
+        if (!ForceeaService.sObjectFieldsBySObject.containsKey(sObjectApiNameToLower)) {
+            Map<String, Schema.SObjectField> fieldInfosByName =
+                ForceeaService.getSObjectType(sObjectApiName).getDescribe().fields.getMap();
+            ForceeaService.sObjectFieldsBySObject.put(sObjectApiNameToLower, fieldInfosByName);
+        }
+
+        return ForceeaService.sObjectFieldsBySObject.get(sObjectApiNameToLower);
+    }
+
+    /**
+     * @description Retrieves the SObjectInfo object related to an SObject name.
+     * @param sObjectName The SObject name.
+     * @return An SObjectInfo object.
+     */
+    public static SObjectInfo getSObjectInfo(String sObjectName) {
+        SObjectInfo result;
+        String sObjectApiNameToLower = sObjectName.toLowerCase();
+        if (sObjectInfosByApiName.containsKey(sObjectApiNameToLower)) {
+            return sObjectInfosByApiName.get(sObjectApiNameToLower);
+        }
+
+        List<Schema.DescribeSObjectResult> describeResults = new List<DescribeSObjectResult>();
+        try {
+            describeResults = Schema.describeSObjects(new List<String>{ sObjectName });
+        } catch (Exception exp) {
+        } finally {
+            if (!describeResults.isEmpty()) {
+                result = new SObjectInfo();
+                result.sObjectApiName = describeResults.get(0).getName();
+                result.sObjType = describeResults.get(0).getSObjectType();
+
+                sObjectInfosByApiName.put(result.sObjectApiName.toLowerCase(), result);
+                sObjectInfosBySObjectType.put(result.sObjType, result);
+            }
+        }
         return result;
     }
 
+    /**
+     * @description Retrieves the SObjectType from the SObject name.
+     * @param sObjectApiName The SObject API name.
+     * @return An SObjectInfo object.
+     */
+    public static Schema.SObjectType getSObjectType(String sObjectApiName) {
+        String sObjectApiNameToLower = sObjectApiName.toLowerCase();
+        if (sObjectInfosByApiName.containsKey(sObjectApiNameToLower)) {
+            return sObjectInfosByApiName.get(sObjectApiNameToLower).sObjType;
+        }
+
+        Schema.SObjectType result;
+        List<Schema.DescribeSObjectResult> describeResults = new List<DescribeSObjectResult>();
+        try {
+            describeResults = Schema.describeSObjects(new List<String>{ sObjectApiName });
+        } catch (Exception exp) {
+        } finally {
+            if (!describeResults.isEmpty()) {
+                result = describeResults.get(0).getSObjectType();
+                String name = describeResults.get(0).getName();
+
+                SObjectInfo info = new SObjectInfo();
+                info.sObjectApiName = name;
+                info.sObjType = result;
+                sObjectInfosByApiName.put(name.toLowerCase(), info);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @description Retrieves a trimmed string value as '' if string is blank.
+     * @param value The string value.
+     * @return The converted string.
+     */
     public static String getStringValue(String value) {
-        return String.isBlank(value) ? '' : value;
+        return String.isBlank(value) ? '' : value.trim();
+    }
+
+    /**
+     * @description Retrieves a trimmed lowercase string value as '' if string is blank.
+     * @param value The string value.
+     * @return The converted string.
+     */
+    public static String getStringValueToLower(String value) {
+        return String.isBlank(value) ? '' : value.trim().toLowerCase();
+    }
+
+    /**
+     * @description Informs if the global fields map contains a field.
+     * @param sObjectApiNameToLower The SObject API name in lowercase.
+     * @param fieldApiNameToLower The field API name in lowercase.
+     * @return True, if the map contains the field.
+     */
+    private static Boolean globalFieldsMapContains(String sObjectApiNameToLower, String fieldApiNameToLower) {
+        Boolean result = false;
+
+        if (FObject.globalFieldsMapBySObject.containsKey(sObjectApiNameToLower) &&
+            FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower).containsKey(fieldApiNameToLower)) {
+            result = true;
+        }
+
+        return result;
     }
 
     /**
@@ -527,8 +696,8 @@ public with sharing class ForceeaService {
     }
 
     /**
-     * @description Checks if data are allowed to be deleted.
-     * @return True, if the data can be deleted.
+     * @description Checks if the environment is Production org.
+     * @return True, if the org is Production.
      */
     public static Boolean recordsCanBeDeletedInThisOrg() {
         Organization org = [
@@ -537,6 +706,10 @@ public with sharing class ForceeaService {
             WHERE Id = :UserInfo.getOrganizationId()
         ];
 
+        // Boolean isSandboxOrg = org.IsSandbox && org.TrialExpirationDate == null;
+        // Boolean isScratchOrg = org.IsSandbox && org.TrialExpirationDate != null;
+        // Boolean isDeveloperOrg = !org.IsSandbox && org.OrganizationType.equalsIgnoreCase('Developer Edition');
+        // Boolean isTrialOrg = !org.IsSandbox && org.TrialExpirationDate != null;
         Boolean isOtherThanProductionOrg = org.IsSandbox ||
             org.OrganizationType.equalsIgnoreCase('Developer Edition') || org.TrialExpirationDate != null;
 

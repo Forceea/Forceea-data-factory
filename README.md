@@ -1,8 +1,8 @@
-### New User Guide version 3
+### User Guide version 1
 
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
-# Forceea 2.1.2
+# Forceea 2.2.0
 
 ### What is Forceea?
 Forceea (forsi:a) is the most sophisticated and powerful data factory for Salesforce, it's based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
@@ -26,7 +26,7 @@ or this link for **Sandboxes**:
                                                                                                                        
 You may also use the Salesforce CLI command
 ```
-sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFHVQA2 -r -u <UsernameOrOrgAlias>
+sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVbJQAU -r -u <UsernameOrOrgAlias>
 ```
 
 ### What can Forceea do?
@@ -37,6 +37,7 @@ sfdx force:package:install -w 10 -b 10 -p 04t4I000000lFHVQA2 -r -u <UsernameOrO
 * Can create data for fields of the data types: Integer, Currency, Double, Date, Datetime, Time, Boolean, String, TextArea, Percent, Reference, Email, Phone, URL, Base64, Picklist and MultiPicklist.
 * Handles Record Types and field dependencies (dependent picklists).
 * Supports record groups for inserting and deleting records.
+* Uses DML Optimizer to reduce the number of insert statements with Templates.
 * Supports variables and functions.
 * Validates the definitions based on the field data type.
 * Has an extended error messaging system.

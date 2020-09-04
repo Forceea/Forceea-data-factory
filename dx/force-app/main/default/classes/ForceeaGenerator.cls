@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class ForceeaGenerator {
 
@@ -130,9 +130,8 @@ public with sharing class ForceeaGenerator {
      * @return True, if the SObject contains an IsActive field.
      */
     private Boolean existsIsActiveStandardField(String sObjectApiName) {
-        return FObject.globalFieldsMapBySObject
-            .get(sObjectApiName.toLowerCase())
-            .containsKey('isactive');
+        String fieldApiName = ForceeaService.getFieldApiNameFromKey(sObjectApiName, 'IsActive', null);
+        return (String.isNotBlank(fieldApiName));
     }
 
     /**
@@ -141,7 +140,8 @@ public with sharing class ForceeaGenerator {
      * @return A Boolean value.
      */
     private Boolean fieldIsCheckbox(String fieldApiName) {
-        return (this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName.toLowerCase()).dataType == Schema.DisplayType.BOOLEAN);
+        FObject.Field field = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
+        return (field.dataType == Schema.DisplayType.BOOLEAN);
     }
 
     /**
@@ -202,7 +202,7 @@ public with sharing class ForceeaGenerator {
         List<String> results = new List<String>();
 
         String fieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
-            this.fObj.sObjectApiName, referenceFieldName, this.def.fieldApiName, 'copy-field');
+            this.fObj.sObjectApiName, referenceFieldName, null, this.def.fieldApiName, 'copy-field');
         if (String.isBlank(fieldApiName)) {
             return results;
         }
@@ -221,7 +221,7 @@ public with sharing class ForceeaGenerator {
         }
 
         String lookupFromFieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
-            lookupSObjectApiName, fromSObjectDotField.trim().substringAfter('.'), this.def.fieldApiName, 'copy-from');
+            lookupSObjectApiName, fromSObjectDotField.trim().substringAfter('.'), null, this.def.fieldApiName, 'copy-from');
         if (String.isBlank(lookupFromFieldApiName)) {
             return results;
         }
@@ -289,20 +289,23 @@ public with sharing class ForceeaGenerator {
         fieldName = fieldName.trim();
 
         String fieldApiName = ForceeaService.getFieldApiName(
-            this.fObj, this.def.definitionString, this.fObj.sObjectApiName, fieldName,
+            this.fObj, this.def.definitionString, this.fObj.sObjectApiName, fieldName, null,
             this.def.fieldApiName, 'copy-field');
         if (String.isBlank(fieldApiName)) {
             return results;
         }
 
         if (fieldApiName.equalsIgnoreCase(this.def.fieldApiName)) {
-            this.fObj.addError(this.def.fieldApiName, 'The field [' + fieldApiName + '] cannot be the same as ' +
-                'the definition field in definition [' + this.def.definitionString + ']');
+            this.fObj.addError(this.def.fieldApiName,
+                'The field [' + fieldApiName + '] cannot be the same as ' +
+                    'the definition field in definition [' + this.def.definitionString + ']');
             return results;
         }
 
         Integer thisFieldPosition = getFieldPosition(this.def.fieldApiName);
         Integer fieldPosition = getFieldPosition(fieldApiName);
+        //System.debug('thisFieldPosition: ' + thisFieldPosition);
+        //System.debug('fieldPosition: ' + fieldPosition);
 
         if (thisFieldPosition < fieldPosition || fieldPosition == -1) {
             results = getCopiedFieldValuesFromExisting(fieldApiName);
@@ -444,7 +447,8 @@ public with sharing class ForceeaGenerator {
             return Schema.DisplayType.ANYTYPE;
         }
 
-        return this.fObj.sObjectFieldsByFieldApiName.get(this.def.fieldApiName.toLowerCase()).dataType;
+        FObject.Field field = ForceeaService.getField(this.fObj.sObjectApiName, this.def.fieldApiName);
+        return field.dataType;
     }
 
     /**
@@ -461,26 +465,25 @@ public with sharing class ForceeaGenerator {
             return Schema.DisplayType.ANYTYPE;
         }
 
-        return this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName.toLowerCase()).dataType;
+        return ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName).dataType;
     }
 
     /**
      * @description Retrieves the field dependencies mapping between a controlling field and a dependent field.
      *   https://salesforce.stackexchange.com/questions/4462/get-lists-of-dependent-picklist-options-in-apex/164491#164491
-     * @param objectName The API name of the SObject.
      * @param controllingField The API name of the controlling field.
      * @param dependentField The API name of the dependent field.
      * @author Suriya Soundrapandian.
      * @return A map of the controlling field value and the dependent field values.
      */
-    private Map<String, Set<String>> getFieldDependenciesMap(
-        String objectName, String controllingField, String dependentField) {
+    private Map<String, Set<String>> getFieldDependenciesMap(String controllingField, String dependentField) {
         Map<String, Set<String>> results = new Map<String, Set<String>>();
-        Schema.SObjectType objType = FObject.globalDescribeBySObject.get(objectName);
-        Schema.DescribeSObjectResult describeResult = objType.getDescribe();
-        Schema.DescribeFieldResult controllingFieldInfo = describeResult.fields.getMap().get(controllingField).getDescribe();
-        Schema.DescribeFieldResult dependentFieldInfo = describeResult.fields.getMap().get(dependentField).getDescribe();
+        Map<String, Schema.SObjectField> sObjectFieldsByName = ForceeaService.getSObjectFieldsByName( this.fObj.sObjectApiName);
+
+        Schema.DescribeFieldResult controllingFieldInfo = sObjectFieldsByName.get(controllingField).getDescribe();
         List<Schema.PicklistEntry> controllingValues = controllingFieldInfo.getPicklistValues();
+
+        Schema.DescribeFieldResult dependentFieldInfo = sObjectFieldsByName.get(dependentField).getDescribe();
         List<Schema.PicklistEntry> dependentValues = dependentFieldInfo.getPicklistValues();
 
         for (Schema.PicklistEntry currControllingValue : controllingValues) {
@@ -495,13 +498,11 @@ public with sharing class ForceeaGenerator {
 
             for (Integer curr : hexString.getChars()) {
                 Integer val = 0;
-
                 if (curr >= 65) {
                     val = curr - 65 + 10;
                 } else {
                     val = curr - 48;
                 }
-
                 if ((val & 8) == 8) {
                     results.get(controllingValues[baseCount + 0].getValue()).add(currDependentValue.getValue());
                 }
@@ -526,10 +527,12 @@ public with sharing class ForceeaGenerator {
      * @return A list of picklist values.
      */
     private List<String> getFieldPicklistValuesExcludingExceptions() {
+        //System.debug('> ForceeaGenerator.getFieldPicklistValuesExcludingExceptions');
         List<String> picklistValues = new List<String>();
         String fieldApiName = this.def.fieldApiName.toLowerCase();
 
-        for (Schema.PicklistEntry picklistEntry : this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName).picklistValues) {
+        FObject.Field field = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
+        for (Schema.PicklistEntry picklistEntry : field.picklistValues) {
             picklistValues.add(picklistEntry.getValue());
         }
 
@@ -562,6 +565,7 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     public List<String> getListValuesForPermutations() {
+        //System.debug('> ForceeaGenerator.getListValuesForPermutations');
         List<String> results = new List<String>();
         this.def.hasPermutation = true;
 
@@ -637,6 +641,7 @@ public with sharing class ForceeaGenerator {
      */
     private List<SObject> getLookupRecordsFromForceea(
         String lookupSObjectApiName, String lookupFieldApiName, String groupName) {
+        //System.debug('> getLookupRecordsFromForceea');
         List<SObject> results = new List<SObject>();
         String key = lookupSObjectApiName.toLowerCase() + '.' + groupName.trim().toLowerCase() ;
 
@@ -660,6 +665,7 @@ public with sharing class ForceeaGenerator {
      */
     private List<SObject> getLookupRecordsFromSalesforce(
         String lookupSObjectApiName, String lookupFieldApiName, String whereClause) {
+        //System.debug('> getLookupRecordsFromSalesforce');
 
         Boolean isActiveFieldExists = existsIsActiveStandardField(lookupSObjectApiName);
 
@@ -712,6 +718,7 @@ public with sharing class ForceeaGenerator {
     private List<String> getLookupValues(String command, String source,
         String lookupSObjectName, String lookupFieldName, List<String> lookupValues,
         List<String> lookupExceptions, String groupName, String whereClause, String lookupMode, Boolean shouldGetUniqueValues) {
+        //System.debug('> getLookupValues - command: ' + command + ', hasPermutation: ' + this.def.hasPermutation);
         List<String> results = new List<String>();
         String fieldApiName = this.def.fieldApiName;
 
@@ -724,23 +731,13 @@ public with sharing class ForceeaGenerator {
             return results;
         }
 
-        // get the SObject fields map
-        if (!FObject.globalFieldsMapBySObject.containsKey(lookupSObjectApiName.toLowerCase())) {
-            FObject.setSObject(lookupSObjectApiName);
-        }
-
-        // get stored fields details
-        Map<String, FObject.Field> fieldsMap = FObject.globalFieldsMapBySObject.get(lookupSObjectApiName.toLowerCase());
-
-        // check if the lookup field API name is valid
-        // - the fieldName may be blank because of the definition random lookup(Object)
-        String lookupFieldApiName = '';
+        String lookupFieldApiName = ''; // may be blank because of the definition random lookup(SObject)
         if (String.isNotBlank(lookupFieldName)) {
-            if (fieldsMap.containsKey(lookupFieldName.toLowerCase())) {
-                lookupFieldApiName = fieldsMap.get(lookupFieldName.toLowerCase()).fieldApiName;
-            } else {
+            lookupFieldApiName = ForceeaService.getFieldApiNameFromKey(this.fObj.sObjectApiName, lookupFieldName, null);
+
+            if (String.isBlank(lookupFieldApiName)) {
                 this.fObj.addError(fieldApiName,
-                    'Invalid lookup field [' + lookupFieldName + '] in definition [' + def.definitionString + ']');
+                    'Invalid lookup field [' + lookupFieldName.trim() + '] in definition [' + def.definitionString + ']');
                 return results;
             }
         }
@@ -795,6 +792,7 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     public List<String> getLookupValuesForPermutations() {
+        //System.debug('> getLookupValuesForPermutations');
         this.def.hasPermutation = true;
 
         String source = getClusterArgument(ForceeaService.PARAMETER_SOURCE);
@@ -835,7 +833,7 @@ public with sharing class ForceeaGenerator {
 
         switch on this.def.type.id {
             when MOCK_ID {
-                Schema.SObjectType objType = FObject.globalDescribeBySObject.get(this.fObj.sObjectName);
+                Schema.SObjectType objType = this.fObj.sObjType;
                 results = getMockedIds(objType);
             }
         }
@@ -856,6 +854,8 @@ public with sharing class ForceeaGenerator {
      * @return The list of permutation values.
      */
     private List<String> getPermutationValues(Integer permutationPosition) {
+        //System.debug('> getPermutationValues - permutationPosition: ' + permutationPosition);
+        //System.debug('this.fObj.permutationValues: ' + this.fObj.permutationValues);
         List<String> results = new List<String>();
         if (permutationPosition == null || permutationPosition < 0) {
             return results;
@@ -878,19 +878,18 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getPicklistValuesWithRespectToDependencies(
         String dependentFieldApiName, String controllingFieldApiName, List<String> inclusions, List<String> exceptions) {
+        //System.debug('> getPicklistValuesWithRespect');
         exceptions = ForceeaService.convertListToLowercase(exceptions);
         Integer controllingFieldPosition = getFieldPosition(controllingFieldApiName);
 
         // get the Field Dependencies map (key: controlling field value, value: dependent field values)
-        Map<String, Set<String>> fieldDependenciesMap =
-            getFieldDependenciesMap(this.fObj.sObjectApiName, controllingFieldApiName, dependentFieldApiName);
+        Map<String, Set<String>> fieldDependenciesMap = getFieldDependenciesMap(controllingFieldApiName, dependentFieldApiName);
 
         // amend the Field Dependencies map based on the inclusions and exceptions
         if (inclusions != null) { // && !inclusions.isEmpty()
             // keep in the Field Dependencies map only the values of inclusions list
             for (String value : fieldDependenciesMap.keySet()) {
-                // remove any value, except from inclusions
-                fieldDependenciesMap.get(value).retainAll(inclusions);
+                fieldDependenciesMap.get(value).retainAll(inclusions); // remove any value, except from inclusions
             }
         } else if (!exceptions.isEmpty()) {
             // remove the values of the exceptions list from the Field Dependencies map
@@ -1201,12 +1200,11 @@ public with sharing class ForceeaGenerator {
 
         // get all picklist values
         List<String> picklistValues = new List<String>();
-        for (Schema.PicklistEntry picklistEntry : this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName.toLowerCase()).picklistValues) {
+
+        FObject.Field depField = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
+        for (Schema.PicklistEntry picklistEntry : depField.picklistValues) {
             picklistValues.add(picklistEntry.getValue());
         }
-
-        // get field data type
-        FObject.Field depField = this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName.toLowerCase());
 
         // get controlling field's API name
         String ctrlFieldApiName = depField.controllingFieldApiName;
@@ -1357,13 +1355,15 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getRandomPicklistValues() {
+        //System.debug('> ForceeaGenerator.getRandomPicklistValues');
+
         String fieldApiName = this.def.fieldApiName;
         if (fieldApiName == ForceeaService.RECORD_TYPE_ID) {
             return getRandomRecordTypes();
         }
 
         // get dependent and controlling fields
-        FObject.Field dependentField = this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName.toLowerCase());
+        FObject.Field dependentField = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
         String controllingFieldApiName = dependentField.controllingFieldApiName;
 
         List<String> results = new List<String>();
@@ -1813,6 +1813,8 @@ public with sharing class ForceeaGenerator {
      * @return A list of values.
      */
     private List<String> getRandomValuesFromList(List<String> values) {
+        //System.debug('> ForceeaGenerator.getRandomValuesFromList');
+
         List<String> results = new List<String>();
         Integer size = values.size();
 
@@ -1948,6 +1950,8 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getSerialListValues(List<String> values, Integer permutationPosition) {
+        //System.debug('> getSerialStrings');
+
         List<String> results = new List<String>();
 
         if (values.isEmpty()) {
@@ -1997,6 +2001,7 @@ public with sharing class ForceeaGenerator {
             }
         }
 
+        //System.debug('permutationPosition: ' + permutationPosition + ', values: ' + results);
         return results;
     }
 
@@ -2013,6 +2018,7 @@ public with sharing class ForceeaGenerator {
     private List<String> getSerialLookupValues(
         List<SObject> lookupRecords, List<String> lookupValues,
         List<String> lookupExceptions, String lookupFieldApiName, String fieldApiName,  String lookupMode) {
+        //System.debug('> getSerialLookupValues');
         List<String> results = new List<String>();
 
         List<String> lookupIds = getLookupIds(lookupRecords, lookupValues, lookupExceptions,
@@ -2071,6 +2077,10 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getSerialNumbers(Decimal fromNumber, Decimal stepNumber, Integer scale) {
+        //System.debug('> getSerialNumbers');
+        //System.debug('getNumberOfNextRecord: ' + getNumberOfNextRecord());
+        //System.debug('nextRecordNumbersBySObject: ' + FObject.numFirstRecordsBySObject);
+
         List<String> results = new List<String>();
 
         Decimal val = fromNumber + (getNumberOfNextRecord() - 1) * stepNumber;
@@ -2079,6 +2089,7 @@ public with sharing class ForceeaGenerator {
             val += stepNumber;
         }
 
+        //System.debug('getSerialNumbers: ' + results);
         return results;
     }
 
@@ -2113,6 +2124,7 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getSerialValues() {
         List<String> results = new List<String>();
+        //System.debug('> getSerialValues');
 
         switch on this.def.type.id {
             when SERIAL_PICKLIST {
@@ -2214,7 +2226,7 @@ public with sharing class ForceeaGenerator {
         List<String> results = new List<String>();
         String fieldApiName = this.def.fieldApiName;
 
-        if (fieldApiName == ForceeaService.RECORD_TYPE_ID) {
+        if (fieldApiName.equalsIgnoreCase(ForceeaService.RECORD_TYPE_ID)) {
             List<String> recordTypeIds = getRecordTypeIdsFromDeveloperNames(new List<String> {argument});
             if (this.fObj.processMustTerminate()) {
                 return results;
@@ -2222,7 +2234,7 @@ public with sharing class ForceeaGenerator {
             return getStaticValuesFromValue(recordTypeIds.get(0));
         }
 
-        FObject.Field depField = this.fObj.sObjectFieldsByFieldApiName.get(fieldApiName.toLowerCase());
+        FObject.Field depField = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
         Set<Schema.DisplayType> types = new Set<DisplayType>{
             Schema.DisplayType.PICKLIST, Schema.DisplayType.MULTIPICKLIST
         };
@@ -2248,7 +2260,7 @@ public with sharing class ForceeaGenerator {
         }
 
         if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-            this.fObj.sObjectFieldsByFieldApiName.get(ctrlFieldApiName.toLowerCase()).dataType == Schema.DisplayType.BOOLEAN) {
+            ForceeaService.getField(this.fObj.sObjectApiName, ctrlFieldApiName).dataType == Schema.DisplayType.BOOLEAN) {
             results = getRandomValuesFromList(arguments);
         } else { // there is a controlling field
             results = getPicklistValuesWithRespectToDependencies(fieldApiName, ctrlFieldApiName, arguments, null);
@@ -2277,6 +2289,7 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     public List<String> getValues() {
+        //System.debug('> getValues');
         List<String> results = new List<String>();
 
         if (this.def.isFunction) {

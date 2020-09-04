@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class ForceeaGeneratorSerialTest {
@@ -87,7 +87,8 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         // create some serialized records
-        FObject obj = new FObject('FObjectTwo__c', numRecords)
+        FObject obj = new FObject(FObjectTwo__c.SObjectType, numRecords)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(date) from(2020-1-1) step(1)');
         List<FObjectOne__c> records = obj.getRecords();
 
@@ -114,12 +115,14 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         // create some serialized records
-        FObject obj1 = new FObject('FObjectTwo__c', numRecords)
+        FObject obj1 = new FObject(FObjectTwo__c.SObjectType, numRecords)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(date) from(2020-1-1) step(1)');
         obj1.getRecords();
 
         // create some more serialized records of a different FObject
-        FObject obj2 = new FObject('FObjectTwo__c', numRecords)
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, numRecords)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(date) from(2020-1-1) step(1)');
         obj2.getRecords();
 
@@ -305,7 +308,8 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         // create some serialized records
-        FObject obj = new FObject('FObjectTwo__c', numRecords)
+        FObject obj = new FObject(FObjectTwo__c.SObjectType, numRecords)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c,
                 'serial type(datetime) from(2020-1-1 10:11:12) step(1)');
         List<FObjectOne__c> records = obj.getRecords();
@@ -333,13 +337,15 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         // create some serialized records
-        FObject obj1 = new FObject('FObjectTwo__c', numRecords)
+        FObject obj1 = new FObject(FObjectTwo__c.SObjectType, numRecords)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c,
                 'serial type(datetime) from(2020-1-1 10:11:12) step(1)');
         obj1.getRecords();
 
         // create some more serialized records of a different FObject
-        FObject obj2 = new FObject('FObjectTwo__c', numRecords)
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, numRecords)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c,
                 'serial type(datetime) from(2020-1-1 10:11:12) step(1)');
         obj2.getRecords();
@@ -748,7 +754,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_cyclicalForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -777,7 +784,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_cyclicalForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -807,7 +815,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_firstForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -835,7 +844,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_firstForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -864,7 +874,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_lastForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -892,7 +903,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_lastForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -921,7 +933,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_nullForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -949,7 +962,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_nullForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -978,7 +992,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_permutationForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1018,7 +1033,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_permutationForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1060,7 +1076,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_cyclicalGroupForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true, 'one');
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1089,7 +1106,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_firstGroupForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true, 'one');
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1117,7 +1135,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_lastGroupForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true, 'one');
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1145,7 +1164,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_nullGroupForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true, 'one');
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1173,7 +1193,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_permutationGroupForceea_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true, 'one');
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1213,7 +1234,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_cyclicalSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1242,7 +1264,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_cyclicalSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1272,7 +1295,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_firstSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1300,7 +1324,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_firstSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1329,7 +1354,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_lastSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true, 'one');
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1357,7 +1383,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_lastSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true, 'one');
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1386,7 +1413,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_nullSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1414,7 +1442,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_nullSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1443,7 +1472,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookup_permutationSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1483,7 +1513,8 @@ public class ForceeaGeneratorSerialTest {
 
     @IsTest
     private static void serialLookupVirtualField_permutationSalesforce_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10);
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2);
 
@@ -1526,6 +1557,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupField_cyclicalForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1534,6 +1566,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'serial lookup(FObjectTwo__c) field(TestText__c) value(a3,a1) mode(cyclical) source(forceea)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
@@ -1560,6 +1593,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldVirtualField_cyclicalForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1568,6 +1602,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$Lookup',
                 'serial lookup(FObjectTwo__c) field(TestText__c) value(a3,a1) mode(cyclical) source(forceea)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'copy field($Lookup)');
@@ -1595,6 +1630,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupField_firstForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1627,6 +1663,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldVirtualField_firstForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1660,6 +1697,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupField_lastForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1692,6 +1730,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldVirtualField_lastForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1725,6 +1764,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupField_nullForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1757,6 +1797,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldVirtualField_nullForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1790,6 +1831,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupField_permutationForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1798,6 +1840,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setNumberOfRecords('auto')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'serial lookup(FObjectTwo__c) field(TestText__c) value(a3,a1) mode(permutation) source(forceea)');
@@ -1824,6 +1867,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldVirtualField_permutationForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1832,6 +1876,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$Lookup',
                 'serial lookup(FObjectTwo__c) field(TestText__c) value(a3,a1) mode(null) source(forceea)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'copy field($Lookup)');
@@ -1858,6 +1903,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupField_cyclicalSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1866,6 +1912,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'serial lookup(FObjectTwo__c) field(TestText__c) value(a3,a1) mode(cyclical) source(salesforce)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
@@ -1892,6 +1939,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldVirtualField_cyclicalSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1900,6 +1948,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$Lookup',
                 'serial lookup(FObjectTwo__c) field(TestText__c) value(a3,a1) mode(cyclical) source(salesforce)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'copy field($Lookup)');
@@ -1927,6 +1976,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldExcept_cyclicalForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1935,6 +1985,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'serial lookup(FObjectTwo__c) field(TestText__c) except(a3,a2) mode(cyclical) source(forceea)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
@@ -1961,6 +2012,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldExcept_firstForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -1993,6 +2045,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldExcept_cyclicalSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -2001,6 +2054,7 @@ public class ForceeaGeneratorSerialTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'serial lookup(FObjectTwo__c) field(TestText__c) except(a3,a2) mode(cyclical) source(salesforce)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
@@ -2027,6 +2081,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupFieldExcept_permutationForceea_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'serial type(list) value(a1,a2,a3) mode(cyclical)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIds(obj2, new List<String>{
@@ -2036,6 +2091,7 @@ public class ForceeaGeneratorSerialTest {
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
             .setNumberOfRecords('auto')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'serial lookup(FObjectTwo__c) field(TestText__c) except(a3,a2) mode(permutation) source(forceea)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
@@ -2061,6 +2117,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhere_cyclicalSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2092,6 +2149,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhereVirtualField_cyclicalSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2124,6 +2182,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhere_firstSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2157,12 +2216,14 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhereVirtualField_firstSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$Lookup',
                 'serial lookup(FObjectTwo__c) where(TestIntegerUnique__c < 6) mode(first) source(salesforce)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'copy field($Lookup)');
@@ -2191,6 +2252,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhere_lastSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2224,12 +2286,14 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhereVirtualField_lastSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$Lookup',
                 'serial lookup(FObjectTwo__c) where(TestIntegerUnique__c < 6) mode(last) source(salesforce)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'copy field($Lookup)');
@@ -2258,6 +2322,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhere_nullSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2288,6 +2353,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhereVirtualField_nullSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2319,6 +2385,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhere_permutationSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2361,6 +2428,7 @@ public class ForceeaGeneratorSerialTest {
     @IsTest
     private static void serialLookupWhereVirtualField_permutationSalesforce_expectSuccess() {
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj2.insertRecords(true);
         List<Id> lookupIds = ForceeaUtilityTest.getLookupIdsFromIntegerUnique(obj2);
@@ -2494,6 +2562,7 @@ public class ForceeaGeneratorSerialTest {
         Test.startTest();
         //create some serialized records
         FObject obj = new FObject(FObjectOne__c.SObjectType, numRecords)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         List<FObjectOne__c> records = obj.getRecords();
 
@@ -2521,12 +2590,14 @@ public class ForceeaGeneratorSerialTest {
         Test.startTest();
         //create some serialized records
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, numRecords)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         List<FObjectOne__c> records1 = obj1.getRecords();
 
         // create some more serialized records of a different FObject
-        FObject obj2 = new FObject(FObjectOne__c.SObjectType, numRecords);
-        obj2.setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
+        FObject obj2 = new FObject(FObjectOne__c.SObjectType, numRecords)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         List<FObjectOne__c> records2 = obj2.getRecords();
 
         // insert records

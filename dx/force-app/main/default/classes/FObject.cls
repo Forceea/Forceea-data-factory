@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class FObject {
 
@@ -36,7 +36,7 @@ public with sharing class FObject {
     private static final String SYMBOL_SUCCESS = '-';
 
     private static final VerboseLevel VERBOSE_MODE = VerboseLevel.VERBOSE_NONE;
-    private static final String VERSION = '2.1.1';
+    private static final String VERSION = '2.2.0-3';
 
     /* ENUMS */
 
@@ -72,7 +72,8 @@ public with sharing class FObject {
     public static List<ForceeaAddress> addressesLibrary = new List<ForceeaAddress>();
     // the valid script commands
     private static List<String> commands = new List<String>{
-        'copy', 'mock', 'random', 'serial', 'static', 'function-add', 'function-convert'
+        ForceeaService.COMMAND_COPY, ForceeaService.COMMAND_MOCK, ForceeaService.COMMAND_RANDOM,
+        ForceeaService.COMMAND_SERIAL, ForceeaService.COMMAND_STATIC, ForceeaService.COMMAND_FUNCTION_ADD
     };
     // the debug logs
     private static List<String> debugLogs = new List <String>();
@@ -80,18 +81,19 @@ public with sharing class FObject {
     public static List<DefinitionType> definitionTypes = new List<DefinitionType>();
     // the libraries for first names - key: gender, value: first names
     public static Map<String, List<String>> firstNamesLibraryByGender = new Map<String, List<String>>();
-    // the inserted records of all objects
-    // key: objectApiName or objectApiName.groupName (lowercase), value: list of records
-    public static Map<String, List<SObject>> globalInsertedRecordsBySObjectGroup = new Map<String, List<SObject>>();
     // the field details of each declared FObject
     // key: SObject API name (lowercase), value: (key:field API name (lowercase), value: Field)
     public static Map<String, Map<String, Field>> globalFieldsMapBySObject = new Map<String, Map<String, Field>>();
+
+    // the inserted records of all objects
+    // key: objectApiName or objectApiName.groupName (lowercase), value: list of records
+    public static Map<String, List<SObject>> globalInsertedRecordsBySObjectGroup = new Map<String, List<SObject>>();
+    // the variables
+    public static List<ForceeaService.Variable> globalVariables = new List<ForceeaService.Variable>();
     // the libraries for last names - key: gender, value: last names
     public static Map<String, List<String>> lastNamesLibraryByGender = new Map<String, List<String>>();
-    // lookup types used in serial lookup
-    private static Set<String> lookupModesSet = new Set<String>{
-        'cyclical', 'first', 'last', 'null', 'permutation'
-    };
+    // the serializations map with key: SObject API name, value: next serialized record number
+    public static Map<String, Integer> numFirstRecordsBySObject = new Map<String, Integer>();
     // the valid script parameters
     private static Set<String> parametersSet = new Set<String>{
         'scale', 'except', 'field', 'format', 'from', 'group', 'include', 'lookup', 'maxlength', 'minlength', 'mode',
@@ -100,22 +102,6 @@ public with sharing class FObject {
     // the map with key: SObject Type and value: list of Record Type Infos
     private static Map<Schema.SObjectType, List<Schema.RecordTypeInfo>> rtInfosBySObject =
         new Map<Schema.SObjectType, List<Schema.RecordTypeInfo>>();
-    // the API names of all sObjects
-    public static List<String> sObjectApiNames = new List<String>();
-    // the serializations map with key: SObject API name, value: next serialized record number
-    public static Map<String, Integer> numFirstRecordsBySObject = new Map<String, Integer>();
-    // the map of all sObject names (keys) to sObject tokens (values) for the standard and custom objects defined
-    public static Map<String, Schema.SObjectType> globalDescribeBySObject {
-        get {
-            if (globalDescribeBySObject == null) {
-                globalDescribeBySObject = Schema.getGlobalDescribe();
-            }
-            return globalDescribeBySObject;
-        }
-        set;
-    }
-    // the variables
-    public static List<ForceeaService.Variable> globalVariables = new List<ForceeaService.Variable>();
 
     /* INSTANCE COLLECTIONS */
 
@@ -155,8 +141,6 @@ public with sharing class FObject {
     private List<String> requiredFieldNames = new List<String>();
     // the save results list
     private List<Database.SaveResult> saveResults = new List<Database.SaveResult>();
-    // all SObject fields - key: field API name (lowercase), value: field object
-    public Map<String, Field> sObjectFieldsByFieldApiName = new Map<String, Field>();
     // the updated records
     private List<SObject> updatedRecords = new List<SObject>();
     // the variables
@@ -250,6 +234,8 @@ public with sharing class FObject {
     public Boolean excludeInactiveLookupRecords { get; set; }
     // the group that will be used when inserting records for this FObject
     private String groupName { get; set; }
+    // if true, it has the Schema of all fields
+    private Boolean hasSchemaOfAllFields  { get; set; }
     // if TRUE, the created records will have permutations
     private Boolean processHasPermutations { get; set; }
     // if true, the IDs are mocked
@@ -288,10 +274,8 @@ public with sharing class FObject {
     private Boolean requiredFieldsShouldBeAutomaticallyConfigured { get; set; }
     // the SObject API name
     public String sObjectApiName { get; set; }
-    // the user-defined SObject name
-    public String sObjectName { get; set; }
     // the SObject type
-    private Schema.SObjectType sObjType { get; set; }
+    public Schema.SObjectType sObjType { get; set; }
     // the level of verbose mode
     private VerboseLevel verboseMode { get; set; }
     // the name of the virtual field for getting the values of Standard Price Book entries
@@ -404,7 +388,6 @@ public with sharing class FObject {
     static {
         setForceeaSettings();
         setDefinitionTypes();
-        setSObjectApiNames();
         setGlobalProperties();
     }
 
@@ -417,47 +400,70 @@ public with sharing class FObject {
 
     /* CONSTRUCTORS */
 
-    public FObject(SObject record) {
-        this(record, null);
+    // FObject from existing record(s) with/without group
+
+    public FObject(SObject insertedRecord) {
+        this(null, new List<SObject>{ insertedRecord }, '');
     }
 
-    public FObject(SObject record, String groupName) {
-        Schema.SObjectType sObjType = record.getSObjectType();
+    public FObject(Schema.SObjectType sObjType, SObject insertedRecord) {
+        this(sObjType, new List<SObject>{ insertedRecord }, '');
+    }
+
+    public FObject(SObject insertedRecord, String groupName) {
+        this(null, new List<SObject>{ insertedRecord }, groupName);
+    }
+
+    public FObject(Schema.SObjectType sObjType, SObject insertedRecord, String groupName) {
+        this(sObjType, new List<SObject>{ insertedRecord }, groupName);
+    }
+
+    public FObject(List<SObject> insertedRecords) {
+        this(null, insertedRecords, '');
+    }
+
+    public FObject(List<SObject> insertedRecords, String groupName) {
+        this(null, insertedRecords, groupName);
+    }
+
+    public FObject(Schema.SObjectType sObjType, List<SObject> insertedRecords, String groupName) {
+        if (insertedRecords.isEmpty()) {
+            return;
+        }
+
         this.groupName = ForceeaService.getStringValue(groupName);
-        this.insertedRecords.addAll(new List<SObject>{ record });
-        fObjectConstructor(sObjType, null, 0);
+        this.insertedRecords.addAll(insertedRecords);
+        this.sObjType = (sObjType == null) ? insertedRecords.get(0).getSObjectType() : sObjType ;
+
+        fObjectConstructorHandler(this.sObjType, '', 0);
         addRecordsToMapsOnInsert();
     }
 
-    public FObject(List<SObject> records) {
-        this(records, null);
-    }
-
-    public FObject(List<SObject> records, String groupName) {
-        Schema.SObjectType sObjType = records.getSObjectType();
-        this.groupName = ForceeaService.getStringValue(groupName);
-        this.insertedRecords.addAll(records);
-        fObjectConstructor(sObjType, null, 0);
-        addRecordsToMapsOnInsert();
-    }
+    // FObject from API Name or SObject type with/without group
 
     public FObject(Schema.SObjectType sObjectType) {
-        fObjectConstructor(sObjectType, null, 0);
+        fObjectConstructorHandler(sObjectType, '', 0);
     }
 
     public FObject(String sObjectName) {
-        fObjectConstructor(null, sObjectName, 0);
+        fObjectConstructorHandler(null, sObjectName, 0);
     }
 
     public FObject(Schema.SObjectType sObjectType, Integer records) {
-        fObjectConstructor(sObjectType, null, records);
+        fObjectConstructorHandler(sObjectType, '', records);
     }
 
     public FObject(String sObjectName, Integer records) {
-        fObjectConstructor(null, sObjectName, records);
+        fObjectConstructorHandler(null, sObjectName, records);
     }
 
-    private void fObjectConstructor(Schema.SObjectType sObjectType, String sObjectName, Integer numRecords) {
+    /**
+     * @description Constructs an FObject based on the SObject type or API name.
+     * @param sObjectType The SObject type.
+     * @param sObjectName The SObject API name.
+     * @param numRecords The number of records.
+     */
+    private void fObjectConstructorHandler(Schema.SObjectType sObjectType, String sObjectName, Integer numRecords) {
         String sObjectApiName = '';
 
         if (sObjectType != null) {
@@ -473,7 +479,6 @@ public with sharing class FObject {
         }
 
         this.sObjectApiName = sObjectApiName;
-        this.sObjectName = sObjectApiName.toLowerCase();
         displayInitializationMessage();
 
         // validate the number of records
@@ -491,9 +496,8 @@ public with sharing class FObject {
         initializeNumFirstRecordsBySObject();
         setInstanceProperties();
         setRecordTypes();
-        setSObjectFieldsMap();
-
-        resetMilestoneTimer('Initialized settings of [' + this.sObjectApiName + ']');
+        setFields();
+        resetMilestoneTimer('Initialized [' + this.sObjectApiName + ']');
     }
 
     /* METHODS */
@@ -516,7 +520,7 @@ public with sharing class FObject {
      * @param methodName The method name.
      */
     public void addErrorInvalidFieldInMethod(String sObjectApiName, String fieldName, String methodName) {
-        addError(sObjectApiName, ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldName + '] in method ' + methodName);
+        addError(sObjectApiName, ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldName.trim() + '] in method ' + methodName);
     }
 
     /**
@@ -641,6 +645,8 @@ public with sharing class FObject {
      * @description Creates the field values.
      */
     private void createAndDisplayFieldValues() {
+       //System.debug('> FObject.createAndDisplayFieldValues');
+
         for (String fieldName : getFieldsToProcess()) {
             for (ForceeaDefinition def : this.definitions) {
                 Boolean skipIfValid = (this.isUpdate) ? !def.isForUpdate : def.isForUpdate;
@@ -665,6 +671,8 @@ public with sharing class FObject {
      * @description Creates SObject records using the field definitions.
      */
     private void createNewRecords() {
+       //System.debug('> FObject.createNewRecords');
+
         if (processMustTerminate() || !this.mustCreateNewRecords) {
             return;
         }
@@ -732,6 +740,7 @@ public with sharing class FObject {
 
     private void deleteAllDefinitionsForUpdateOfAllFields() {
         List<String> fieldsToRemove = new List<String>(this.fieldsForUpdate);
+        //System.debug('fieldsToRemove: ' + fieldsToRemove);
 
         for (String fieldName : fieldsToRemove) {
             deleteAllDefinitionsOfField(fieldName);
@@ -744,8 +753,9 @@ public with sharing class FObject {
      * @return An FObject instance.
      */
     private FObject deleteAllDefinitionsOfField(String fieldName) {
+        //System.debug('> deleteAllDefinitionsOfField: ' + fieldName);
         String fieldApiName = ForceeaService.getFieldApiName(
-            this, '', this.sObjectApiName, fieldName, '', 'deleteDefinitions');
+            this, '', this.sObjectApiName, fieldName, null, '', 'deleteDefinitions');
         if (String.isBlank(fieldApiName)) {
             return this;
         }
@@ -757,6 +767,7 @@ public with sharing class FObject {
         displayMessageWillDeleteFieldDefinitions(fieldApiName);
 
         List<Integer> definitionIndexesToRemove = getDefinitionIndexesToRemove(fieldApiName);
+        //System.debug('indexes: ' + definitionIndexesToRemove);
         for (Integer counter = definitionIndexesToRemove.size() - 1; counter >= 0; counter--) {
             this.definitions.remove(definitionIndexesToRemove.get(counter));
         }
@@ -783,14 +794,6 @@ public with sharing class FObject {
      * @return An FObject instance.
      */
     public FObject deleteDefinitions(String fieldName) {
-        return deleteAllDefinitionsOfField(fieldName);
-    }
-
-    public FObject deleteFieldDefinitions(Schema.SObjectField sObjectField) { // TODO deprecated
-        return deleteAllDefinitionsOfField(sObjectField.getDescribe().getName());
-    }
-
-    public FObject deleteFieldDefinitions(String fieldName) { // TODO deprecated
         return deleteAllDefinitionsOfField(fieldName);
     }
 
@@ -899,6 +902,8 @@ public with sharing class FObject {
      * @description Displays the Field Value Matrix (FVM) values.
      */
     private void displayFieldValues() {
+       //System.debug('> FObject.displayFieldValues');
+
         forceeaDebug(ForceeaService.DEBUG, ForceeaService.MESSAGE_WILL_DISPLAY_CREATED_FIELD_VALUES + ' of [' + this.sObjectApiName + ']');
         Integer counterField = 0;
 
@@ -1099,6 +1104,8 @@ public with sharing class FObject {
      * @return A list of SObject records.
      */
     private List<SObject> getCreatedRecords() {
+       //System.debug('> FObject.getCreatedRecords');
+
         List<SObject> results = new List<SObject>();
         if (processMustTerminate()) {
             return results;
@@ -1159,7 +1166,7 @@ public with sharing class FObject {
      * @param sObjectField The sObject field.
      * @return A Field object.
      */
-    private static Field getDetailsFromSObjectField(Schema.SObjectField sObjectField) {
+    public static Field getDetailsFromSObjectField(Schema.SObjectField sObjectField) {
         Field result = new Field();
         Schema.DescribeFieldResult dfr = sObjectField.getDescribe();
 
@@ -1304,9 +1311,9 @@ public with sharing class FObject {
      * @description Retrieves the fields to process, based on update.
      * @return An list of strings.
      */
-	public List<String> getFieldsToProcess() {
-		return (this.isUpdate) ? this.fieldsForUpdate : this.fields;
-	}
+    public List<String> getFieldsToProcess() {
+        return (this.isUpdate) ? this.fieldsForUpdate : this.fields;
+    }
 
     /**
      * @description Retrieves the Forceea custom metadata type.
@@ -1377,9 +1384,7 @@ public with sharing class FObject {
      */
     public List<SObject> getInsertedGroupRecords(String groupName) {
         List<SObject> results = new List<SObject>();
-
-        String thisGroupName = String.isBlank(groupName) ? '' : groupName;
-        String key = thisGroupName.trim().toLowerCase();
+        String key =  ForceeaService.getStringValueToLower(groupName);
 
         if (this.instanceInsertedRecordsByGroup.containsKey(key)) {
             results.addAll(this.instanceInsertedRecordsByGroup.get(key));
@@ -1400,26 +1405,23 @@ public with sharing class FObject {
 
     /**
      * @description Retrieves all inserted records of an SObject.
-     * @param sObjectApiName The SObject API name.
+     * @param sObjectName The SObject name.
      * @param groupName The group name of the inserted records.
      * @return A list of SObjects.
      */
-    public static List<SObject> getInsertedGroupRecords(String sObjectApiName, String groupName) {
+    public static List<SObject> getInsertedGroupRecords(String sObjectName, String groupName) {
         List<SObject> results = new List<SObject>();
+        String sObjectApiName = ForceeaService.getSObjectApiName(sObjectName);
 
-        Set<String> sObjectApiNamesSet = new Set<String>(FObject.sObjectApiNames);
-        sObjectApiNamesSet = ForceeaService.convertSetToLowercase(sObjectApiNamesSet);
-        String thisSObjectApiName = sObjectApiName.trim().toLowerCase();
-
-        if (!sObjectApiNamesSet.contains(thisSObjectApiName)) {
+        if (String.isBlank(sObjectApiName)) {
             FObject.processIsValid = false;
             String methodName = String.isBlank(groupName) ? 'getInsertedRecords' : 'getInsertedGroupRecords';
             FObject.postDebug(ForceeaService.ERROR, DEBUG_LOG_PROMPT + SYMBOL_FAILURE + ' ' +
-                'Invalid SObject [' + sObjectApiName + '] in static method ' + methodName, FObject.globalVerboseMode);
+                'Invalid SObject [' + sObjectName + '] in static method ' + methodName, FObject.globalVerboseMode);
+            return results;
         }
 
-        String thisGroupName = String.isBlank(groupName) ? '' : groupName;
-        String key = thisSObjectApiName + '.' + thisGroupName.trim().toLowerCase();
+        String key = ForceeaService.getKey(sObjectApiName, groupName);
         if (FObject.globalInsertedRecordsBySObjectGroup.containsKey(key)) {
             results.addAll(FObject.globalInsertedRecordsBySObjectGroup.get(key));
         }
@@ -1534,7 +1536,7 @@ public with sharing class FObject {
             }
 
             String fieldValue = this.fieldValuesMatrix.get(fieldCounter).get(recordCounter).trim();
-            Schema.DisplayType valueType = this.sObjectFieldsByFieldApiName.get(fieldName.toLowerCase()).dataType;
+            Schema.DisplayType valueType = ForceeaService.getField(this.sObjectApiName, fieldName).dataType;
 
             try {
                 setSObjectFieldValue(result, valueType, fieldName, fieldValue);
@@ -1668,10 +1670,10 @@ public with sharing class FObject {
         String result = '';
         String nameToSearch = name.toLowerCase();
 
-        List<ForceeaService.Variable> variables = new List<ForceeaService.Variable>(FObject.globalVariables)  ;
+        List<ForceeaService.Variable> variables = new List<ForceeaService.Variable>(FObject.globalVariables);
         variables.addAll(this.variables);
 
-        for (ForceeaService.Variable var: variables) {
+        for (ForceeaService.Variable var : variables) {
             if (var.name == nameToSearch) {
                 result = getVariableStringValue(var);
                 break;
@@ -1762,12 +1764,11 @@ public with sharing class FObject {
      */
     private void handleInitializationOfRequiredFields() {
         if (!this.requiredFieldsShouldBeAutomaticallyConfigured) {
-            forceeaDebug(ForceeaService.WARN, ForceeaService.MESSAGE_WILL_NOT_SET_DEFINITIONS_OF_REQUIRED_FIELDS +
-                ' of [' + this.sObjectApiName + ']');
             return;
         }
 
-        forceeaDebug(ForceeaService.DEBUG, ForceeaService.MESSAGE_WILL_SET_DEFINITIONS_OF_REQUIRED_FIELDS + ' of [' + this.sObjectApiName + ']');
+        forceeaDebug(ForceeaService.DEBUG,
+            ForceeaService.MESSAGE_WILL_SET_DEFINITIONS_OF_REQUIRED_FIELDS + ' of [' + this.sObjectApiName + ']');
         this.requiredFieldNames.clear();
     }
 
@@ -1805,6 +1806,8 @@ public with sharing class FObject {
      * @param groupName The group name.
      */
     private void handleRecordsWithUpdatedValues(String groupName) {
+        //System.debug('> FObject.handleRecordsWithUpdatedValues');
+
         this.recordsToUpdate = getRecordsToUpdate(groupName);
         this.records = this.recordsToUpdate.size();
         if (this.recordsToUpdate.isEmpty()) {
@@ -1846,12 +1849,13 @@ public with sharing class FObject {
      * @description Initializes the Field Values Matrix.
      */
     private void initializeFieldValuesMatrix() {
+       //System.debug('> FObject.initializeFieldValuesMatrix');
         this.fieldValuesMatrix.clear();
 
         for (Integer fieldCounter = 0; fieldCounter < getFieldsToProcess().size(); fieldCounter++) {
-	        List<String> values = new List<String>();
+            List<String> values = new List<String>();
             for (Integer recordCounter = 0; recordCounter < this.records; recordCounter++) {
-	            values.add('');
+                values.add('');
             }
             this.fieldValuesMatrix.add(values);
         }
@@ -1861,9 +1865,11 @@ public with sharing class FObject {
      * @description Initializes the numOfFirstRecordsBySObject map.
      */
     private void initializeNumFirstRecordsBySObject() {
+        //System.debug('> initializeNextRecordMap');
         if (!FObject.numFirstRecordsBySObject.containsKey(this.sObjectApiName)) {
             FObject.numFirstRecordsBySObject.put(this.sObjectApiName, 1);
         }
+        //System.debug('numFirstRecordsBySObject: ' + FObject.numFirstRecordsBySObject);
     }
 
     /**
@@ -1915,6 +1921,43 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Inserts in their group (if any) the FObject records of a Template
+     *   for entries with specific key and removes the keys from Template.
+     * @param template The Template map.
+     * @param allOrNone Specifies whether the operation allows partial success.
+     * @param templateKeysToInsert A set of Template keys to insert.
+     * @return A list of Database.SaveResult objects.
+     */
+    public static List<Database.SaveResult> insertRecordsFromTemplate(
+            Map<String, FObject> template, Boolean allOrNone, List<String> templateKeysToInsert) {
+        List<Database.SaveResult> results = new List<Database.SaveResult>();
+        List<SObject> recordsToInsert = new List<SObject>();
+        Schema.SObjectType sObjType;
+
+        for (String key : templateKeysToInsert) {
+            if (!template.containsKey(key)) {
+                continue;
+            }
+
+            if (sObjType == null) {
+                sObjType = template.get(key).sObjType;
+            } else if (sObjType != template.get(key).sObjType) {
+                FObject.processIsValid = false;
+                String errorMessage = 'There are Template keys with multiple SObject types in method [insertRecordsFromTemplate]';
+                System.debug(LoggingLevel.ERROR, DEBUG_LOG_PROMPT + SYMBOL_FAILURE + ' ' + errorMessage + '.');
+                return results;
+            }
+
+            List<SObject> records = template.get(key).getRecords();
+            recordsToInsert.addAll(records);
+            new FObject(sObjType, records,  template.get(key).getGroupName());
+            template.remove(key);
+        }
+
+        return Database.insert(recordsToInsert, allOrNone);
+    }
+
+    /**
      * @description Inserts the FObject records of a Template.
      * @param template The Template map.
      * @param allOrNone Specifies whether the operation allows partial success.
@@ -1950,6 +1993,7 @@ public with sharing class FObject {
      * @description Inserts entries for the Standard Price Book using the values of a virtual field.
      */
     private void insertStandardPricebookEntries() {
+        //System.debug('virtualFieldForStandardPriceBookEntries: ' + this.virtualFieldForStandardPriceBookEntries);
         if (String.isBlank(this.virtualFieldForStandardPriceBookEntries) || this.sObjectApiName != 'Product2') {
             return;
         }
@@ -2007,6 +2051,8 @@ public with sharing class FObject {
      * @description Executes after the creation of records.
      */
     private void onAfterCreateRecords() {
+       //System.debug('> FObject.onAfterCreateRecords');
+
         if (processMustTerminate()) {
             return;
         }
@@ -2077,8 +2123,8 @@ public with sharing class FObject {
         displaySeparatorOnMethodStart('Create records');
 
         this.createdRecords.clear();
-	    this.permutationsList.clear();
-	    this.namesByGroup.clear();
+        this.permutationsList.clear();
+        this.namesByGroup.clear();
         this.addressesByGroup.clear();
         this.numDefinitionsWithData = 0;
 
@@ -2138,10 +2184,19 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Parses all definitions.
+     */
+    public void parse() {
+        validateDefinitions();
+
+    }
+
+    /**
      * @description Parses a definition to its command and clusters.
      * @param def The field definition.
      */
     private void parseDefinition(ForceeaDefinition def) {
+       //System.debug('> FObject.parseDefinition');
         String definitionString = def.definitionString.trim();
         String fieldApiName = def.fieldApiName;
         String script = '';
@@ -2158,10 +2213,15 @@ public with sharing class FObject {
         command = command.toLowerCase();
         def.command = command.toLowerCase();
 
+        //System.debug('isValid: ' + def.isValid());
+
         // parse script
+        //System.debug('..parse script');
         do {
             script = parseCluster(def, script);
         } while (String.isNotEmpty(script));
+        //System.debug('-clusters: ' + def.clusters);
+        //System.debug('-isValid: ' + def.isValid());
     }
 
     /**
@@ -2171,6 +2231,8 @@ public with sharing class FObject {
      * @return Returns the script without the cluster.
      */
     private String parseCluster(ForceeaDefinition def, String script) {
+        //System.debug('> parseCluster - script: [' + script + ']');
+
         List<String> arguments = new List<String>();
         String result = script.trim();
         String argument = '';
@@ -2295,26 +2357,37 @@ public with sharing class FObject {
         } while (mustContinue);
 
         // add cluster to definition
+        //System.debug('..add cluster to definition - isValid:' + def.isValid());
+        //System.debug('arguments: ' + arguments);
         Cluster newCluster = new Cluster(parameter.toLowerCase(), arguments);
         def.clusters.add(newCluster);
 
         return result;
     }
 
+    /**
+     * @description Replaces the variables of the argument string with their values.
+     * @param argument The argument String with the defines variables as {@variableName}.
+     * @return The argument String with the actual variable values.
+     */
     private String getStringWithVariablesReplaced(String argument) {
         String result = argument;
+        //System.debug('argument [' + result + ']');
 
         if (!result.contains('{@')) {
             return result;
         }
+        //System.debug('result [' + result + ']');
 
-        List<ForceeaService.Variable> vars = new List<ForceeaService.Variable>(FObject.globalVariables)  ;
+        List<ForceeaService.Variable> vars = new List<ForceeaService.Variable>(FObject.globalVariables);
         vars.addAll(this.variables);
 
         for (ForceeaService.Variable var : vars) {
+            //System.debug(getVariableStringValue(var));
             result = result.replace('{@' + var.name + '}', getVariableStringValue(var));
         }
 
+        //System.debug('>result [' + result + ']');
         return result;
     }
 
@@ -2408,51 +2481,49 @@ public with sharing class FObject {
     }
 
     /**
-     * @description Declares a field definition.
+     * @description Declares a field definition with field as sObjectField.
      * @param sObjectField The SObjectField.
-     * @param definition The field definition.
+     * @param definitionString The field definition string.
      * @return An FObject instance.
      */
-    public FObject setDefinition(Schema.SObjectField sObjectField, String definition) {
-        String fieldApiName = sObjectField.getDescribe().getName();
-        Schema.SObjectField sof = this.sObjType.getDescribe().fields.getMap().get(fieldApiName);
-
-        if (sof != sObjectField) {
-            addError(this.sObjectApiName, ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldApiName +
-                '] for SObject [' + this.sObjectApiName + ']');
-            return this;
-        }
-
-        setDefinition(fieldApiName, false, false, definition);
+    public FObject setDefinition(Schema.SObjectField sObjectField, String definitionString) {
+        setDefinition('', sObjectField, false, false, definitionString.trim());
         return this;
     }
 
     /**
-     * @description Declares a field definition.
+     * @description Declares a field definition with field as String.
      * @param fieldApiName The API name of a field.
-     * @param definition The field definition (command + script).
+     * @param definitionString The field definition string.
      * @return An FObject instance.
      */
-    public FObject setDefinition(String fieldApiName, String definition) {
-        setDefinition(fieldApiName, false, false, definition);
+    public FObject setDefinition(String fieldApiName, String definitionString) {
+        setDefinition(fieldApiName.trim(), null, false, false, definitionString.trim());
         return this;
     }
 
     /**
      * @description Declares a field definition.
      * @param fieldName The API name of a field.
+     * @param sObjField The Schema SObject field.
      * @param isSystemDeclared If true, the definition is declared by Forceea.
      * @param isForUpdate If true, the definition is for update.
      * @param definitionString The field definition.
      */
-    public void setDefinition(String fieldName, Boolean isSystemDeclared, Boolean isForUpdate, String definitionString) {
+    public void setDefinition(String fieldName, Schema.SObjectField sObjField,
+        Boolean isSystemDeclared, Boolean isForUpdate, String definitionString) {
+       //System.debug('> FObject.setDefinition');
+        if (!FObject.processIsValid) {
+            return;
+        }
+
         if (!FObject.processIsValid) {
             return;
         }
 
         this.definitionsAreValidated = false;
         String fieldApiName = ForceeaService.getFieldApiName(
-            this, definitionString, this.sObjectApiName, fieldName, '', 'standard');
+            this, definitionString, this.sObjectApiName, fieldName, sObjField, '', 'standard');
         if (String.isBlank(fieldApiName)) {
             return;
         }
@@ -2479,7 +2550,7 @@ public with sharing class FObject {
      * @return An FObject instance.
      */
     public FObject setDefinitionForUpdate(Schema.SObjectField sObjectField, String definition) {
-        setDefinition(sObjectField.getDescribe().getName(), false, true, definition);
+        setDefinition(sObjectField.getDescribe().getName(), null, false, true, definition);
         return this;
     }
 
@@ -2490,7 +2561,7 @@ public with sharing class FObject {
      * @return An FObject instance.
      */
     public FObject setDefinitionForUpdate(String fieldApiName, String definition) {
-        setDefinition(fieldApiName, false, true, definition);
+        setDefinition(fieldApiName, null, false, true, definition);
         return this;
     }
 
@@ -2501,87 +2572,87 @@ public with sharing class FObject {
     @TestVisible
     private void setDefinitionFromField(Field field) {
         if (this.sObjectApiName == 'Account' && field.fieldApiName == 'Name') {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'static value(Company-)');
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'serial type(number) from(1) step(1) scale(0)');
         } else if (this.sObjectApiName == 'Contact' && field.fieldApiName == 'FirstName') {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(firstName) group(name)');
         } else if (this.sObjectApiName == 'Contact' && field.fieldApiName == 'LastName') {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(lastName) group(name)');
         } else if (this.sObjectApiName == 'Lead' && field.fieldApiName == 'Company') {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'static value(Company-)');
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'serial type(number) from(1) step(1) scale(0)');
         } else if (this.sObjectApiName == 'Lead' && field.fieldApiName == 'FirstName') {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(firstName) group(name)');
         } else if (this.sObjectApiName == 'Lead' && field.fieldApiName == 'LastName') {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(lastName) group(name)');
         } else if (this.sObjectApiName == 'Opportunity' && field.fieldApiName == 'Name') {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'static value(Opportunity-)');
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'serial type(number) from(1) step(1) scale(0)');
         } else if (field.dataType == Schema.DisplayType.INTEGER) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(number) from(1) to(100) scale(0)');
         } else if (field.dataType == Schema.DisplayType.CURRENCY) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(number) from(1000) to(10000) scale(2)');
         } else if (field.dataType == Schema.DisplayType.DOUBLE) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(number) from(1000) to(10000) scale(3)');
         } else if (field.dataType == Schema.DisplayType.DATE) {
             Integer thisYear = Date.today().year();
             String fromDate = String.valueOf(thisYear - 1) + '-01-01';
             String toDate = String.valueOf(thisYear + 1) + '-12-31';
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(date) from(' + fromDate + ') to(' + toDate + ')');
         } else if (field.dataType == Schema.DisplayType.DATETIME) {
             Integer thisYear = Date.today().year();
             String fromDate = String.valueOf(thisYear - 1) + '-01-01';
             String toDate = String.valueOf(thisYear + 1) + '-12-31';
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(datetime) from(' + fromDate + ') to(' + toDate + ')');
         } else if (field.dataType == Schema.DisplayType.TIME) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(time) from(00:00:00) to(23:59:59)');
         } else if (
             field.dataType == Schema.DisplayType.PICKLIST ||
                 field.dataType == Schema.DisplayType.MULTIPICKLIST ||
                 field.dataType == Schema.DisplayType.COMBOBOX) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(picklist)');
         } else if (field.dataType == Schema.DisplayType.STRING) {
             Integer minlength = (field.length < 5) ? field.length : 5;
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(string) minLength(' + minlength + ') maxLength(' +
                     field.length + ') startWith(upper) include(lower,upper)');
         } else if (field.dataType == Schema.DisplayType.TEXTAREA) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(text) minLength(30) maxLength(100)');
         } else if (field.dataType == Schema.DisplayType.PERCENT) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(number) from(0) to(100) scale(2)');
         } else if (field.dataType == Schema.DisplayType.REFERENCE) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random lookup(' + field.parents[0] + ') source(' + ForceeaService.SOURCE_FORCEEA + ')');
         } else if (field.dataType == Schema.DisplayType.BOOLEAN) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(boolean)');
         } else if (field.dataType == Schema.DisplayType.EMAIL) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(email)');
         } else if (field.dataType == Schema.DisplayType.PHONE) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(phone) format(DD dDD dd-DD-DDD)');
         } else if (field.dataType == Schema.DisplayType.URL) {
-            setDefinition(field.fieldName, true, false,
+            setDefinition(field.fieldName, null, true, false,
                 'random type(url)');
         }
     }
@@ -2591,9 +2662,10 @@ public with sharing class FObject {
      */
     private void setDefinitionOfRequiredFields() {
         if (FObject.isGlobalMocking) {
-            this.fields.add('Id');
+            String fieldName = ForceeaService.getFieldApiNameFromKey(this.sObjectApiName, 'Id', null);
+            this.fields.add(fieldName);
             ForceeaDefinition def = new ForceeaDefinition(
-                this, this.sObjectApiName, 'Id', 'Id', false, false, 'mock type(id)');
+                this, this.sObjectApiName, fieldName, fieldName, false, false, 'mock type(id)');
             this.definitions.add(def);
         }
 
@@ -2628,7 +2700,7 @@ public with sharing class FObject {
      * @description Declares the definitions of required fields for all SObjects except User.
      */
     private void setDefinitionsOfRequiredFieldsForSObjectsExceptUser() {
-        for (Field field : this.sObjectFieldsByFieldApiName.values()) {
+        for (Field field : FObject.globalFieldsMapBySObject.get(this.sObjectApiName).values()) {
             String fieldApiName = field.fieldApiName;
             if (field.isRequired && (!this.fields.contains(fieldApiName))) { // field required and not defined yet
                 setDefinitionFromField(field);
@@ -2675,10 +2747,11 @@ public with sharing class FObject {
         this.requiredFieldNames.add('ProfileId');
         requiredDefinitions.add('static lookup(profile) field(name) value(Standard User) source(salesforce)');
 
+        //System.debug('fields: ' + this.fields);
         for (Integer counter = 0; counter < this.requiredFieldNames.size(); counter++) {
             String fieldName = this.requiredFieldNames.get(counter);
             if (!this.fields.contains(fieldName)) {
-                setDefinition(fieldName, true, false, requiredDefinitions.get(counter));
+                setDefinition(fieldName, null, true, false, requiredDefinitions.get(counter));
                 forceeaDebug(ForceeaService.DEBUG,
                     SYMBOL_SUCCESS + ' ' + ForceeaService.MESSAGE_GENERATED_DEFINITION + ' of [' + fieldName + ']');
             }
@@ -3165,38 +3238,38 @@ public with sharing class FObject {
         DefinitionType dt = new DefinitionType();
 
         // example: static value("")
-        dt = new DefinitionType(DefinitionTypeId.STATIC_BLANK, 'StaticBlank', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_BLANK, 'StaticBlank', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_BLANK, '', false));
         FObject.definitionTypes.add(dt);
 
         // example: static value(10)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_INTEGER, 'StaticInteger', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_INTEGER, 'StaticInteger', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_INTEGER, null, false));
         FObject.definitionTypes.add(dt);
 
         // example: static value(10.2)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_DECIMAL, 'StaticDecimal', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_DECIMAL, 'StaticDecimal', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_DECIMAL, null, false));
         FObject.definitionTypes.add(dt);
 
         // example: static value(2017-1-1)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_DATE, 'StaticDate', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_DATE, 'StaticDate', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_DATE, null, false));
         FObject.definitionTypes.add(dt);
 
         // example: static value(2017-1-1 01:01:01)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_DATETIME, 'StaticDatetime', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_DATETIME, 'StaticDatetime', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_DATETIME, null, false));
         FObject.definitionTypes.add(dt);
 
         // example: static value(01:01:01)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_TIME, 'StaticTime', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_TIME, 'StaticTime', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_TIME, null, false));
         FObject.definitionTypes.add(dt);
 
         // StaticString should always be last, after all other static definitions
         // example: static value(abc)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_STRING, 'StaticString', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_STRING, 'StaticString', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_STRING, null, false));
         FObject.definitionTypes.add(dt);
     }
@@ -3208,20 +3281,20 @@ public with sharing class FObject {
         DefinitionType dt = new DefinitionType();
 
         // example: static lookup(Account) source(salesforce)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookup', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookup', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('lookup', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('source', ValueType.TYPE_STRING, null, false));
         FObject.definitionTypes.add(dt);
 
         // example: static lookup(Account) group(one) source(forceea)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupGroup', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupGroup', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('lookup', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('group', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('source', ValueType.TYPE_STRING, 'forceea', false));
         FObject.definitionTypes.add(dt);
 
         // example: static lookup(Account) field(Name) value(Company XYZ) source(salesforce)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupField', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupField', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('lookup', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('field', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_STRING, null, true));
@@ -3229,7 +3302,7 @@ public with sharing class FObject {
         FObject.definitionTypes.add(dt);
 
         // example: static lookup(Account) field(Name) value(Company XYZ) group(one) source(forceea)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupFieldGroup', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupFieldGroup', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('lookup', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('field', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('value', ValueType.TYPE_STRING, null, true));
@@ -3238,7 +3311,7 @@ public with sharing class FObject {
         FObject.definitionTypes.add(dt);
 
         // example: static lookup(Account) field(Name) except(Company XYZ) source(salesforce)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupExcept', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupExcept', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('lookup', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('field', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('except', ValueType.TYPE_STRING, null, true));
@@ -3246,7 +3319,7 @@ public with sharing class FObject {
         FObject.definitionTypes.add(dt);
 
         // example: static lookup(Account) field(Name) except(Company XYZ) group(one) source(forceea)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupExceptGroup', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupExceptGroup', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('lookup', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('field', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('except', ValueType.TYPE_STRING, null, true));
@@ -3255,7 +3328,7 @@ public with sharing class FObject {
         FObject.definitionTypes.add(dt);
 
         // example: static lookup(Account) where(...) source(salesforce)
-        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupWhere', 'static');
+        dt = new DefinitionType(DefinitionTypeId.STATIC_LOOKUP, 'StaticLookupWhere', ForceeaService.COMMAND_STATIC);
         dt.clusterTypes.add(new ClusterType('lookup', ValueType.TYPE_STRING, null, false));
         dt.clusterTypes.add(new ClusterType('where', ValueType.TYPE_STRING, null, true));
         dt.clusterTypes.add(new ClusterType('source', ValueType.TYPE_STRING, 'salesforce', false));
@@ -3265,7 +3338,7 @@ public with sharing class FObject {
     /**
      * @description Sets the controlling fields' definition
      */
-    private void setDependentFields() {
+    private void setFieldDependency() {
         Integer controllingFieldPosition = -1;
         String controllingFieldApiName = '';
         String dependentFieldApiName = '';
@@ -3279,7 +3352,7 @@ public with sharing class FObject {
             }
 
             dependentFieldApiName = def.fieldApiName;
-            field = this.sObjectFieldsByFieldApiName.get(dependentFieldApiName.toLowerCase()); // get field details
+            field = ForceeaService.getField(this.sObjectApiName, dependentFieldApiName);
 
             if (fieldHasControllingField(field)) {
                 continue;
@@ -3288,7 +3361,10 @@ public with sharing class FObject {
             }
 
             // the (dependent) field has a controlling field and it respects field dependencies
-            Schema.DisplayType controllingFieldType = this.sObjectFieldsByFieldApiName.get(controllingFieldApiName.toLowerCase()).dataType;
+            controllingFieldApiName = ForceeaService.getFieldApiNameFromKey(
+                this.sObjectApiName, controllingFieldApiName, null);
+            Schema.DisplayType controllingFieldType =
+                ForceeaService.getField(this.sObjectApiName, controllingFieldApiName).dataType;
 
             // check the controlling field data type
             if (controllingFieldType == Schema.DisplayType.PICKLIST || controllingFieldType == Schema.DisplayType.MULTIPICKLIST) {
@@ -3305,7 +3381,7 @@ public with sharing class FObject {
                 // create a new definition for the controlling field, before the definition of the dependent field
                 forceeaDebug(ForceeaService.INFO, 'Did not find a definition for the controlling field [' +
                     controllingFieldApiName + '] of dependent field [' + dependentFieldApiName + '] and will generate a definition');
-                setDefinition(controllingFieldApiName, true, this.isUpdate, 'random type(picklist)');
+                setDefinition(controllingFieldApiName, null, true, this.isUpdate, 'random type(picklist)');
             }
             upsertFieldBeforePosition(controllingFieldApiName, dependentFieldApiName, dependentFieldPosition);
         }
@@ -3486,18 +3562,19 @@ public with sharing class FObject {
         this.cpuTimeOfDataGeneration = 0;
         this.cpuTimeStartOfDataGeneration = 0;
         this.definitionsAreValidated = false;
-        this.excludeInactiveLookupRecords = true;
-        this.groupName = String.isBlank(this.groupName) ? '' : this.groupName;
-        this.processHasPermutations = false;
         this.dmlIsInsert = false;
+        this.dmlIsUpdate = false;
+        this.excludeInactiveLookupRecords = true;
+        this.groupName =  ForceeaService.getStringValue(this.groupName);
+        this.hasSchemaOfAllFields = false;
         this.isMocking = false;
         this.isUpdate = false;
-        this.dmlIsUpdate = false;
         this.mustCreateNewRecords = true;
         this.numValidatedDefinitions = 0;
+        this.processHasPermutations = false;
         this.queryLimit = FObject.globalQueryLimit;
-        this.requiredFieldsShouldBeAutomaticallyConfigured = true;
-        this.sObjType = FObject.globalDescribeBySObject.get(this.sObjectApiName);
+        this.requiredFieldsShouldBeAutomaticallyConfigured = false;
+        this.sObjType = ForceeaService.getSObjectType(this.sObjectApiName);
         this.virtualFieldForStandardPriceBookEntries = '';
     }
 
@@ -3507,6 +3584,7 @@ public with sharing class FObject {
      * @return An FObject instance.
      */
     public FObject setNumberOfNextRecord(Integer numberOfNextRecord) {
+        //System.debug('> setNumberOfNextRecord: ' + numberOfNextRecord);
         Integer numFirstRecord = (numberOfNextRecord <= 0) ? 1 : numberOfNextRecord;
         FObject.numFirstRecordsBySObject.put(this.sObjectApiName, numFirstRecord);
 
@@ -3550,13 +3628,15 @@ public with sharing class FObject {
      */
     public FObject setPartitionFieldName(Schema.SObjectField sObjectFieldName) {
         this.partitionFieldName = sObjectFieldName.getDescribe().getName();
+        //System.debug('setPartitionFieldName: ' +  this.partitionFieldName);
         return this;
     }
 
     /**
      * @description Sets the lists for calculating permutations.
      */
-    private void setPermutationValues() {
+    private void setPermutationValues() { // TODO set for update?
+        //System.debug('> FObject.setPermutationValues');
         for (ForceeaDefinition def : this.definitions) {
             def.setPermutations();
         }
@@ -3564,6 +3644,7 @@ public with sharing class FObject {
         if (this.permutationsList.isEmpty()) {
             return;
         }
+        //System.debug('> permutationsList: ' + this.permutationsList);
 
         List<String> permutationValues = new List<String>();
         ForceeaService.getPermutations(this.permutationsList, permutationValues, 0, '');
@@ -3578,6 +3659,8 @@ public with sharing class FObject {
         if (this.processHasPermutations) {
             this.records = this.permutationValues.size();
         }
+        //System.debug('permutationValues: ' + this.permutationValues);
+        //System.debug('setNumberOfRecords: ' + this.getNumberOfRecords());
     }
 
     /**
@@ -3614,13 +3697,18 @@ public with sharing class FObject {
 
             SObject recordToUpdate = this.recordsToUpdate.get(counter);
             Map<String, Object> populatedFieldsByName = recordWithUpdatedValues.getPopulatedFieldsAsMap();
+            //System.debug('recordWithUpdatedValues: ' + recordWithUpdatedValues);
+            //System.debug('recordToUpdate: ' + recordToUpdate);
+            //System.debug('populatedFieldsByName: ' + populatedFieldsByName);
 
             Integer numUpdatedFields = 0;
             for (String fieldName : populatedFieldsByName.keySet()) {
                 Object fieldValue = populatedFieldsByName.get(fieldName);
+                //System.debug('fieldValue: [' + fieldValue + ']');
                 recordToUpdate.put(fieldName, fieldValue);
                 numUpdatedFields++;
             }
+            //System.debug('new recordToUpdate: ' + recordToUpdate);
 
             if (numUpdatedFields > 0) {
                 this.numUpdatedRecords++;
@@ -3631,7 +3719,7 @@ public with sharing class FObject {
     /**
      * @description Set Record Types.
      */
-    public void setRecordTypes() {
+    private void setRecordTypes() {
         if (!FObject.rtInfosBySObject.containsKey(this.sObjType)) {
             List<Schema.RecordTypeInfo> rtInfos = new List<Schema.RecordTypeInfo>();
             for (Schema.RecordTypeInfo rti : this.sObjType.getDescribe().getRecordTypeInfos()) {
@@ -3648,33 +3736,25 @@ public with sharing class FObject {
     }
 
     /**
-     * @description Stores the SObject field details to the global fields map.
-     * @param sObjectApiName The SObject API name.
+     * @description Sets the SObject fields info.
      */
-    public static void setSObject(String sObjectApiName) {
-        Map<String, Field> fieldsMap = new Map<String, Field>();
-        Schema.SObjectType objType = FObject.globalDescribeBySObject.get(sObjectApiName);
-
-        for (Schema.SObjectField sof : objType.getDescribe().fields.getMap().values()) {
-            Field field = FObject.getDetailsFromSObjectField(sof);
-            fieldsMap.put(field.fieldApiName.toLowerCase(), field);
+    private void setFields() {
+        if (!this.requiredFieldsShouldBeAutomaticallyConfigured || this.hasSchemaOfAllFields) {
+            return;
         }
 
-        FObject.globalFieldsMapBySObject.put(sObjectApiName.toLowerCase(), fieldsMap);
+        Map<String, Field> fieldInfosByName = new Map<String, Field>();
+        for (Schema.SObjectField sof : ForceeaService.getSObjectFieldsByName(this.sObjectApiName).values()) {
+            Field fieldInfo = FObject.getDetailsFromSObjectField(sof);
+            fieldInfosByName.put(fieldInfo.fieldApiName, fieldInfo);
+        }
+
+        FObject.globalFieldsMapBySObject.put(this.sObjectApiName.toLowerCase(), fieldInfosByName);
+        this.hasSchemaOfAllFields = true;
     }
 
     /**
-     * @description Set SObject fields map.
-     */
-    public void setSObjectFieldsMap() {
-        if (!FObject.globalFieldsMapBySObject.containsKey(this.sObjectApiName.toLowerCase())) {
-            FObject.setSObject(this.sObjectApiName);
-        }
-        this.sObjectFieldsByFieldApiName = FObject.globalFieldsMapBySObject.get(this.sObjectApiName.toLowerCase());
-    }
-
-    /**
-     * @description Sets if Forceea should set the required fields.
+     * @description Sets if Forceea should define the required fields.
      * @param fieldsAreRequired If true, Forceea automatically defines the required fields.
      * @return An FObject instance.
      */
@@ -3698,6 +3778,8 @@ public with sharing class FObject {
      * @param fieldValue The field value string.
      */
     private void setSObjectFieldValue(SObject result, Schema.DisplayType valueType, String fieldName, String fieldValue) {
+        //System.debug('> setSObjectFieldValue: [' + fieldValue + ']');
+
         if (String.isBlank(fieldValue)) {
             result.put(fieldName, null);
             return;
@@ -3731,7 +3813,7 @@ public with sharing class FObject {
             when TIME {
                 Time valueTime;
                 String thisYear = String.valueOf(Date.today().year());
-                valueTime = Datetime.valueOf(thisYear + '-01-01 ' + fieldValue).Time();
+                valueTime = Datetime.valueOf(thisYear + '-01-01 ' + fieldValue).time();
                 result.put(fieldName, valueTime);
             }
             when BASE64 {
@@ -3740,15 +3822,6 @@ public with sharing class FObject {
             when else { // any other type
                 result.put(fieldName, fieldValue);
             }
-        }
-    }
-
-    /**
-     * @description Sets the API names of all SObjects.
-     */
-    private static void setSObjectApiNames() {
-        for (Schema.SObjectType sot : FObject.globalDescribeBySObject.values()) {
-            FObject.sObjectApiNames.add(sot.getDescribe().getName());
         }
     }
 
@@ -3834,6 +3907,8 @@ public with sharing class FObject {
      * @return An instance of FObject.
      */
     public FObject updateFields(String groupName) {
+        //System.debug('> FObject.updateFields');
+
         if (processMustTerminate()) {
             return this;
         }
@@ -3906,6 +3981,10 @@ public with sharing class FObject {
             return;
         }
 
+        if (this.definitions.isEmpty()) {
+            forceeaDebug(ForceeaService.DEBUG, 'Found no definitions to validate.');
+            return;
+        }
         forceeaDebug(ForceeaService.DEBUG,
             ForceeaService.MESSAGE_WILL_VALIDATE_FIELD_DEFINITIONS + ' of [' + this.sObjectApiName + ']');
         setDefinitionsAsFunctions();
@@ -3936,7 +4015,7 @@ public with sharing class FObject {
         }
 
         this.definitionsAreValidated = true;
-        setDependentFields();
+        setFieldDependency();
     }
 
     /**

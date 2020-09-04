@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class ForceeaQueueable implements Queueable {
 
@@ -126,6 +126,9 @@ public with sharing class ForceeaQueueable implements Queueable {
         if (this.operationType == ForceeaService.OperationType.ASYNC_DELETE) {
             this.definitionsOnDelete =
                 asyncTransaction.sObjectsToDelete.get(asyncTransaction.sObjectToDeleteIndex).definitions;
+            //System.debug('asyncTransaction.sObjectToDeleteIndex: ' + asyncTransaction.sObjectToDeleteIndex);
+            //System.debug('asyncTransaction.sObjectsToDelete: ' + asyncTransaction.sObjectsToDelete);
+            //System.debug('definitionsOnDelete: ' + this.definitionsOnDelete);
         }
         this.partitionFieldValue = asyncTransaction.partitionFieldValue;
         this.processId = asyncTransaction.processId;
@@ -150,6 +153,8 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @description Creates a new batch.
      */
     private void createNewBatch() {
+        //System.debug('> createNewBatch');
+
         try {
             this.batchId++;
             ForceeaService.AsyncTransaction asyncTrans = this.getAsyncTransaction();
@@ -179,6 +184,7 @@ public with sharing class ForceeaQueueable implements Queueable {
     private void decideIfShouldCheckNextSectorOnDelete() {
         Integer nextSector = this.sector + this.numJobs;
         this.shouldCheckNextSector = shouldContinueToNextSectorOnDelete(nextSector);
+        //System.debug('shouldCheckNextSector: ' + this.shouldCheckNextSector);
     }
 
     /**
@@ -188,6 +194,8 @@ public with sharing class ForceeaQueueable implements Queueable {
         Boolean shouldTryAgain = !this.operationIsSuccessful && this.shouldTryAgainAfterError;
         this.hasMoreRecordsToDelete = this.numRecordsFoundForDeletion == this.queryLimit;
         this.shouldCheckSameSector = (shouldTryAgain || this.hasMoreRecordsToDelete) ? true : false;
+        //System.debug('hasMoreRecordsToDelete: ' + this.hasMoreRecordsToDelete);
+        //System.debug('shouldCheckSameSector: ' + this.shouldCheckSameSector);
     }
 
     /**
@@ -195,6 +203,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private void decideIfShouldCreateNewBatchOnDelete() {
         this.shouldCreateNewBatch = false;
+        //System.debug('hasMoreRecordsToDelete: ' + this.hasMoreRecordsToDelete);
 
         Boolean conditionOnSuccess = this.operationIsSuccessful && (
             (this.shouldMoveToNextSObject && !this.isTheLastSObject) ||
@@ -205,6 +214,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         if (conditionOnSuccess || conditionOnFailure) {
             this.shouldCreateNewBatch = true;
         }
+        //System.debug('shouldCreateNewBatch: ' + this.shouldCreateNewBatch);
 
         if (this.isBenchmark) {
             setNumOfMaxUnitsOnBenchmark();
@@ -219,20 +229,25 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private void decideIfThisIsTheLastSObjectOnDelete() {
         this.isTheLastSObject = this.sObjectToDeleteIndex == this.sObjectsToDelete.size() - 1;
+        //System.debug('thisIsTheLastSObject: ' + isTheLastSObject);
+        //System.debug('sObjectToDeleteIndex: ' + this.sObjectToDeleteIndex);
     }
 
     /**
      * @description Decides what happens as a next step when deleting.
      */
     private void decideWhatHappensNextOnDelete() {
+        //System.debug('> decideWhatHappensNext');
         if (this.shouldCreateNewBatch) {
             publishLogMessageOnSuccess();
 
             if (this.shouldMoveToNextSObject && !this.isTheLastSObject) {
+                //System.debug('will go to next SObject');
                 this.isBenchmark = true;
                 this.sector = this.jobId;
                 this.sObjectToDeleteIndex++;
             }
+            //System.debug('numMaxUnitsPerBatch: ' + this.numMaxUnitsPerBatch);
 
             createNewBatch();
             return;
@@ -242,6 +257,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             publishLogMessageOnSuccess();
             this.jobIsCompleted = true;
             publishLogMessageOnSuccess();
+            //System.debug('jobIsCompleted: ' + this.jobIsCompleted);
         }
     }
 
@@ -263,6 +279,8 @@ public with sharing class ForceeaQueueable implements Queueable {
         Boolean hasMoreIterationsToInsert = this.operationIsSuccessful
             && this.operationType == ForceeaService.OperationType.ASYNC_INSERT
             && this.numJobUnitsToExecute > 0;
+        //System.debug('shouldTryAgainAfterError: ' + this.shouldTryAgainAfterError);
+        //System.debug('hasMoreIterationsToInsert: ' + hasMoreIterationsToInsert);
 
         Boolean conditionOnSuccess = this.operationIsSuccessful &&
             (this.shouldCheckNextSector || hasMoreIterationsToInsert);
@@ -276,6 +294,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             this.jobIsCompleted = true;
             if (this.operationIsSuccessful) {
                 publishLogMessageOnSuccess();
+                //System.debug('jobIsCompleted: ' + this.jobIsCompleted);
             }
         }
     }
@@ -297,6 +316,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         this.numBatchUnitsExecuted = recordsToDelete.size();
         this.numJobUnitsExecuted += this.numBatchUnitsExecuted;
         this.numBatchUnitsToExecute = this.numBatchUnitsExecuted;
+        //System.debug('> deleted ' + this.numBatchUnitsExecuted + ' records for ' + this.sObjectApiName);
     }
 
     /**
@@ -304,6 +324,8 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @param context The queueable context.
      */
     public void execute(QueueableContext context) {
+        //System.debug('=== ForceeaQueueable.execute, job:' + this.jobId + ', batch: ' + this.batchId);
+
         handleOnTerminated();
         if (this.isTerminated) {
             return;
@@ -362,6 +384,10 @@ public with sharing class ForceeaQueueable implements Queueable {
 
         this.limitGlobalSetupCpuTime = FObject.getCpuTimeOfGlobalSetup();
         this.limitDmlRows = Limits.getDmlRows();
+        //System.debug('limit GlobalSetupCpuTime: ' + this.limitGlobalSetupCpuTime);
+        //System.debug('limit FObjectSetupCpuTime: ' + this.limitFObjectSetupCpuTime);
+        //System.debug('limit DataGenerationCpuTime: ' + this.limitDataGenerationCpuTime);
+        //System.debug('limit DmlRows: ' + this.limitDmlRows);
     }
 
     /**
@@ -459,16 +485,21 @@ public with sharing class ForceeaQueueable implements Queueable {
         }
 
         Integer allowedCpuTime = getMaxCpuTime() - this.limitGlobalSetupCpuTime - this.limitFObjectSetupCpuTime;
+        //System.debug('allowedCpuTime: ' + allowedCpuTime);
+        //System.debug('limitDataGenerationCpuTime: ' + this.limitDataGenerationCpuTime);
+        //System.debug('getDmlRows: ' + Limits.getDmlRows());
 
         Integer maxIterationsForCpuTime = 1;
         if (this.limitDataGenerationCpuTime > 0) {
             maxIterationsForCpuTime = (Integer) allowedCpuTime / this.limitDataGenerationCpuTime;
         }
+        //System.debug('maxIterationsForCpuTime: ' + maxIterationsForCpuTime);
 
         Integer maxIterationsForDmlRows = 1;
         if (Limits.getDmlRows() > 0) {
             maxIterationsForDmlRows = (Integer) Limits.getLimitDmlRows() / Limits.getDmlRows();
         }
+        //System.debug('maxIterationsForDmlRows: ' + maxIterationsForDmlRows);
 
         List<Integer> maxIterations = new List<Integer>{
             maxIterationsForCpuTime,
@@ -476,6 +507,8 @@ public with sharing class ForceeaQueueable implements Queueable {
         };
         maxIterations.sort();
 
+        //System.debug('maxIterations: ' + maxIterations);
+        //System.debug('MaxNumOfIterationsPerBatch: ' + maxIterations.get(0));
         return maxIterations.get(0);
     }
 
@@ -514,6 +547,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             multiplierForDmlRows
         };
         multipliers.sort();
+        //System.debug('multiplier: ' + multipliers.get(0));
 
         Integer result = Integer.valueOf(
             multipliers.get(0) * queueable.numBatchUnitsExecuted * ForceeaQueueable.LIMITS_THRESHOLD);
@@ -528,6 +562,9 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private FObject getNewFObject(ForceeaService.FObjectAsync async) {
         Integer numRecords = async.numOfRecords * this.numBatchUnitsToExecute;
+        //System.debug('getNewFObject - async.numRecords: ' + async.numOfRecords);
+        //System.debug('getNewFObject - this.numBatchUnitsToExecute: ' + this.numBatchUnitsToExecute);
+        //System.debug('getNewFObject - numRecords: ' + numRecords);
 
         FObject newFObject = new FObject(async.sObjectApiName, numRecords)
             .setRequiredFields(async.setRequiredFields);
@@ -570,11 +607,13 @@ public with sharing class ForceeaQueueable implements Queueable {
             'RecordTypeId'
         };
         final Map<String, String> valuesByField = getValuesByField(fieldNames);
+        //System.debug('valuesByField: ' + valuesByField);
 
         String result = 'SELECT Id FROM ' + this.sObjectApiName;
         result += getQueryWhereClauseOnDelete(valuesByField, partitionFieldName, partitionFieldValue);
         result += ' LIMIT ' + this.queryLimit;
 
+        //System.debug('SOQL Query: ' + result);
         return result;
     }
 
@@ -587,6 +626,8 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private String getQueryWhereClauseOnDelete(Map<String, String> valuesByField,
         String partitionFieldName, String partitionFieldValue) {
+        //System.debug('> getQueryWhereClauseOnDelete');
+
         String additionalClause = '';
         Integer counter = 0;
 
@@ -601,6 +642,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         }
 
         String result = '';
+        //System.debug('hasPartitioning: ' + this.hasPartitioning);
 
         if (this.hasPartitioning) {
             result = ' WHERE ' + partitionFieldName + ' = \'' +
@@ -627,7 +669,9 @@ public with sharing class ForceeaQueueable implements Queueable {
         try {
             String soqlQuery = getQueryString(obj.partitionFieldName, this.partitionFieldValue);
             results = Database.query(soqlQuery);
+            //System.debug('sector: ' + this.sector + ', records to delete: ' + results.size());
         } catch (Exception ex) {
+            //System.debug('getRecordsToDelete - error');
             this.operationIsSuccessful = false;
             this.errorMessage = ex.getMessage();
             publishLogMessageOnFailure();
@@ -644,6 +688,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private String getStaticValueFromDefinition(ForceeaService.FieldDefinition definition) {
         String result = '';
+        //System.debug('getStaticValueFromDefinition: ' + definition);
 
         if (definition.definitionString.toLowerCase().startsWith('static')) {
             result = definition.definitionString.trim();
@@ -662,10 +707,12 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private Map<String, String> getValuesByField(List<String> fieldNames) {
         Map<String, String> results = new Map<String, String>();
+        //System.debug('definitionsOnDelete: ' + this.definitionsOnDelete);
 
         for (ForceeaService.FieldDefinition def : this.definitionsOnDelete) {
             if (fieldNames.contains(def.fieldApiName)) {
                 String value = getStaticValueFromDefinition(def);
+                //System.debug('value: ' + value);
                 if (String.isNotBlank(value)) {
                     String fieldName = def.fieldApiName == 'RecordTypeId'
                         ? 'RecordType.DeveloperName'
@@ -694,6 +741,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @description Handles the deletion process.
      */
     private void handleOnDelete() {
+        //System.debug('=== DELETE ===');
         List<SObject> recordsToDelete = new List<SObject>();
 
         this.shouldCheckNextSector = true;
@@ -736,6 +784,10 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @description Inserts records.
      */
     private void insertRecords() {
+        //System.debug('=====================================================================');
+        //System.debug(' INSERT Job: ' + this.jobId + ', iterations to exec: ' + this.numJobUnitsToExecute);
+        //System.debug('=====================================================================');
+
         setNumOfBatchUnitsToExecute();
         FObject.setAsync(true);
 
@@ -746,6 +798,10 @@ public with sharing class ForceeaQueueable implements Queueable {
             if (this.isBenchmark) {
                 newFObject.setNumberOfRecords(fObjAsync.numOfRecords);
             }
+
+            //System.debug('Job Units Executed: ' + this.numJobUnitsExecuted);
+            //System.debug('Records: ' + newFObject.getNumberOfRecords());
+            //System.debug('will insert ' + newFObject.getNumberOfRecords() + ' records for [' + this.sObjectApiName + ']');
 
             try {
                 newFObject.createRecords();
@@ -789,6 +845,9 @@ public with sharing class ForceeaQueueable implements Queueable {
 
         this.limitGlobalSetupCpuTime = Limits.getCpuTime() - this.limitGlobalSetupCpuTime;
         this.limitDmlRows = Limits.getDmlRows() - this.limitDmlRows;
+        //System.debug('limitGlobalSetupCpuTime: ' + this.limitGlobalSetupCpuTime);
+        //System.debug('limitDmlRows: ' + this.limitDmlRows);
+        //System.debug('numMaxUnitsPerBatch: ' + this.numMaxUnitsPerBatch);
     }
 
     /**
@@ -799,6 +858,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             return;
         }
 
+        //System.debug('===================== BENCHMARK =====================');
         this.limitGlobalSetupCpuTime = Limits.getCpuTime();
         this.limitDmlRows = Limits.getDmlRows();
     }
@@ -810,6 +870,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         if (this.isBenchmark) {
             Database.rollback(this.savePoint);
             this.numFirstRecordsBySObject = this.tempNumFirstRecordsBySObject;
+            //System.debug('numFirstRecordsBySObject: ' + this.numFirstRecordsBySObject);
         }
     }
 
@@ -817,15 +878,21 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @description Handles the process after insertion.
      */
     private void onBeforeInsert() {
+        //System.debug('> ForceeaQueueable.onBeforeInsert');
+        //System.debug('numFirstRecordsBySObject: ' + this.numFirstRecordsBySObject);
         FObject.numFirstRecordsBySObject = this.numFirstRecordsBySObject;
+        //System.debug('FObject.numFirstRecordsBySObject: ' + FObject.numFirstRecordsBySObject);
+        //System.debug('numMaxUnitsPerBatch: ' + this.numMaxUnitsPerBatch);
 
         if (this.isBenchmark && this.numMaxUnitsPerBatch == 1) {
             this.isBenchmark = false;
         }
 
         if (this.isBenchmark) {
+            //System.debug('=== BENCHMARK');
             this.savePoint = Database.setSavepoint();
             this.tempNumFirstRecordsBySObject = new Map<String, Integer>(this.numFirstRecordsBySObject);
+            //System.debug('tempNumFirstRecordsBySObject: ' + this.tempNumFirstRecordsBySObject);
         }
     }
 
@@ -862,6 +929,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         if (Test.isRunningTest()) {
             Test.getEventBus().deliver();
         }
+        //System.debug(platformEvent);
 
         return platformEvent.Message__c;
     }
@@ -890,6 +958,10 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @description Sets the number of batch units to execute.
      */
     private void setNumOfBatchUnitsToExecute() {
+        //System.debug('> setNumOfBatchUnitsToExecute');
+        //System.debug('numJobUnitsToExecute:' + this.numJobUnitsToExecute);
+        //System.debug('numMaxUnitsPerBatch:' + this.numMaxUnitsPerBatch);
+
         if (this.isBenchmark) {
             this.numBatchUnitsToExecute = 1;
         }
@@ -897,6 +969,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         this.numBatchUnitsToExecute = this.numJobUnitsToExecute > this.numMaxUnitsPerBatch
             ? this.numMaxUnitsPerBatch
             : this.numJobUnitsToExecute;
+        //System.debug('setNumBatchUnitsToExecute - numBatchUnitsToExecute: ' + this.numBatchUnitsToExecute);
     }
 
     /**
@@ -937,6 +1010,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             this.sector = newSector;
         }
 
+        //System.debug('shouldMoveToNextSObject: ' + this.shouldMoveToNextSObject);
         return result;
     }
 

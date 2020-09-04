@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class ForceeaGeneratorTest {
@@ -37,9 +37,6 @@ public class ForceeaGeneratorTest {
         }
         if (!results.isEmpty()) {
             errors += 4;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 8;
         }
         System.assertEquals(0, errors, 'mock - errors found');
     }
@@ -89,9 +86,6 @@ public class ForceeaGeneratorTest {
         if (!results1.isEmpty() && !results2.isEmpty()) {
             errors += 16;
         }
-        if (!FObject.processIsValid()) {
-            errors += 32;
-        }
         System.assertEquals(0, errors, 'mock - errors found');
     }
 
@@ -128,9 +122,6 @@ public class ForceeaGeneratorTest {
         }
         if (!results1.isEmpty() && !results2.isEmpty() && !results3.isEmpty()) {
             errors += 4;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 8;
         }
         System.assertEquals(0, errors, 'mock - errors found');
     }
@@ -179,9 +170,6 @@ public class ForceeaGeneratorTest {
         if (!results1.isEmpty() && !results2.isEmpty()) {
             errors += 16;
         }
-        if (!FObject.processIsValid()) {
-            errors += 32;
-        }
         System.assertEquals(0, errors, 'mock - errors found');
     }
 
@@ -214,9 +202,6 @@ public class ForceeaGeneratorTest {
         if (!results1.isEmpty() && !results2.isEmpty()) {
             errors += 4;
         }
-        if (!FObject.processIsValid()) {
-            errors += 8;
-        }
         System.assertEquals(0, errors, 'mock - errors found');
     }
 
@@ -242,9 +227,6 @@ public class ForceeaGeneratorTest {
         }
         if (results.size() != 20) {
             errors += 2;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 4;
         }
         System.assertEquals(0, errors, 'permutations - errors found');
     }
@@ -276,9 +258,6 @@ public class ForceeaGeneratorTest {
         if (results.size() != 12) {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'permutations - errors found');
     }
 
@@ -304,9 +283,6 @@ public class ForceeaGeneratorTest {
         }
         if (results.size() != 20) {
             errors += 2;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 4;
         }
         System.assertEquals(0, errors, 'permutations - errors found');
     }
@@ -337,15 +313,13 @@ public class ForceeaGeneratorTest {
         if (results.size() != 12) {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'permutations - errors found');
     }
 
     @IsTest
     private static void permutations_lookupAuto_expectSuccess() {
         new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .insertRecords(true);
 
         Test.startTest();
@@ -353,6 +327,7 @@ public class ForceeaGeneratorTest {
             .setNumberOfRecords('auto')
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(A, B, C) mode(permutation)')
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(1, 2) mode(permutation)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'serial lookup(FObjectTwo__c) mode(permutation) source(salesforce)');
         obj1.insertRecords(true);
         Test.stopTest();
@@ -369,21 +344,20 @@ public class ForceeaGeneratorTest {
         if (results.size() != 60) {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'permutations - errors found');
     }
 
     @IsTest
     private static void permutations_lookupDefault_expectSuccess() {
         new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .insertRecords(true);
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, 20)
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(A, B, C) mode(permutation)')
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(1, 2) mode(permutation)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'serial lookup(FObjectTwo__c) mode(permutation) source(salesforce)');
         obj1.insertRecords(true);
         Test.stopTest();
@@ -399,9 +373,6 @@ public class ForceeaGeneratorTest {
         }
         if (results.size() != obj1.getNumberOfRecords()) {
             errors += 2;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 4;
         }
         System.assertEquals(0, errors, 'permutations - errors found');
     }
@@ -424,9 +395,6 @@ public class ForceeaGeneratorTest {
                 errors += 1;
                 break;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors += 2;
         }
         System.assertEquals(0, errors, 'permutations - errors found');
     }

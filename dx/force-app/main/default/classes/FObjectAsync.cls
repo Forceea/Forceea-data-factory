@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class FObjectAsync {
 
@@ -122,6 +122,7 @@ public with sharing class FObjectAsync {
         List<ForceeaService.FObjectAsync> asyncFObjectsToDelete = getReversedList(asyncFObjects);
 
         if (hasBlankPartitionFieldInAnySObject(asyncFObjectsToDelete) || String.isBlank(this.partitionFieldValue)) {
+            //System.debug('.. will use 1 delete job');
             this.numJobs = 1;
             this.hasPartitioning = false;
         } else {
@@ -147,16 +148,20 @@ public with sharing class FObjectAsync {
      */
     private void enqueueJobsOnInsert() {
         // initilaize map
+        //System.debug('..initilaize map: numOfFirstRecordsBySObject');
         Map<String, Integer> numOfFirstRecordsBySObject = new Map<String, Integer>();
         for (FObject sObj : this.template.values()) {
             numOfFirstRecordsBySObject.put(sObj.getSObjectName(), 1);
         }
 
+        //System.debug('..enqueue jobs');
         for (Integer jobId = 1; jobId <= numJobs; jobId++) {
+            //System.debug('jobId: ' + jobId);
             this.asyncTrans = new ForceeaService.AsyncTransaction();
             this.asyncTrans.language = FObject.getGlobalLanguage();
             this.asyncTrans.locality = FObject.getGlobalLocality();
             this.asyncTrans.numFirstRecordsBySObject = new Map<String, Integer>(numOfFirstRecordsBySObject);
+            //System.debug('- numOfFirstRecordsBySObject: ' + this.asyncTrans.numFirstRecordsBySObject);
             this.asyncTrans.numJobUnitsToExecute = this.getNumberOfIterationsForThisJob(jobId);
             this.asyncTrans.numMaxUnitsPerBatch = this.numMaxIterationsPerBatch;
             this.asyncTrans.numProcessUnitsToExecute = this.numIterationsToExecute;
@@ -242,9 +247,14 @@ public with sharing class FObjectAsync {
 
         for (FObject obj : fObjects) {
             String sObjectApiName = obj.getSObjectName();
+            //System.debug('sObjectApiName: ' + sObjectApiName);
 
             Integer previousFirstRecord = results.get(sObjectApiName);
             Integer newFirstRecord = previousFirstRecord + obj.getNumberOfRecords() * this.asyncTrans.numJobUnitsToExecute;
+            //System.debug('previousRecord: ' + previousFirstRecord);
+            //System.debug('numJobUnitsToExecute: ' + this.asyncTrans.numJobUnitsToExecute);
+            //System.debug('getNumberOfRecords: ' + obj.getNumberOfRecords());
+            //System.debug('==>>> new first record: ' + newFirstRecord);
 
             results.put(sObjectApiName, newFirstRecord);
         }
@@ -342,9 +352,12 @@ public with sharing class FObjectAsync {
      * @return True, if there is at least one SObject to be deleted with a blank Partition Field.
      */
     private Boolean hasBlankPartitionFieldInAnySObject(List<ForceeaService.FObjectAsync> asyncFObjects) {
+        //System.debug('> FObjectAsync.hasBlankPartitionFieldInAnySObject');
         Boolean result = false;
 
         for (ForceeaService.FObjectAsync asyncFObject : asyncFObjects) {
+            //System.debug('partitionFieldName: ' + asyncFObject.partitionFieldName);
+
             if (String.isBlank(asyncFObject.partitionFieldName)) {
                 result = true;
                 break;

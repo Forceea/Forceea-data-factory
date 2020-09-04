@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class ForceeaGeneratorRandomPicklistTest {
@@ -23,8 +23,9 @@ public class ForceeaGeneratorRandomPicklistTest {
         };
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('TestPicklistA__c', 'random type(picklist)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -38,7 +39,8 @@ public class ForceeaGeneratorRandomPicklistTest {
     private static void randomPicklist_dependentPicklistField_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestPicklistC__c, 'random type(picklist)');
+            .setDefinition(FObjectOne__c.TestPicklistC__c, 'random type(picklist)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -101,9 +103,6 @@ public class ForceeaGeneratorRandomPicklistTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random picklist - errors found');
     }
 
@@ -112,9 +111,10 @@ public class ForceeaGeneratorRandomPicklistTest {
         FObject.setGlobalVerbose('info');
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestPicklistB__c', 'random type(picklist)');
-        obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestPicklistB__c', 'random type(picklist)')
+            .setDefinition('TestPicklistA__c', 'random type(picklist)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -158,18 +158,16 @@ public class ForceeaGeneratorRandomPicklistTest {
         if (!FObject.getGlobalDebugLogs().contains(movedFieldLogMessage)) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random picklist - errors found');
     }
 
     @IsTest
     private static void randomPicklist_definitionsOfDependentPicklists_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestPicklistC__c', 'random type(picklist)');
-        obj.setDefinition('RecordTypeId', 'static value(RecordTypeA)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestPicklistC__c', 'random type(picklist)')
+            .setDefinition('RecordTypeId', 'static value(RecordTypeA)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         Test.stopTest();
 
@@ -183,17 +181,11 @@ public class ForceeaGeneratorRandomPicklistTest {
         if (picklistBDefinitions[0] != 'random type(picklist)') {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'random picklist - errors found');
     }
 
     @IsTest
     private static void randomPicklist_oneRecordType_expectSuccess() {
-        FObject obj4 = new FObject(FObjectFour__c.SObjectType, 10);
-        obj4.insertRecords(true);
-
         Map<Id, Schema.RecordTypeInfo> recordTypesMap = Schema.SObjectType.FObjectThree__c.getRecordTypeInfosById();
         List<Id> keys = new List<Id>(recordTypesMap.keySet());
 
@@ -204,12 +196,9 @@ public class ForceeaGeneratorRandomPicklistTest {
 
         Integer errors = 0;
         for (FObjectThree__c objRecord : (List<FObjectThree__c>) obj.getRecords()) {
-            if (objRecord.RecordTypeId != keys.get(0) || objRecord.TestLookup__c == null) {
+            if (objRecord.RecordTypeId != keys.get(0)) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random picklist - errors found');
     }
@@ -217,8 +206,9 @@ public class ForceeaGeneratorRandomPicklistTest {
     @IsTest
     private static void randomPicklist_manyRecordTypes_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('RecordTypeId', 'random type(picklist)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('RecordTypeId', 'random type(picklist)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -244,9 +234,6 @@ public class ForceeaGeneratorRandomPicklistTest {
         if (!ForceeaUtilityTest.isValidDistribution('RecordTypeId', values, records)) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random picklist - errors found');
     }
 
@@ -262,14 +249,10 @@ public class ForceeaGeneratorRandomPicklistTest {
         Integer errors = 0;
         String errorMessage = 'Invalid definition [random type(picklist)] of virtual field [$Test]';
         if (obj.getErrors().isEmpty() || obj.getErrors().get('$Test').get(0) != errorMessage) {
-            errors += 1;
-        }
-        if (FObject.processIsValid()) {
-            errors += 2;
+            errors ++;
         }
         System.assertEquals(0, errors, 'random picklist - errors found');
     }
-
 
     @IsTest
     private static void randomPicklistExcept_independentPicklistField_expectSuccess() {
@@ -290,9 +273,6 @@ public class ForceeaGeneratorRandomPicklistTest {
         }
         List<String> values = new List<String>(picklistValuesSet);
         if (!ForceeaUtilityTest.isValidDistribution('TestPicklistA__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random picklist except - errors found');
@@ -364,9 +344,6 @@ public class ForceeaGeneratorRandomPicklistTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random picklist except - error found');
     }
 
@@ -388,9 +365,6 @@ public class ForceeaGeneratorRandomPicklistTest {
         if (picklistBDefinitions[0] != 'random type(picklist)') {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'random picklist except - errors found');
     }
 
@@ -410,9 +384,6 @@ public class ForceeaGeneratorRandomPicklistTest {
             if (picklistValuesSet.contains(records[counter].TestPicklistA__c)) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random picklist except - error found');
     }
@@ -438,18 +409,17 @@ public class ForceeaGeneratorRandomPicklistTest {
         if (!ForceeaUtilityTest.isValidDistribution('TestPicklistA__c', values, records)) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random picklist except - error found');
     }
 
     @IsTest
     private static void randomPicklistExcept_controllingFieldIsCheckbox_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestCheckbox__c', 'static value(true)');
-        obj.setDefinition('TestpicklistD__c', 'random type(picklist) except(d0, d1)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestCheckbox__c', 'static value(true)')
+            .setDefinition('TestpicklistD__c', 'random type(picklist) except(d0, d1)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+
         List<Database.SaveResult> saveResults = obj.insertRecords(false);
         Test.stopTest();
 
@@ -458,12 +428,6 @@ public class ForceeaGeneratorRandomPicklistTest {
             if (!sr.isSuccess()) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random picklist except - errors found');
     }
@@ -487,9 +451,6 @@ public class ForceeaGeneratorRandomPicklistTest {
         if (!errorMessage.contains('INVALID_CROSS_REFERENCE_KEY')) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random picklist except - errors found');
     }
 
@@ -499,8 +460,9 @@ public class ForceeaGeneratorRandomPicklistTest {
             Schema.SObjectType.FObjectOne__c.getRecordTypeInfosByName().get('Record Type C').getRecordTypeId();
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('RecordTypeId', 'random type(picklist) except(RecordTypeA, RecordTypeB)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('RecordTypeId', 'random type(picklist) except(RecordTypeA, RecordTypeB)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<Database.SaveResult> saveResults = obj.insertRecords(false);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -515,9 +477,6 @@ public class ForceeaGeneratorRandomPicklistTest {
             if (objRecord.RecordTypeId != recordTypeId) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random picklist except - errors found');
     }
@@ -546,9 +505,6 @@ public class ForceeaGeneratorRandomPicklistTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('RecordTypeId', arguments, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random picklist except - errors found');

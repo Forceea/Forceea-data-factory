@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class ForceeaDefinition {
 
@@ -45,6 +45,8 @@ public with sharing class ForceeaDefinition {
 
     public ForceeaDefinition(FObject fObj, String sObjectApiName, String fieldName, String fieldApiName, Boolean isSystemDeclared,
         Boolean isForUpdate, String definitionString) {
+       //System.debug('> ForceeaDefinition.constructor: ' + definitionString);
+
         this.command = '';
         this.definitionString = definitionString.trim();
         this.fieldName = fieldName.trim();
@@ -104,11 +106,13 @@ public with sharing class ForceeaDefinition {
      * @return True if the cluster arguments are valid, based on the cluster type.
      */
     private Boolean argumentMatches(FObject.ClusterType clusterType, Integer clusterIndex) {
+        //System.debug('> argumentMatches: ' + clusterType.parameter + '(' + clusterType.valueType + ')');
         Boolean result = false;
         FObject.Cluster cluster = this.clusters.get(clusterIndex);
 
         // check if value must have only 1 item but it has more
         if (!clusterType.allowsMultipleArguments && cluster.arguments.size() > 1) {
+            //System.debug('allowsMultipleArguments - cluster.arguments.size() > 1');
             return result;
         }
 
@@ -116,10 +120,18 @@ public with sharing class ForceeaDefinition {
         if (String.isNotBlank(clusterType.value) && // if the parameter has a value
             cluster.arguments.size() == 1 && // and there is only 1 argument
             clusterType.value != cluster.arguments.get(0)) { // and this is not the expected value
+            //System.debug('cluster.arguments.size():' + cluster.arguments.size());
+            //System.debug('clusterType.value [' + clusterType.value + ']');
+            //System.debug('clusterType.value [' + clusterType.value + ']');
+            //System.debug('cluster.arguments[0] [' + cluster.arguments[0] + ']');
             return result;
         }
+        //System.debug('..next');
+        //System.debug('clusterType.value: ' + clusterType.value);
+        //System.debug('cluster.arguments.get(0): ' + cluster.arguments.get(0));
 
         if (clusterType.value == '' && cluster.arguments.size() == 1 && String.isBlank(cluster.arguments.get(0))) {
+            //System.debug('..blank');
             return true;
         }
 
@@ -178,14 +190,17 @@ public with sharing class ForceeaDefinition {
      * @return A boolean value.
      */
     private Boolean clusterTypeMatches(FObject.ClusterType clusterType) {
+        //System.debug('> ForceeaDefinition.clusterTypeMatches: ' + clusterType.valueType);
         Boolean result = false;
 
         Integer countOfParameter = 0; // counts how many times a cluster parameter is found
         Integer index; // the position of a definition cluster with a specified cluster type parameter
+        //System.debug('cluster: ' + this.clusters);
 
         // find how many times the Parameter exists and its position (index)
         Integer counter = 0;
         for (FObject.Cluster cluster : this.clusters) {
+            //System.debug('cluster.parameter: ' + cluster.parameter);
             if (clusterType.parameter == cluster.parameter) { // if parameter is valid
                 countOfParameter++;
                 index = counter;
@@ -202,6 +217,7 @@ public with sharing class ForceeaDefinition {
         }
 
         result = argumentMatches(clusterType, index);
+        //System.debug('cluster type matches: ' + result);
         return result;
     }
 
@@ -218,6 +234,7 @@ public with sharing class ForceeaDefinition {
             Boolean definitionIsValid = (def.isForUpdate && this.fObj.dmlIsUpdate)
                 || (!def.isForUpdate && !this.fObj.dmlIsUpdate);
 
+            //System.debug(def.definitionString + ' ' + def.isFunction);
             if (definitionIsValid && !def.isFunction && def.fieldApiName.toLowerCase() == fieldApiName) {
                 counter++;
             }
@@ -236,9 +253,11 @@ public with sharing class ForceeaDefinition {
      * @return The definition type.
      */
     private FObject.DefinitionType getType() {
+        //System.debug('> ForceeaDefinition.getType');
         FObject.DefinitionType result;
 
         for (FObject.DefinitionType defType : FObject.definitionTypes) {
+            //System.debug(defType.description);
             if (typeMatches(defType)) {
                 return defType;
             }
@@ -260,9 +279,16 @@ public with sharing class ForceeaDefinition {
      * @return A boolean value.
      */
     private Boolean isValidForFieldDataType() {
+       //System.debug('> ForceeaDefinitons.isValidForFieldDataType: ' + this.definitionString);
         Boolean result = false;
-        Schema.DisplayType fieldType = this.fObj.sObjectFieldsByFieldApiName.get(this.fieldApiName.toLowerCase()).dataType;
+
+        Schema.DisplayType fieldType =  FObject.globalFieldsMapBySObject
+            .get(this.sObjectApiName.toLowerCase())
+            .get(this.fieldApiName.toLowerCase()).dataType;
         FObject.DefinitionTypeId typeId = this.type.id;
+        //System.debug('fieldApiName: ' + this.fieldApiName);
+        //System.debug('fieldType: ' + fieldType);
+        //System.debug('typeId: ' + typeId);
 
         if (this.fieldApiName == ForceeaService.RECORD_TYPE_ID) {
             if (
@@ -486,9 +512,11 @@ public with sharing class ForceeaDefinition {
     }
 
     public void setPermutations() {
+        //System.debug('> ForceeaDefinition.setPermutations - for: ' + this.definitionString);
         if (!modeIsPermutation()) {
             return;
         }
+        //System.debug('..definitionModeIsPermutation');
 
         List<String> results = new List<String>();
         switch on this.type.id {
@@ -506,6 +534,7 @@ public with sharing class ForceeaDefinition {
         this.permutationValues = results;
         this.fObj.permutationsList.add(this.permutationValues);
         this.positionForPermutations = this.fObj.permutationsList.size() - 1;
+        //System.debug('permutationValues:' + this.permutationValues);
     }
 
     /**
@@ -522,6 +551,7 @@ public with sharing class ForceeaDefinition {
 	 * @return True if the definition matches the definition type.
 	 */
     private Boolean typeMatches(FObject.DefinitionType defType) {
+        //System.debug('> ForceeaDefinition.definitionTypeMatches - match defType: ' + defType.description);
         Boolean result = false;
 
         if (defType.command != this.command) {
@@ -538,6 +568,10 @@ public with sharing class ForceeaDefinition {
             }
         }
 
+        //System.debug('numValidClusterTypes: ' + numValidClusterTypes);
+        //System.debug('defType.clusterTypes.size(): ' + defType.clusterTypes.size());
+        //System.debug('this.clusters.size(): ' + this.clusters.size());
+
         // if all Cluster Types are valid, the Definition Type is found
         if (numValidClusterTypes == defType.clusterTypes.size() && numValidClusterTypes == this.clusters.size()) {
             result = true;
@@ -550,6 +584,7 @@ public with sharing class ForceeaDefinition {
      * @description Validates a field definition.
      */
     public void validate() {
+       //System.debug('> ForceeaDefinition.validate: ' + this.isValidated);
         if (this.isValidated) {
             return;
         }
@@ -569,6 +604,8 @@ public with sharing class ForceeaDefinition {
      * @description Validates data type.
      */
     private void validateDataType() {
+       //System.debug('> ForceeaDefinition.validateDataType');
+
         if (!this.isValid || this.isVirtualField) {
             return;
         }
@@ -586,11 +623,14 @@ public with sharing class ForceeaDefinition {
      * @description Validates definition type.
      */
     private void validateType() {
+       //System.debug('> ForceeaDefinition.validateType');
         if (!this.isValid) {
             return;
         }
 
+        //System.debug('clusters: ' + this.clusters);
         FObject.DefinitionType defType = getType();
+        //System.debug('defType: ' + defType.id);
 
         if (defType == null) {
             this.fObj.addError(this.fieldApiName,
@@ -610,8 +650,8 @@ public with sharing class ForceeaDefinition {
             return;
         }
 
-        FObject.Field fieldObj = this.fObj.sObjectFieldsByFieldApiName.get(this.fieldApiName.toLowerCase());
-        if (!fieldObj.allowsMultipleDefinitions && fieldHasMultipleDefinitions()) {
+        FObject.Field field = ForceeaService.getField(this.sObjectApiName, this.fieldApiName);
+        if (!field.allowsMultipleDefinitions && fieldHasMultipleDefinitions()) {
             this.fObj.addError(this.fieldApiName,
                 'Field [' + this.fieldApiName + '] does not accept multiple definitions');
             this.isValid = false;
@@ -622,6 +662,8 @@ public with sharing class ForceeaDefinition {
      * @description Validates when the field is virtual.
      */
     private void validateVirtualField() {
+       //System.debug('> ForceeaDefinition.validateVirtualField');
+
         if (!this.isValid || !this.isVirtualField) {
             return;
         }

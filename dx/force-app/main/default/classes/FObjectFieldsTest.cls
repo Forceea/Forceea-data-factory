@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class FObjectFieldsTest {
@@ -193,9 +193,6 @@ public class FObjectFieldsTest {
         if (definitions.get('TestText__c').get(1) != 'static value(One)') {
             errors += 8;
         }
-        if (!FObject.processIsValid()) {
-            errors += 16;
-        }
         System.assertEquals(0, errors, 'getAllDefinitions - errors found');
     }
 
@@ -207,14 +204,14 @@ public class FObjectFieldsTest {
             .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c);
         Test.stopTest();
 
-        Boolean result = FObject.processIsValid() && obj.getPartitionFieldName() == 'ForceeaPartition__c';
-        System.assert(result, 'getPartitionFieldName - errors found');
+        System.assert(obj.getPartitionFieldName() == 'ForceeaPartition__c', 'getPartitionFieldName - errors found');
     }
 
     @IsTest
     private static void updateFields_create1Def_forUpdate0Def_updateCreated_expectSuccess() {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
 
         Test.startTest();
@@ -229,7 +226,8 @@ public class FObjectFieldsTest {
     @IsTest
     private static void updateFields_create1Def_forUpdate1Def_updateCreated_expectSuccess() {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
 
         Test.startTest();
@@ -246,7 +244,8 @@ public class FObjectFieldsTest {
     @IsTest
     private static void updateFields_create1Def_forUpdate2Def_updateCreated_expectSuccess() {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
 
         Test.startTest();
@@ -267,7 +266,8 @@ public class FObjectFieldsTest {
         String groupName = '';
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -284,7 +284,8 @@ public class FObjectFieldsTest {
         String groupName = 'MyGroup';
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -301,7 +302,8 @@ public class FObjectFieldsTest {
         String groupName = '';
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -320,7 +322,8 @@ public class FObjectFieldsTest {
         String groupName = 'MyGroup';
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -339,7 +342,8 @@ public class FObjectFieldsTest {
         String groupName;
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -360,7 +364,8 @@ public class FObjectFieldsTest {
         String groupName = 'MyGroup';
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -382,7 +387,8 @@ public class FObjectFieldsTest {
 
         String updatedValue = 'one';
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(' + updatedValue + ')');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(' + updatedValue + ')')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -409,7 +415,8 @@ public class FObjectFieldsTest {
 
         String updatedValue = 'one';
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(' + updatedValue + ')');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(' + updatedValue + ')')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -435,7 +442,8 @@ public class FObjectFieldsTest {
         String groupName = 'MyGroup';
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)');
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -452,9 +460,6 @@ public class FObjectFieldsTest {
             }
             counter++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'updateFields - errors found');
     }
 
@@ -464,7 +469,8 @@ public class FObjectFieldsTest {
         String updatedValue = 'one';
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(' + updatedValue + ')');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(' + updatedValue + ')')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
 
         Test.startTest();
@@ -483,7 +489,8 @@ public class FObjectFieldsTest {
     @IsTest
     private static void updateFields_dependentPicklistWithoutControlling_expectSuccess() {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestPicklistA__c, 'static value(a2)');
+            .setDefinition(FObjectOne__c.TestPicklistA__c, 'static value(a2)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
 
         Test.startTest();
@@ -499,12 +506,9 @@ public class FObjectFieldsTest {
         };
         for (FObjectOne__c record : [SELECT TestPicklistA__c, TestPicklistB__c FROM FObjectOne__c]) {
             if (record.TestPicklistA__c != 'a1' && !values.contains(record.TestPicklistB__c)) {
-                errors += 1;
+                errors++;
                 break;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors += 2;
         }
         System.assertEquals(0, errors, 'updateFields - errors found');
     }
@@ -512,7 +516,8 @@ public class FObjectFieldsTest {
     @IsTest
     private static void updateFields_dependentPicklistExceptWithoutControlling_expectSuccess() {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestPicklistA__c, 'static value(a2)');
+            .setDefinition(FObjectOne__c.TestPicklistA__c, 'static value(a2)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
 
         Test.startTest();
@@ -528,12 +533,9 @@ public class FObjectFieldsTest {
         };
         for (FObjectOne__c record : [SELECT TestPicklistA__c, TestPicklistB__c FROM FObjectOne__c]) {
             if (record.TestPicklistA__c != 'a1' && !values.contains(record.TestPicklistB__c)) {
-                errors += 1;
+                errors++;
                 break;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors += 2;
         }
         System.assertEquals(0, errors, 'updateFields - errors found');
     }
@@ -541,7 +543,8 @@ public class FObjectFieldsTest {
     @IsTest
     private static void updateFields_dependentPicklist_expectFailure() {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(one)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
 
         Test.startTest();
@@ -565,9 +568,6 @@ public class FObjectFieldsTest {
 
         Integer errors = 0;
         if (!errorMessage.contains('INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST')) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'updateFields - errors found');

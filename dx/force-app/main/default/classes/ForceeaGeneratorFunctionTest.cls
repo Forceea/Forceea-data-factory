@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class ForceeaGeneratorFunctionTest {
@@ -22,7 +22,8 @@ public class ForceeaGeneratorFunctionTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestInteger__c, 'random type(number) from(1) to(10) scale(0)')
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(date) from(2020-1-1) step(1)')
-            .setDefinition(FObjectOne__c.TestText__c, 'function-add field(TestInteger__c)');
+            .setDefinition(FObjectOne__c.TestText__c, 'function-add field(TestInteger__c)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -45,7 +46,8 @@ public class ForceeaGeneratorFunctionTest {
             .setVariable('now', now)
             .setDefinition('$Integer', 'static value(1)')
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(1,{@today},{@now},Test) mode(permutation)')
-            .setDefinition(FObjectOne__c.TestText__c, 'function-add field($Integer)');
+            .setDefinition(FObjectOne__c.TestText__c, 'function-add field($Integer)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -66,9 +68,6 @@ public class ForceeaGeneratorFunctionTest {
         }
         if (records.get(3).TestText__c != 'Test') {
             errors += 8;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 16;
         }
         System.assertEquals(0, errors, 'function - errors found');
     }
@@ -108,9 +107,6 @@ public class ForceeaGeneratorFunctionTest {
             }
             calculatedValue += step;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
     }
 
     @IsTest
@@ -147,9 +143,6 @@ public class ForceeaGeneratorFunctionTest {
                 errors++;
             }
             calculatedValue += step;
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'function - errors found');
     }
@@ -189,9 +182,6 @@ public class ForceeaGeneratorFunctionTest {
             }
             calculatedValue += step;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'function - errors found');
     }
 
@@ -230,9 +220,6 @@ public class ForceeaGeneratorFunctionTest {
             }
             calculatedValue += step;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
     }
 
     @IsTest
@@ -269,9 +256,6 @@ public class ForceeaGeneratorFunctionTest {
                 errors++;
             }
             calculatedValue += step;
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'function - errors found');
     }
@@ -311,9 +295,6 @@ public class ForceeaGeneratorFunctionTest {
             }
             calculatedValue += step;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'function - errors found');
     }
 
@@ -323,7 +304,8 @@ public class ForceeaGeneratorFunctionTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestInteger__c, 'serial type(number) from(1) step(1.8) scale(1)')
             .setDefinition(FObjectOne__c.TestDate__c, 'serial type(date) from(2020-1-1) step(1)')
-            .setDefinition(FObjectOne__c.TestDate__c, 'function-add field(TestInteger__c)');
+            .setDefinition(FObjectOne__c.TestDate__c, 'function-add field(TestInteger__c)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -346,10 +328,6 @@ public class ForceeaGeneratorFunctionTest {
             daysToAddDecimal += step;
             serialDate = serialDate.addDays(1);
         }
-
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'function - errors found');
     }
 
@@ -361,10 +339,10 @@ public class ForceeaGeneratorFunctionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
-            .setDefinition('$Days',
-                'serial type(number) from(1) step(' + String.valueOf(step) + ') scale(2)')
+            .setDefinition('$Days', 'serial type(number) from(1) step(' + String.valueOf(step) + ') scale(2)')
             .setDefinition(FObjectOne__c.TestDatetime__c, 'static value({@now})')
-            .setDefinition(FObjectOne__c.TestDatetime__c, 'function-add field($Days)');
+            .setDefinition(FObjectOne__c.TestDatetime__c, 'function-add field($Days)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         Test.stopTest();
 
@@ -381,10 +359,6 @@ public class ForceeaGeneratorFunctionTest {
                 errors++;
             }
             daysToAdd += step;
-        }
-
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'function - errors found');
     }

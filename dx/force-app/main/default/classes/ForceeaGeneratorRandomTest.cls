@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class ForceeaGeneratorRandomTest {
@@ -22,6 +22,7 @@ public class ForceeaGeneratorRandomTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestCheckbox__c, 'random type(boolean)');
         obj.insertRecords(true);
         Test.stopTest();
@@ -40,6 +41,7 @@ public class ForceeaGeneratorRandomTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition('$Test', 'random type(boolean)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestCheckbox__c, 'copy field($Test)');
         obj.insertRecords(true);
         Test.stopTest();
@@ -56,8 +58,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDate__c', 'random type("date ") from(2018-01-01) to(2018-01-10)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDate__c', 'random type("date ") from(2018-01-01) to(2018-01-10)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -69,9 +72,6 @@ public class ForceeaGeneratorRandomTest {
             if (objRecord.TestDate__c < fromDate || objRecord.TestDate__c > toDate) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random date - errors found');
     }
@@ -114,6 +114,7 @@ public class ForceeaGeneratorRandomTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition('$TestDate', 'random type(date) from(2018-01-01) to(2018-01-10)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('TestDate__c', 'copy field($TestDate)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -127,9 +128,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random date - errors found');
     }
 
@@ -138,9 +136,10 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c',
-            'random type("datetime") from(2018-01-01 01:01:01) to(2018-01-01 02:02:02)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c',
+                'random type("datetime") from(2018-01-01 01:01:01) to(2018-01-01 02:02:02)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -153,9 +152,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
 
@@ -164,9 +160,10 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c',
-            'random type(datetime) from(" 2018-01-01 01:01:01") to(2018-01-02 02:02:02)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c',
+                'random type(datetime) from(" 2018-01-01 01:01:01") to(2018-01-02 02:02:02)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -179,9 +176,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
 
@@ -190,8 +184,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-01)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-01)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -204,9 +199,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
 
@@ -215,8 +207,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-05)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-05)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -229,9 +222,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
 
@@ -240,8 +230,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01) to(2018-01-01 01:01:01)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01) to(2018-01-01 01:01:01)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -254,9 +245,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
 
@@ -265,8 +253,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01) to(2018-01-05 01:01:01)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c', 'random type(datetime) from(2018-01-01) to(2018-01-05 01:01:01)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -279,9 +268,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
 
@@ -290,8 +276,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-1-1) to(2018-1-5)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c', 'random type(datetime) from(2018-1-1) to(2018-1-5)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -304,9 +291,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
 
@@ -315,8 +299,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDatetime__c', 'random type(datetime) from(2018-1-1) to(2018-1-1)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDatetime__c', 'random type(datetime) from(2018-1-1) to(2018-1-1)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -328,9 +313,6 @@ public class ForceeaGeneratorRandomTest {
             if (objRecord.TestDatetime__c.getTime() < dtFrom || objRecord.TestDatetime__c.getTime() > dtTo) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
@@ -408,6 +390,7 @@ public class ForceeaGeneratorRandomTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition('$TestDatetime',
                 'random type(datetime) from(2018-01-01 01:01:01) to(2018-01-01 02:02:02)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('TestDatetime__c', 'copy field($TestDatetime)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -420,9 +403,6 @@ public class ForceeaGeneratorRandomTest {
             if (objRecord.TestDatetime__c.getTime() < dtFrom || objRecord.TestDatetime__c.getTime() > dtTo) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random datetime - errors found');
     }
@@ -444,9 +424,6 @@ public class ForceeaGeneratorRandomTest {
             if (objRecord.TestTime__c < timeFrom || objRecord.TestTime__c > timeTo) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random time - errors found');
     }
@@ -518,9 +495,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random time - errors found');
     }
 
@@ -531,6 +505,7 @@ public class ForceeaGeneratorRandomTest {
         Test.startTest();
         new FObject(FObjectOne__c.SObjectType)
             .setDefinition(FObjectOne__c.TestEmail__c, 'random type(email)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .insertRecords(true);
         Test.stopTest();
         System.assert(FObject.processIsValid(), 'random email - errors found');
@@ -543,6 +518,7 @@ public class ForceeaGeneratorRandomTest {
         Test.startTest();
         new FObject(FObjectOne__c.SObjectType)
             .setDefinition('$TestEmail', 'random type(email)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestEmail__c, 'copy field($TestEmail)')
             .insertRecords(true);
         Test.stopTest();
@@ -569,9 +545,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random name - errors found');
     }
 
@@ -594,9 +567,6 @@ public class ForceeaGeneratorRandomTest {
                 !ForceeaUtilityTest.maleLastNames.contains(objRecord.TestText__c)) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random name - errors found');
     }
@@ -626,9 +596,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random name - errors found');
     }
 
@@ -656,9 +623,6 @@ public class ForceeaGeneratorRandomTest {
                 !ForceeaUtilityTest.maleLastNames.contains(objRecord.TestTextArea__c)) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random name - errors found');
     }
@@ -690,9 +654,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random name - errors found');
     }
 
@@ -711,8 +672,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 200);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(street) group(shipping)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(street) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -729,9 +691,6 @@ public class ForceeaGeneratorRandomTest {
             objRecord.TestText__c = objRecord.TestText__c.substringAfter(' ');
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random street - errors found');
@@ -752,8 +711,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 500);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(street) group(shipping)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 500)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(street) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -770,9 +730,6 @@ public class ForceeaGeneratorRandomTest {
             objRecord.TestText__c = objRecord.TestText__c.substringBeforeLast(' ');
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random street - errors found');
@@ -795,6 +752,7 @@ public class ForceeaGeneratorRandomTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
             .setDefinition('$TestAddress', 'random type(street) group(shipping)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestText__c, 'copy field($TestAddress)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -812,9 +770,6 @@ public class ForceeaGeneratorRandomTest {
             objRecord.TestText__c = objRecord.TestText__c.substringAfter(' ');
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random address - errors found');
@@ -835,8 +790,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 200);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(city) group(shipping)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(city) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -850,9 +806,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random city - errors found');
@@ -873,8 +826,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 200);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(city) group(shipping)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(city) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -888,9 +842,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random city - errors found');
@@ -912,7 +863,8 @@ public class ForceeaGeneratorRandomTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
-            .setDefinition('$TestAddress','random type(city) group(shipping)')
+            .setDefinition('$TestAddress', 'random type(city) group(shipping)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestText__c, 'copy field($TestAddress)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -930,9 +882,6 @@ public class ForceeaGeneratorRandomTest {
             objRecord.TestText__c = objRecord.TestText__c;
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random address - errors found');
@@ -953,8 +902,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 200);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(postalcode) group(shipping)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(postalcode) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -968,9 +918,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random postalcode - errors found');
@@ -991,8 +938,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 500);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(postalcode) group(shipping)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 500)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(postalcode) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -1006,9 +954,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random postalcode - errors found');
@@ -1030,7 +975,8 @@ public class ForceeaGeneratorRandomTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
-            .setDefinition('$TestAddress','random type(postalcode) group(shipping)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('$TestAddress', 'random type(postalcode) group(shipping)')
             .setDefinition(FObjectOne__c.TestText__c, 'copy field($TestAddress)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -1045,9 +991,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random postalcode - errors found');
@@ -1068,8 +1011,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject('FObjectOne__c', 200);
-        obj.setDefinition('TestText__c', 'random type(state) group(shipping)');
+        FObject obj = new FObject('FObjectOne__c', 200)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestText__c', 'random type(state) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -1083,9 +1027,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random state - errors found');
@@ -1107,7 +1048,8 @@ public class ForceeaGeneratorRandomTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
-            .setDefinition('$TestAddress','random type(state) group(shipping)')
+            .setDefinition('$TestAddress', 'random type(state) group(shipping)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestText__c, 'copy field($TestAddress)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -1122,9 +1064,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random address - errors found');
@@ -1146,6 +1085,7 @@ public class ForceeaGeneratorRandomTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$TestAddress', 'random type(country) group(shipping)')
             .setDefinition(FObjectOne__c.TestText__c, 'copy field($TestAddress)');
         obj.insertRecords(true);
@@ -1166,9 +1106,6 @@ public class ForceeaGeneratorRandomTest {
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random country - errors found');
     }
 
@@ -1187,8 +1124,9 @@ public class ForceeaGeneratorRandomTest {
         }
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 200);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'random type(country) group(shipping)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 200)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(country) group(shipping)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -1202,9 +1140,6 @@ public class ForceeaGeneratorRandomTest {
             }
         }
         if (!ForceeaUtilityTest.isValidDistribution('TestText__c', values, records)) {
-            errors++;
-        }
-        if (!FObject.processIsValid()) {
             errors++;
         }
         System.assertEquals(0, errors, 'random country - errors found');
@@ -1226,9 +1161,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random number - errors found');
     }
 
@@ -1237,8 +1169,9 @@ public class ForceeaGeneratorRandomTest {
         FObject.setSeed(1);
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(50.12) scale(2)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition('TestDecimal__c', 'random type(number) from(1) to(50.12) scale(2)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -1248,9 +1181,6 @@ public class ForceeaGeneratorRandomTest {
             if (objRecord.TestDecimal__c < 1 || objRecord.TestDecimal__c > 50.12) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random number - errors found');
     }
@@ -1305,9 +1235,6 @@ public class ForceeaGeneratorRandomTest {
             if (objRecord.NumberOfEmployees < 1 || objRecord.NumberOfEmployees > 100) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random number - errors found');
     }
@@ -1410,9 +1337,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random string - errors found');
     }
 
@@ -1436,9 +1360,6 @@ public class ForceeaGeneratorRandomTest {
             if (!result.isAllLowerCase()) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random string - errors found');
     }
@@ -1464,9 +1385,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random string - errors found');
     }
 
@@ -1486,9 +1404,6 @@ public class ForceeaGeneratorRandomTest {
             if (!objRecord.TestText__c.left(1).isAllLowerCase()) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random string - errors found');
     }
@@ -1510,9 +1425,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random string - errors found');
     }
 
@@ -1532,9 +1444,6 @@ public class ForceeaGeneratorRandomTest {
             if (!objRecord.TestText__c.left(1).isNumeric()) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random string - errors found');
     }
@@ -1612,9 +1521,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random string - errors found');
     }
 
@@ -1646,9 +1552,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random text - errors found');
     }
 
@@ -1670,9 +1573,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random text - errors found');
     }
 
@@ -1693,9 +1593,6 @@ public class ForceeaGeneratorRandomTest {
             if (textSize < 20 || textSize > 30) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random text - errors found');
     }
@@ -1776,9 +1673,6 @@ public class ForceeaGeneratorRandomTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'random text - errors found');
     }
 
@@ -1805,9 +1699,6 @@ public class ForceeaGeneratorRandomTest {
             if (url != 'http://www..com') {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random url - errors found');
     }
@@ -1836,9 +1727,6 @@ public class ForceeaGeneratorRandomTest {
             if (url != 'http://www..com') {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'random url - errors found');
     }

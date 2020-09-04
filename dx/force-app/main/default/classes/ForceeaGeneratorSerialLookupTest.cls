@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class ForceeaGeneratorSerialLookupTest {
@@ -20,11 +20,14 @@ public class ForceeaGeneratorSerialLookupTest {
     private static void staticLookupForceea_valid_expectSuccess() {
         FObject.setSeed(1);
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 20)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'random type(list) value(a1,a2)');
         obj2.insertRecords(true);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'static lookup(FObjectTwo__c) source(Forceea)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -40,9 +43,6 @@ public class ForceeaGeneratorSerialLookupTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -50,11 +50,13 @@ public class ForceeaGeneratorSerialLookupTest {
     private static void staticLookupValueForceea_valid_expectSuccess() {
         FObject.setSeed(1);
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'static value(a1)');
         obj2.insertRecords(true);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'static lookup(FObjectTwo__c) field(TestPicklistA__c) value(a1) source(Forceea)');
         obj.insertRecords(true);
@@ -82,9 +84,6 @@ public class ForceeaGeneratorSerialLookupTest {
         if (refObjectRecord.TestPicklistA__c != 'a1') {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -96,11 +95,13 @@ public class ForceeaGeneratorSerialLookupTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition('TestText__c', 'static value(' + whereValue + ')');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
         obj1.insertRecords(true);
 
         FObject obj2 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('TestLookup__c', 'static lookup(FObjectTwo__c) ' +
                 'field(TestText__c) value(' + whereValue + ') source(Forceea)');
         List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj2.getRecords();
@@ -126,9 +127,6 @@ public class ForceeaGeneratorSerialLookupTest {
         if (refObjectRecord.TestText__c != whereValue) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -136,11 +134,13 @@ public class ForceeaGeneratorSerialLookupTest {
     private static void staticLookupValueForceeaVirtualField_valid_expectSuccess() {
         FObject.setSeed(1);
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'static value(a1)');
         obj2.insertRecords(true);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$Test',
                 'static lookup(FObjectTwo__c) field(TestPicklistA__c) value(a1) source(Forceea)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'copy field($Test)');
@@ -169,9 +169,6 @@ public class ForceeaGeneratorSerialLookupTest {
         if (refObjectRecord.TestPicklistA__c != 'a1') {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -182,14 +179,17 @@ public class ForceeaGeneratorSerialLookupTest {
         Test.startTest();
         // insert FObjectTwo__c records for group B
         FObject objB1 = new FObject('FObjectTwo__c', 5)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition('TestPicklistA__c', 'random type(list) value(a0,a1,a2)');
         objB1.insertRecords(true, 'B');
         // insert FObjectTwo__c records without group
         FObject objB2 = new FObject('FObjectTwo__c', 5)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition('TestPicklistA__c', 'random type(list) value(a2, a3)');
         objB2.insertRecords(true);
         // insert FObjectOne__c records
         FObject objA = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('TestLookup__c',
                 'static lookup(FObjectTwo__c) field(TestPicklistA__c) value(a0,a1) group(B) source(forceea)');
         objA.insertRecords(true);
@@ -200,12 +200,10 @@ public class ForceeaGeneratorSerialLookupTest {
             'a0', 'a1'
         };
         for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c LIMIT 1000]) {
+           //System.debug(objRecord.TestLookup__r.TestPicklistA__c);
             if (!values.contains(objRecord.TestLookup__r.TestPicklistA__c)) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
@@ -218,11 +216,13 @@ public class ForceeaGeneratorSerialLookupTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'static value(' + whereValue + ')');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
         obj1.insertRecords(true);
 
         FObject obj2 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'static lookup(FObjectTwo__c) ' +
                 'field(TestText__c) value(' + whereValue + ') source(Salesforce)');
         obj2.insertRecords(true);
@@ -249,9 +249,6 @@ public class ForceeaGeneratorSerialLookupTest {
         if (refObjectRecord.TestText__c != whereValue) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -263,11 +260,13 @@ public class ForceeaGeneratorSerialLookupTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestText__c, 'static value(' + whereValue + ')');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
         obj1.insertRecords(true);
 
         FObject obj2 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition('$Test',
                 'static lookup(FObjectTwo__c) field(TestText__c) value(' + whereValue + ') source(Salesforce)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'copy field($Test)');
@@ -295,9 +294,6 @@ public class ForceeaGeneratorSerialLookupTest {
         if (refObjectRecord.TestText__c != whereValue) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -305,11 +301,12 @@ public class ForceeaGeneratorSerialLookupTest {
     private static void staticLookupExceptForceea_valid_expectSuccess() {
         FObject.setSeed(1);
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 20)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'random type(list) value(a1,a2,a3)');
         obj2.insertRecords(true);
 
         Id lookupId;
-        for (FObjectTwo__c record: (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
+        for (FObjectTwo__c record : (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
             if (record.TestPicklistA__c == 'a3') {
                 lookupId = record.Id;
                 break;
@@ -328,9 +325,6 @@ public class ForceeaGeneratorSerialLookupTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -338,11 +332,12 @@ public class ForceeaGeneratorSerialLookupTest {
     private static void staticLookupExceptSalesforce_valid_expectSuccess() {
         FObject.setSeed(1);
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 20)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'random type(list) value(a1,a2,a3)');
         obj2.insertRecords(true);
 
         Id lookupId;
-        for (FObjectTwo__c record: (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
+        for (FObjectTwo__c record : (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
             if (record.TestPicklistA__c == 'a3') {
                 lookupId = record.Id;
                 break;
@@ -351,6 +346,7 @@ public class ForceeaGeneratorSerialLookupTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'static lookup(FObjectTwo__c) field(TestPicklistA__c) except(a1,a2) source(salesforce)');
         Test.stopTest();
@@ -361,9 +357,6 @@ public class ForceeaGeneratorSerialLookupTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -371,11 +364,12 @@ public class ForceeaGeneratorSerialLookupTest {
     private static void staticLookupWhere_valid_expectSuccess() {
         FObject.setSeed(1);
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 20)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'random type(list) value(a1,a2,a3)');
         obj2.insertRecords(true);
 
         Id lookupId;
-        for (FObjectTwo__c record: (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
+        for (FObjectTwo__c record : (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
             if (record.TestPicklistA__c == 'a3') {
                 lookupId = record.Id;
                 break;
@@ -384,6 +378,7 @@ public class ForceeaGeneratorSerialLookupTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestLookup__c,
                 'static lookup(FObjectTwo__c) where(TestPicklistA__c = \'a3\') source(salesforce)');
         Test.stopTest();
@@ -399,7 +394,6 @@ public class ForceeaGeneratorSerialLookupTest {
         }
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
-
 
 
     @IsTest

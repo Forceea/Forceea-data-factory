@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.1.2)
+  Forceea data factory (v2.2.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -11,7 +11,7 @@
   See the GNU General Public License for more details.
 
   You can find a copy of the GNU General Public License at
-  https://github.com/nmitrakis/Forceea/blob/master/LICENSE
+  https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
 public class FObjectTest {
@@ -22,7 +22,7 @@ public class FObjectTest {
         FObject obj = new FObject('User', 1);
         Test.stopTest();
 
-        System.assert(FObject.processIsValid() && !obj.canInsertUsers, 'createRecords - errors found');
+        System.assert(!obj.canInsertUsers, 'createRecords - errors found');
     }
 
     @IsTest
@@ -32,14 +32,16 @@ public class FObjectTest {
         obj.canInsertUsers(true);
         Test.stopTest();
 
-        System.assert(FObject.processIsValid() && obj.canInsertUsers, 'createRecords - errors found');
+        System.assert(obj.canInsertUsers, 'createRecords - errors found');
     }
 
     @IsTest
     private static void createRecords_getRecordsBeforeInsertRecords_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
+        obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+
         obj.createRecords();
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
@@ -53,9 +55,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'createRecords - errors found');
     }
 
@@ -64,6 +63,8 @@ public class FObjectTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .createRecords();
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
@@ -76,9 +77,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'createRecords - errors found');
     }
 
@@ -90,7 +88,9 @@ public class FObjectTest {
         Test.startTest();
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, size1);
-        obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)')
+        obj
+            .setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .createRecords()
             .insertRecords(true);
         List<FObjectOne__c> insertedRecords1 = [SELECT Id, TestInteger__c FROM FObjectOne__c LIMIT 1000];
@@ -111,9 +111,6 @@ public class FObjectTest {
         if (records[size2 - 1].TestInteger__c != (size1 + size2)) {
             errors += 4;
         }
-        if (!FObject.processIsValid()) {
-            errors += 8;
-        }
         System.assertEquals(0, errors, 'createRecords - errors found');
     }
 
@@ -127,6 +124,7 @@ public class FObjectTest {
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, size1);
         obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .createRecords();
         List<Database.SaveResult> saveResults1 = obj.insertRecords(true);
 
@@ -155,9 +153,6 @@ public class FObjectTest {
         if (records[size3 - 1].TestInteger__c != (size1 + size2 + size3)) {
             errors += 16;
         }
-        if (!FObject.processIsValid()) {
-            errors += 16;
-        }
         System.assertEquals(0, errors, 'createRecords - errors found');
     }
 
@@ -183,9 +178,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'createRecords - errors found');
     }
 
@@ -202,8 +194,9 @@ public class FObjectTest {
     @IsTest
     private static void createRecords_noDefinitions_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.createRecords();
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .createRecords();
         List<Database.SaveResult> saveResults = obj.insertRecords(true);
         Test.stopTest();
 
@@ -212,9 +205,6 @@ public class FObjectTest {
             if (!sr.isSuccess()) {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'insertRecords - errors found');
     }
@@ -228,8 +218,6 @@ public class FObjectTest {
 
         System.assert(obj.queryLimit == FObject.DEFAULT_QUERY_LIMIT, 'createRecords - errors found');
     }
-
-    // query LIMIT
 
     @IsTest
     private static void createRecords_validateQueryLimitLessThanMin_expectSuccess() {
@@ -321,9 +309,6 @@ public class FObjectTest {
         if (records[size2 - 1].TestInteger__c != (size1 + size2)) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'createRecords - errors found');
     }
 
@@ -381,7 +366,8 @@ public class FObjectTest {
     @IsTest
     private static void excludeInactiveLookupRecords_true_expectSuccess() {
         // insert active users
-        FObject objUser = new FObject('User', 5);
+        FObject objUser = new FObject('User', 5)
+            .setRequiredFields(true);
         objUser.insertRecords(true, 'active');
 
         // insert inactive users
@@ -400,11 +386,8 @@ public class FObjectTest {
         Integer errors = 0;
         for (FObjectFour__c record : [SELECT TestLookupUser__r.IsActive FROM FObjectFour__c]) {
             if (!record.TestLookupUser__r.IsActive) {
-                errors += 1;
+                errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors += 2;
         }
         System.assertEquals(0, errors, 'excludeInactiveLookupRecords - errors found');
     }
@@ -412,7 +395,8 @@ public class FObjectTest {
     @IsTest
     private static void excludeInactiveLookupRecords_false_expectSuccess() {
         // insert active users
-        FObject objUser = new FObject('User', 5);
+        FObject objUser = new FObject('User', 5)
+            .setRequiredFields(true);
         objUser.insertRecords(true, 'active');
 
         // insert inactive users
@@ -434,9 +418,6 @@ public class FObjectTest {
             if (record.TestLookupUser__r.IsActive) {
                 count++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         if (count == 0) {
             errors++;
@@ -481,7 +462,7 @@ public class FObjectTest {
     private static void fObjectConstructor_validNumRecords_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDecimal__c', 'Random Type (number ) from( 100) to(1000000 ) scale(3)');
+        obj.setDefinition('TestDecimal__c ', 'Random Type (number ) from( 100) to(1000000 ) scale(3)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
 
@@ -490,7 +471,7 @@ public class FObjectTest {
 
     @IsTest
     private static void fObjectConstructor_recordWithoutGroup_expectSuccess() {
-        FObjectOne__c record =  new FObjectOne__c(TestTextRequired__c = 'test');
+        FObjectOne__c record = new FObjectOne__c(TestTextRequired__c = 'test');
         insert record;
 
         Test.startTest();
@@ -504,15 +485,12 @@ public class FObjectTest {
         if (obj.getSObjectName() != 'FObjectOne__c') {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'FObject constructor - errors found');
     }
 
     @IsTest
     private static void fObjectConstructor_recordWithGroup_expectSuccess() {
-        FObjectOne__c record =  new FObjectOne__c(TestTextRequired__c = 'test');
+        FObjectOne__c record = new FObjectOne__c(TestTextRequired__c = 'test');
         insert record;
 
         Test.startTest();
@@ -525,9 +503,6 @@ public class FObjectTest {
         }
         if (obj.getSObjectName() != 'FObjectOne__c') {
             errors += 2;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 4;
         }
         System.assertEquals(0, errors, 'FObject constructor - errors found');
     }
@@ -553,9 +528,6 @@ public class FObjectTest {
         if (obj.getSObjectName() != 'FObjectOne__c') {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'FObject constructor - errors found');
     }
 
@@ -580,9 +552,6 @@ public class FObjectTest {
         if (obj.getSObjectName() != 'FObjectOne__c') {
             errors += 2;
         }
-        if (!FObject.processIsValid()) {
-            errors += 4;
-        }
         System.assertEquals(0, errors, 'FObject constructor - errors found');
     }
 
@@ -591,13 +560,13 @@ public class FObjectTest {
         String groupName = 'MyGroup';
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 5);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'static value(test)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 5)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, groupName);
         Test.stopTest();
 
-        Boolean result = FObject.processIsValid() && obj.getGroupName() == groupName;
-        System.assert(result, 'getFieldApiName - errors found');
+        System.assert(obj.getGroupName() == groupName, 'getFieldApiName - errors found');
     }
 
     @IsTest
@@ -605,16 +574,15 @@ public class FObjectTest {
         String groupName = 'MyGroup';
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 5);
-        obj.setDefinition(FObjectOne__c.TestText__c, 'static value(test)')
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 5)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setGroupName(groupName);
         obj.insertRecords(true);
         Test.stopTest();
 
-        Boolean result = FObject.processIsValid() && obj.getGroupName() == groupName;
-        System.assert(result, 'getFieldApiName - errors found');
+        System.assert(obj.getGroupName() == groupName, 'getFieldApiName - errors found');
     }
-
 
 
     @IsTest
@@ -625,8 +593,7 @@ public class FObjectTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setNumberOfRecords(numberOfRecords);
 
-        Boolean result = FObject.processIsValid() && (obj.getNumberOfRecords() == numberOfRecords);
-        System.assert(result == true, 'getNumberOfRecords - errors found');
+        System.assert(obj.getNumberOfRecords() == numberOfRecords, 'getNumberOfRecords - errors found');
     }
 
     @IsTest
@@ -637,8 +604,7 @@ public class FObjectTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setNumberOfRecords(numberOfRecords);
 
-        Boolean result = FObject.processIsValid() && (obj.getNumberOfRecords() == 1);
-        System.assert(result == true, 'getNumberOfRecords - errors found');
+        System.assert(obj.getNumberOfRecords() == 1, 'getNumberOfRecords - errors found');
     }
 
     @IsTest
@@ -665,8 +631,9 @@ public class FObjectTest {
         Integer size2 = 100;
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, size1);
-        obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, size1)
+            .setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
 
         obj.setNumberOfRecords(size2);
@@ -684,17 +651,15 @@ public class FObjectTest {
         if (records2[records2.size() - 1].TestInteger__c != (size1 + size2)) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'getRecords - errors found');
     }
 
     @IsTest
     private static void getRecords_insertRecordsBeforeGetRecords_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestText__c', 'static value(sample)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestText__c', 'static value(sample)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = obj.getRecords();
         Test.stopTest();
@@ -706,9 +671,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'getRecords - errors found');
     }
 
@@ -718,9 +680,9 @@ public class FObjectTest {
         Integer size2 = 100;
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, size1);
-        obj.setDefinition(FObjectOne__c.TestInteger__c,
-            'serial type(number) from(1) step(1) scale(0)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, size1)
+            .setDefinition(FObjectOne__c.TestInteger__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
 
@@ -737,17 +699,15 @@ public class FObjectTest {
         if (records2[records2.size() - 1].TestInteger__c != (size1 + size2)) {
             errors++;
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'getRecords - errors found');
     }
 
     @IsTest
     private static void getRecords_afterRecordsAreDeleted_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestText__c', 'random type(list) value(v1,v2,v3)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestText__c', 'random type(list) value(v1,v2,v3)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
         obj.deleteRecords('TestText__c = \'v1\'');
@@ -770,8 +730,9 @@ public class FObjectTest {
     @IsTest
     private static void getRecords_amendFieldValues_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
-        obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
 
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
             objRecord.TestDecimal__c = objRecord.TestDecimal__c * 0.1;
@@ -789,14 +750,11 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'getRecords - errors found');
     }
 
     @IsTest
-    private static void getRecords_setNumberOfNextRecords_expectSuccess() {
+    private static void getRecords_setNumberOfNextRecords1_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
@@ -815,14 +773,43 @@ public class FObjectTest {
         Integer errors = 0;
         Integer counter = 1;
         List<FObjectOne__c> records = obj.getRecords();
-        for (FObjectOne__c record: records) {
+        for (FObjectOne__c record : records) {
             String str = String.valueOf(counter);
             if (record.TestInteger__c != counter && record.TestText__c != str + '-test' + str) {
                 errors++;
             }
             counter++;
         }
-        System.assertEquals(0, errors, 'getInsertedRecords - errors found');
+        System.assertEquals(0, errors, 'getRecords - errors found');
+    }
+
+    @IsTest
+    private static void getRecords_setNumberOfNextRecords2_expectSuccess() {
+        Test.startTest();
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(Test-)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .createRecords();
+        FObject obj2 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setNumberOfNextRecord(1)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(Test-)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .createRecords();
+        Test.stopTest();
+
+        Integer errors = 0;
+        Integer counter = 1;
+        List<FObjectOne__c> records1 = obj1.getRecords();
+        List<FObjectOne__c> records2 = obj2.getRecords();
+        for (FObjectOne__c record : records1) {
+            String str = String.valueOf(counter);
+            if (record.TestText__c != str &&
+                records1.get(counter - 1).TestText__c != records2.get(counter - 1).TestText__c) {
+                errors++;
+            }
+            counter++;
+        }
+        System.assertEquals(0, errors, 'getRecords - errors found');
     }
 
     @IsTest
@@ -848,9 +835,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'PRNG - errors found');
     }
 
@@ -860,6 +844,7 @@ public class FObjectTest {
 
         Test.startTest();
         new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .createRecords();
         Test.stopTest();
 
@@ -924,11 +909,7 @@ public class FObjectTest {
             counter++;
         }
 
-        if (entries.isEmpty() || !FObject.processIsValid()) {
-            errors++;
-        }
-
-        System.assertEquals(0, errors, 'setStandardPricebookEntries - errors found');
+        System.assert(!entries.isEmpty(), 'setStandardPricebookEntries - errors found');
     }
 
     @IsTest
@@ -946,10 +927,7 @@ public class FObjectTest {
         Integer errors = 0;
         String errorMessage = 'Invalid virtual field [$WrongStandardPrice] in method setStandardPricebookEntries';
         if (!obj.getErrors().get('Product2').get(0).startsWith(errorMessage)) {
-            errors += 1;
-        }
-        if (FObject.processIsValid()) {
-            errors += 2;
+            errors++;
         }
         System.assertEquals(0, errors, 'setStandardPricebookEntries - errors found');
     }
@@ -976,15 +954,9 @@ public class FObjectTest {
             }
             counter++;
         }
-
         if (records.size() != obj.getNumberOfRecords()) {
             errors = +32;
         }
-
-        if (!FObject.processIsValid()) {
-            errors = +64;
-        }
-
         System.assertEquals(0, errors, 'setStandardPricebookEntries - errors found');
     }
 
@@ -1007,6 +979,7 @@ public class FObjectTest {
         Test.startTest();
         new FObject(FObjectOne__c.SObjectType, 10)
             .setVerbose('debug')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .createRecords();
         Test.stopTest();
 
@@ -1061,9 +1034,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'variables - errors found');
     }
 
@@ -1080,9 +1050,6 @@ public class FObjectTest {
             if (objRecord.TestText__c != 'test: ' + obj.getVariableStringValue('var') + ' !test') {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'variables - errors found');
     }
@@ -1101,9 +1068,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'variables - errors found');
     }
 
@@ -1120,9 +1084,6 @@ public class FObjectTest {
             if (objRecord.TestText__c != 'test' + obj.getVariableStringValue('var') + ' !test') {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'variables - errors found');
     }
@@ -1141,9 +1102,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'variables - errors found');
     }
 
@@ -1160,9 +1118,6 @@ public class FObjectTest {
             if (objRecord.TestText__c != 'test' + obj.getVariableStringValue('var') + ' !test') {
                 errors++;
             }
-        }
-        if (!FObject.processIsValid()) {
-            errors++;
         }
         System.assertEquals(0, errors, 'variables - errors found');
     }
@@ -1197,9 +1152,6 @@ public class FObjectTest {
                 errors++;
             }
         }
-        if (!FObject.processIsValid()) {
-            errors++;
-        }
         System.assertEquals(0, errors, 'variables - errors found');
     }
 
@@ -1226,7 +1178,8 @@ public class FObjectTest {
             .setDefinition(FObjectOne__c.TestDecimal__c, 'copy field($Decimal)')
             .setDefinition(FObjectOne__c.TestDate__c, 'copy field($Date)')
             .setDefinition(FObjectOne__c.TestDatetime__c, 'copy field($Datetime)')
-            .setDefinition(FObjectOne__c.TestText__c, 'copy field($String)');
+            .setDefinition(FObjectOne__c.TestText__c, 'copy field($String)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         Test.stopTest();
 
@@ -1256,7 +1209,8 @@ public class FObjectTest {
             .setDefinition(FObjectOne__c.TestDecimal__c, 'copy field($Decimal)')
             .setDefinition(FObjectOne__c.TestDate__c, 'copy field($Date)')
             .setDefinition(FObjectOne__c.TestDatetime__c, 'copy field($Datetime)')
-            .setDefinition(FObjectOne__c.TestText__c, 'copy field($String)');
+            .setDefinition(FObjectOne__c.TestText__c, 'copy field($String)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         Test.stopTest();
 
