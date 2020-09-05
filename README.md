@@ -1,4 +1,4 @@
-### User Guide version 1
+### User Guide version 2
 
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
