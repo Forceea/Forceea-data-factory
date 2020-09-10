@@ -1,4 +1,10 @@
-### User Guide version 2
+### Attention to all Forceea users: the automated generation of required fields is deactivated by default in v2.2.0.
+
+This was undocumented in User Guide v2, but is now documented in **User Guide v3**.
+
+If you have any methods which use this feature, the methods will fail. If so, you have 2 options:
+- Temporarily use `setRequiredFields(true)`
+- Set the definitions of all required fields that are missing (Tip: let Forceea generate the field definitions and then copy these definitions and manually set any changes required).
 
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
