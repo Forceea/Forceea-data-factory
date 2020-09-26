@@ -32,7 +32,7 @@ sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVbJQAU -r -u <UsernameOrO
 * Can insert/update records synchronously (for test methods) or insert/delete records asynchronously (for populating your org with millions of records).
 * Has an easy way to define data.
 * Automatically defines required fields.
-* Can create data for fields of the data types: Integer, Currency, Double, Date, Datetime, Time, Boolean, String, TextArea, Percent, Reference, Email, Phone, URL, Base64, Picklist and MultiPicklist.
+* Can create data for fields of the data types: Integer, Currency, Double, Date, Datetime, Time, Boolean, String, TextArea, Percent, Reference, Geolocation, Email, Phone, URL, Base64, Picklist and MultiPicklist.
 * Handles Record Types and field dependencies (dependent picklists).
 * Supports record groups for inserting and deleting records.
 * Uses DML Optimizer to reduce the number of insert statements with Templates.
@@ -41,7 +41,7 @@ sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVbJQAU -r -u <UsernameOrO
 * Has an extended error messaging system.
 
 ### How can you find more information?
-* Read the [User Guide](https://nmitrakis.com/Forceea-UserGuide)
+* Read [Forceea Success Guide](https://nmitrakis.com/ForceeaSuccessGuide)
 * Visit [passion-for-salesforce.com](https://passionforsalesforce.com/forceea)
 ---
 
