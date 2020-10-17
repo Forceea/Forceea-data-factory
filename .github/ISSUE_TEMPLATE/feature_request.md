@@ -1,14 +1,17 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an idea for adding a Forceea feature
 
 ---
 
-**What is the current situation?**
+### What is the current situation?
+
 A clear and concise description of what the problem is and how Forceea currently provides a solution.
 
-**Proposed solution**
+### Proposed solution
+
 A clear and concise description of what you want to happen.
 
-**Benefits of new functionality**
+### Benefits of new functionality
+
 A description of the benefits of the proposed solution.
