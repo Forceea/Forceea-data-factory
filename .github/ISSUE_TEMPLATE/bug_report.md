@@ -1,14 +1,14 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report a Forceea bug
 
 ---
 
-**Summary**
+### Summary
 A description of what the bug is.
 
-**Repro**
+### Reproduction
 Steps or code to reproduce the bug.
 
-**Workaround**
+### Workaround
 A permanent or temporary solution.
