@@ -42,7 +42,7 @@ sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVbJQAU -r -u <UsernameOrO
 
 ### How can you find more information?
 * Read [Forceea Success Guide](https://nmitrakis.com/ForceeaSuccessGuide)
-* Visit [passion-for-salesforce.com](https://passionforsalesforce.com/forceea)
+* Visit [forceea.com](https://www.forceea.com)
 ---
 
 ### Give you opinion about Forceea by completing this [Survey](https://www.surveymonkey.co.uk/r/M6BJMKT)
