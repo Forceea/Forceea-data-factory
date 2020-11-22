@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -15,10 +15,59 @@
 */
 public with sharing class ForceeaService {
 
+    /* CLASSES */
+
+    public class FieldDefinition {
+        public String definitionString = '';
+        public String fieldApiName = '';
+    }
+
+    public class FObjectAsync {
+        public List<FieldDefinition> definitions = new List<FieldDefinition>();
+        public String bigObjectIndexFieldsString = '';
+        public Integer numOfRecords = 0;
+        public String partitionFieldName = '';
+        public Boolean setRequiredFields = false;
+        public String sObjectApiName = '';
+    }
+
+    private class SObjectInfo {
+        private String sObjectApiName { get; set; }
+        private Schema.SObjectType sObjType { get; set; }
+    }
+
+    /* ENUMS */
+
+    public enum DefinitionTypeId {
+        COPY_FIELD, COPY_LOOKUP,
+        FUNCTION_ADD, FUNCTION_CONVERT,
+        MOCK_ID,
+        RANDOM_STRING, RANDOM_TEXT, RANDOM_NUMBER, RANDOM_PHONE,
+        RANDOM_DATE, RANDOM_DATETIME, RANDOM_TIME,
+        RANDOM_PICKLIST, RANDOM_PICKLIST_EXCEPT,
+        RANDOM_LIST_INTEGER, RANDOM_LIST_DECIMAL, RANDOM_LIST_STRING,
+        RANDOM_LIST_DATE, RANDOM_LIST_DATETIME, RANDOM_LIST_TIME,
+        RANDOM_STREET, RANDOM_CITY, RANDOM_STATE, RANDOM_POSTALCODE, RANDOM_COUNTRY,
+        RANDOM_FIRSTNAME, RANDOM_LASTNAME,
+        RANDOM_EMAIL, RANDOM_BOOLEAN, RANDOM_URL,
+        RANDOM_LOOKUP, RANDOM_LOOKUP_WHERE,
+        SERIAL_NUMBER, SERIAL_DATE, SERIAL_DATETIME, SERIAL_PICKLIST, SERIAL_LOOKUP,
+        SERIAL_LIST_STRING, SERIAL_LIST_INTEGER, SERIAL_LIST_DECIMAL,
+        SERIAL_LIST_DATE, SERIAL_LIST_DATETIME, SERIAL_LIST_TIME,
+        STATIC_INTEGER, STATIC_DECIMAL,
+        STATIC_DATE, STATIC_DATETIME, STATIC_TIME, STATIC_STRING,
+        STATIC_BLANK, STATIC_LOOKUP
+    }
+
+    public enum ValueType {
+        TYPE_INTEGER, TYPE_DECIMAL, TYPE_STRING, TYPE_DATE, TYPE_DATETIME, TYPE_TIME, TYPE_BLANK
+    }
+
     /* CONSTANTS */
 
     public static final String COMMAND_COPY = 'copy';
     public static final String COMMAND_FUNCTION_ADD = 'function-add';
+    public static final String COMMAND_FUNCTION_CONVERT = 'function-convert';
     public static final String COMMAND_MOCK = 'mock';
     public static final String COMMAND_RANDOM = 'random';
     public static final String COMMAND_SERIAL = 'serial';
@@ -30,49 +79,21 @@ public with sharing class ForceeaService {
     public static final String ERROR = 'error';
     public static final String INFO = 'info';
     public static final String WARN = 'warn';
+
     private static final String FORCEEA_PROCESS_SETTING_NAME = 'Standard';
+    public static final String RECORD_TYPE_ID = 'RecordTypeId';
     public static final String SOURCE_FORCEEA = 'forceea';
     public static final String SOURCE_SALESFORCE = 'salesforce';
 
-    public static final String PARAMETER_EXCEPT = 'except';
-    public static final String PARAMETER_FIELD = 'field';
-    public static final String PARAMETER_FROM = 'from';
-    public static final String PARAMETER_GROUP = 'group';
-    public static final String PARAMETER_LOOKUP = 'lookup';
-    public static final String PARAMETER_SCALE = 'scale';
-    public static final String PARAMETER_MODE = 'mode';
-    public static final String PARAMETER_SOURCE = 'source';
-    public static final String PARAMETER_TO = 'to';
-    public static final String PARAMETER_VALUE = 'value';
-    public static final String PARAMETER_WHERE = 'where';
-
-    public static final String RECORD_TYPE_ID = 'RecordTypeId';
-
-    public static final String MESSAGE_ADDRESSES = 'Loaded addresses from ';
+    public static final String MESSAGE_FOUND_ERRORS_DELETING_RECORD = 'Found errors deleting record #';
     public static final String MESSAGE_FOUND_ERRORS_SELECTING_FROM_LOOKUP =
         'Found errors selecting records from the lookup SObject';
     public static final String MESSAGE_GENERATED_DEFINITION = 'Generated definition';
+    public static final String MESSAGE_IN_DEFINITION = 'in definition';
     public static final String MESSAGE_INVALID_DEFINITION = 'Invalid definition';
     public static final String MESSAGE_INVALID_FIELD = 'Invalid field';
     public static final String MESSAGE_INVALID_LOOKUP_SOBJECT = 'Invalid lookup SObject';
-    public static final String MESSAGE_INVALID_PROCESS = 'Process is invalid and will terminate.';
     public static final String MESSAGE_INVALID_SOBJECT = 'Invalid SObject';
-    public static final String MESSAGE_NAMES = 'Loaded first & last names from';
-    public static final String MESSAGE_VALUES = 'Values of';
-    public static final String MESSAGE_VALIDATED_DEFINITIONS = 'Validated definitions of';
-    public static final String MESSAGE_WILL_DELETE_ALL_FIELDS_DEFINITIONS = 'Will delete all field definitions of';
-    public static final String MESSAGE_WILL_DELETE_FIELD_DEFINITIONS = 'Will delete all definitions of field';
-    public static final String MESSAGE_WILL_DELETE_RECORDS = 'Will delete records';
-    public static final String MESSAGE_WILL_DISPLAY_CREATED_FIELD_VALUES = 'Will display the created field values';
-    public static final String MESSAGE_WILL_INSERT_CREATED_RECORDS = 'Will insert the created records';
-    public static final String MESSAGE_WILL_NOT_INSERT_RECORDS = 'Will not insert records';
-    public static final String MESSAGE_WILL_SET_DEFINITIONS_OF_REQUIRED_FIELDS =
-        'Will set the definition of required fields';
-    public static final String MESSAGE_WILL_STORE_CREATED_RECORDS = 'Will store the created records with mocked IDs';
-    public static final String MESSAGE_WILL_UPDATE_FIELD_VALUES = 'Will update the field values';
-    public static final String MESSAGE_WILL_UPDATE_RECORDS = 'Will update the records';
-    public static final String MESSAGE_WILL_VALIDATE_FIELD_DEFINITIONS = 'Will validate the field definitions';
-    public static final String MESSAGE_WITH_DEFINITION = 'with definition';
 
     /* ENUMS */
 
@@ -85,123 +106,28 @@ public with sharing class ForceeaService {
 
     /* STATIC COLLECTIONS */
 
-    // the map of all sObject names (keys) to sObject tokens (values) for the standard and custom objects defined
-    public static Map<String, SObjectInfo> sObjectInfosByApiName = new Map<String, SObjectInfo>();
-    //
-    public static Map<Schema.SObjectType, SObjectInfo> sObjectInfosBySObjectType =
-        new Map<Schema.SObjectType, SObjectInfo>();
-    //
-    public static Map<String, Map<String, Schema.SObjectField>> sObjectFieldsBySObject =
+    // the map of defined SObject names (keys) to SObject Infos (values)
+    private static Map<String, SObjectInfo> sObjectInfosBySObjectName = new Map<String, SObjectInfo>();
+    //  the map of defined SObject types (keys) to SObject Infos (values)
+    private static Map<Schema.SObjectType, SObjectInfo> sObjectInfosBySObjectType = new Map<Schema.SObjectType, SObjectInfo>();
+    // the map of defined SObject names (keys) to map [SObject fields by Field name] (values)
+    private static Map<String, Map<String, Schema.SObjectField>> sObjectFieldsMapBySObjectName =
         new Map<String, Map<String, Schema.SObjectField>>();
 
     /* STATIC VARIABLES & PROPERTIES */
 
     // the ID of the ForceeaQueueable class
-    private static Id classId {
+    private static Id queueableClassId {
         get {
-            if (classId == null) {
-                classId = [SELECT Id FROM ApexClass WHERE Name = 'ForceeaQueueable'].Id;
+            if (queueableClassId == null) {
+                queueableClassId = new ForceeaSelector().selectQueueableClassByName('ForceeaQueueable').Id;
             }
-            return classId;
+            return queueableClassId;
         }
         set;
     }
     // the async Process ID
     public static String processId = '';
-
-    /* CLASSES */
-
-    public class AsyncTransaction {
-        public Map<String, Integer> numFirstRecordsBySObject = new Map<String, Integer>();
-        public List<ForceeaService.FObjectAsync> sObjectsToDelete = new List<ForceeaService.FObjectAsync>();
-        public Map<String, ForceeaService.FObjectAsync> template = new Map<String, ForceeaService.FObjectAsync>();
-
-        public Integer batchId = 1;
-        public Boolean hasPartitioning = true;
-        public Boolean isBenchmark = false;
-        public Integer jobId = 0;
-        public String locality = '';
-        public String language = '';
-        public Integer numErrors = 0;
-        public Integer numJobs = 0;
-        public Integer numJobUnitsExecuted = 0; // the iterations that have been inserted in the job
-        public Integer numJobUnitsToExecute = 0; // the units that should be executed in the job
-        public Integer numTotalJobUnits = 0; // the units that should be executed in the job
-        public Integer numMaxUnitsPerBatch = 1; // the max units allowed to be executed per batch
-        public Integer numProcessUnitsToExecute = 0; // the total units (iterations/records) that should be executed
-        public ForceeaService.OperationType operationType;
-        public String partitionFieldValue = '';
-        public String processId = '';
-        public Long seed = 0;
-        public Integer sector = 0;
-        public Integer sObjectToDeleteIndex = 0;
-        public String sObjectApiName = '';
-    }
-
-    public class FieldDefinition {
-        public String definitionString = '';
-        public String fieldApiName = '';
-    }
-
-    public class FObjectAsync {
-        public List<FieldDefinition> definitions = new List<FieldDefinition>();
-        public Boolean setRequiredFields = true;
-        public Integer numOfRecords = 0;
-        public String sObjectApiName = '';
-        public String partitionFieldName = '';
-    }
-
-    public class SObjectInfo {
-        public String sObjectApiName { get; set; }
-        public Schema.SObjectType sObjType { get; set; }
-    }
-
-    public class Variable {
-        public Boolean booleanValue { get; set; }
-        public Date dateValue { get; set; }
-        public Datetime datetimeValue { get; set; }
-        public Decimal decimalValue { get; set; }
-        public Integer integerValue { get; set; }
-        public Boolean isGlobalVariable { get; set; }
-        public String name { get; set; }
-        public String stringValue { get; set; }
-
-        public Variable(String name, Boolean value, Boolean isGlobalVariable) {
-            this.name = name;
-            this.booleanValue = value;
-            this.isGlobalVariable = isGlobalVariable;
-        }
-
-        public Variable(String name, Date value, Boolean isGlobalVariable) {
-            this.name = name;
-            this.dateValue = value;
-            this.isGlobalVariable = isGlobalVariable;
-        }
-
-        public Variable(String name, Datetime value, Boolean isGlobalVariable) {
-            this.name = name;
-            this.datetimeValue = value;
-            this.isGlobalVariable = isGlobalVariable;
-        }
-
-        public Variable(String name, Decimal value, Boolean isGlobalVariable) {
-            this.name = name;
-            this.decimalValue = value;
-            this.isGlobalVariable = isGlobalVariable;
-        }
-
-        public Variable(String name, Integer value, Boolean isGlobalVariable) {
-            this.name = name;
-            this.integerValue = value;
-            this.isGlobalVariable = isGlobalVariable;
-        }
-
-        public Variable(String name, String value, Boolean isGlobalVariable) {
-            this.name = name;
-            this.stringValue = value;
-            this.isGlobalVariable = isGlobalVariable;
-        }
-    }
 
     /* METHODS */
 
@@ -231,6 +157,24 @@ public with sharing class ForceeaService {
 
         for (String value : listToConvert) {
             results.add(value.toLowerCase());
+        }
+
+        return results;
+    }
+
+    /**
+     * @description Converts all items of a list to uppercase.
+     * @param listToConvert The list for conversion.
+     * @return A list of string values.
+     */
+    public static List<String> convertListToUppercase(List<String> listToConvert) {
+        List<String> results = new List<String>();
+        if (listToConvert == null || listToConvert.isEmpty()) {
+            return results;
+        }
+
+        for (String value : listToConvert) {
+            results.add(value.toUpperCase());
         }
 
         return results;
@@ -280,7 +224,7 @@ public with sharing class ForceeaService {
      * @description Enqueues a transaction for asynchronous processing.
      * @param fObjectTransaction An instance of AsyncTransaction.
      */
-    public static void enqueueJob(ForceeaService.AsyncTransaction fObjectTransaction) {
+    public static void enqueueJob(ForceeaAsyncTransaction fObjectTransaction) {
         System.enqueueJob(new ForceeaQueueable(fObjectTransaction));
     }
 
@@ -294,12 +238,39 @@ public with sharing class ForceeaService {
     }
 
     /**
+     * @description Constructs the countable form (singular or plural) of a noun.
+     * @param noun The countable noun.
+     * @param count The number of occurrences.
+     * @return The countable form.
+     */
+    public static String getCountable(String noun, Integer count) {
+        Boolean isSingular = (count == 1 || count == -1) ? true : false;
+        if (isSingular) {
+            return String.valueOf(count) + ' ' + noun;
+        }
+
+        Boolean endsWithY = (noun.right(1).equalsIgnoreCase('y')) ? true : false;
+        Boolean endsWithS = (noun.right(1).equalsIgnoreCase('s')) ? true : false;
+
+        String nounInPlural = '';
+        if (endsWithS) {
+            nounInPlural = noun + 'es';
+        } else if (endsWithY) {
+            nounInPlural = noun.removeEndIgnoreCase('y') + 'ies';
+        } else {
+            nounInPlural = noun + 's';
+        }
+
+        return String.valueOf(count) + ' ' + nounInPlural;
+    }
+
+    /**
      * @description Retrieves the FObject.Field object from global fields map.
      * @param sObjectApiName The SObject API Name.
      * @param fieldApiName The field API name.
      * @return An FObject.Field.
      */
-    public static FObject.Field getField(String sObjectApiName, String fieldApiName) {
+    public static ForceeaFieldInfo getField(String sObjectApiName, String fieldApiName) {
         return FObject.globalFieldsMapBySObject.get(sObjectApiName.toLowerCase()).get(fieldApiName.toLowerCase());
     }
 
@@ -316,7 +287,6 @@ public with sharing class ForceeaService {
      */
     public static String getFieldApiName(FObject fObj, String definitionString, String sObjectApiName,
         String fieldName, Schema.SObjectField sObjectField, String relatedFieldApiName, String category) {
-       //System.debug('> getFieldApiName - fieldName: ' + fieldName + ', sObjectField: ' + sObjectField + ', relatedFieldApiName: ' + relatedFieldApiName);
 
         String result = getFieldApiNameFromKey(sObjectApiName, fieldName, sObjectField);
 
@@ -324,8 +294,8 @@ public with sharing class ForceeaService {
             String fieldApiName = sObjectField.getDescribe().getName();
             SObjectField fieldInfo = ForceeaService.getSObjectFieldsByName(sObjectApiName.toLowerCase()).get(fieldApiName);
             if (fieldInfo != sObjectField) {
-                fObj.addError(fObj.sObjectApiName, ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldApiName +
-                    '] for SObject [' + fObj.sObjectApiName + ']');
+                fObj.addError(fObj.getSObjectName(), ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldApiName +
+                    '] for SObject [' + fObj.getSObjectName() + ']');
             }
         }
 
@@ -335,20 +305,21 @@ public with sharing class ForceeaService {
 
         switch on category.toLowerCase() {
             when 'standard' {
-                fObj.addError(fObj.sObjectApiName,
-                    'Invalid field [' + fieldName + '] in definition [' + definitionString + ']');
+                fObj.addError(fObj.getSObjectName(),
+                    'Invalid field [' + fieldName + '] ' + MESSAGE_IN_DEFINITION + ' [' + definitionString + ']');
             }
             when 'copy-field' {
                 fObj.addError(relatedFieldApiName,
-                    'Invalid copy field [' + fieldName + '] in definition [' + definitionString + ']');
+                    'Invalid copy field [' + fieldName + '] ' + MESSAGE_IN_DEFINITION + ' [' + definitionString + ']');
             }
             when 'copy-from' {
                 fObj.addError(relatedFieldApiName,
-                    'Invalid lookup field [' + sObjectApiName + '.' + fieldName + '] in definition [' + definitionString + ']');
+                    'Invalid lookup field [' + sObjectApiName + '.' + fieldName + '] ' +
+                        MESSAGE_IN_DEFINITION + ' [' + definitionString + ']');
             }
             when 'deletedefinitions' {
                 if (!fObj.isUpdate) {
-                    fObj.addErrorInvalidFieldInMethod(fObj.sObjectApiName, fieldName, category);
+                    fObj.addErrorInvalidFieldInMethod(fObj.getSObjectName(), fieldName, category);
                     return result;
                 }
             }
@@ -359,7 +330,6 @@ public with sharing class ForceeaService {
 
     public static String getFieldApiNameFromKey(
         String sObjectApiName, String fieldApiName, Schema.SObjectField sObjectField) {
-       //System.debug('> getFieldApiNameFromKey - sObjectApiName: ' + sObjectApiName + ', fieldApiName: ' + fieldApiName + '/' + sObjectField);
         if (ForceeaService.fieldIsVirtual(fieldApiName)) {
             return fieldApiName;
         }
@@ -374,15 +344,15 @@ public with sharing class ForceeaService {
             sObjectField = sObjectFieldsByName.get(fieldApiName);
         }
 
-        FObject.Field field = FObject.getDetailsFromSObjectField(sObjectField);
+        ForceeaFieldInfo field = FObject.getFieldInfoFromSObjectField(sObjectField);
         String fieldApiNameToLower = field.fieldApiName.toLowerCase();
 
         if (!globalFieldsMapContains(sObjectApiNameToLower, fieldApiNameToLower)) {
             if (!FObject.globalFieldsMapBySObject.containsKey(sObjectApiNameToLower)) {
-                FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, new Map<String, FObject.Field>());
+                FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, new Map<String, ForceeaFieldInfo>());
             }
 
-            Map<String, FObject.Field> fieldsByName = FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower);
+            Map<String, ForceeaFieldInfo> fieldsByName = FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower);
             fieldsByName.put(fieldApiNameToLower, field);
             FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, fieldsByName);
         }
@@ -437,11 +407,7 @@ public with sharing class ForceeaService {
         Set<String> statuses = new Set<String>{
             'Preparing', 'Processing', 'Queued'
         };
-        return [
-            SELECT Id
-            FROM AsyncApexJob
-            WHERE ApexClassId = :ForceeaService.classId AND Status IN :statuses
-        ];
+        return new ForceeaSelector().selectAsyncJobsByStatus(statuses);
     }
 
     public static String getKey(String majorValue, String minorValue) {
@@ -468,16 +434,8 @@ public with sharing class ForceeaService {
         }
     }
 
-    /**
-     * @description Constructs the plural of a countable noun.
-     * @param text The countable noun.
-     * @param count The number of occurrences.
-     * @return The ForceeaProcess__c custom setting "Standard" record.
-     */
-    public static String getPlural(String text, Integer count) {
-        Boolean isOne = (count == 1 || count == -1);
-        String result = (isOne) ? text : text + 's';
-        return result;
+    public static Id getQueueableClassId() {
+        return ForceeaService.queueableClassId;
     }
 
     /**
@@ -500,11 +458,11 @@ public with sharing class ForceeaService {
 
         switch on category.toLowerCase() {
             when 'standard' {
-                fObj.addError(sObjectName, ForceeaService.MESSAGE_INVALID_SOBJECT + ' [' + sObjectName + ']');
+                fObj.addError(sObjectName, MESSAGE_INVALID_SOBJECT + ' [' + sObjectName + ']');
             }
             when 'lookup' {
                 fObj.addError(relatedFieldApiName,
-                    ForceeaService.MESSAGE_INVALID_LOOKUP_SOBJECT + ' [' + sObjectName +
+                    MESSAGE_INVALID_LOOKUP_SOBJECT + ' [' + sObjectName +
                         '] in definition [' + definitionString + ']');
             }
         }
@@ -532,15 +490,15 @@ public with sharing class ForceeaService {
      * @return A Schema.SObjectField map.
      */
     public static Map<String, Schema.SObjectField> getSObjectFieldsByName(String sObjectApiName) {
-        String sObjectApiNameToLower = sObjectApiName.toLowerCase();
+        String key = sObjectApiName.toLowerCase();
 
-        if (!ForceeaService.sObjectFieldsBySObject.containsKey(sObjectApiNameToLower)) {
+        if (!ForceeaService.sObjectFieldsMapBySObjectName.containsKey(key)) {
             Map<String, Schema.SObjectField> fieldInfosByName =
                 ForceeaService.getSObjectType(sObjectApiName).getDescribe().fields.getMap();
-            ForceeaService.sObjectFieldsBySObject.put(sObjectApiNameToLower, fieldInfosByName);
+            ForceeaService.sObjectFieldsMapBySObjectName.put(key, fieldInfosByName);
         }
 
-        return ForceeaService.sObjectFieldsBySObject.get(sObjectApiNameToLower);
+        return ForceeaService.sObjectFieldsMapBySObjectName.get(key);
     }
 
     /**
@@ -551,13 +509,15 @@ public with sharing class ForceeaService {
     public static SObjectInfo getSObjectInfo(String sObjectName) {
         SObjectInfo result;
         String sObjectApiNameToLower = sObjectName.toLowerCase();
-        if (sObjectInfosByApiName.containsKey(sObjectApiNameToLower)) {
-            return sObjectInfosByApiName.get(sObjectApiNameToLower);
+        if (sObjectInfosBySObjectName.containsKey(sObjectApiNameToLower)) {
+            return sObjectInfosBySObjectName.get(sObjectApiNameToLower);
         }
 
         List<Schema.DescribeSObjectResult> describeResults = new List<DescribeSObjectResult>();
         try {
-            describeResults = Schema.describeSObjects(new List<String>{ sObjectName });
+            describeResults = Schema.describeSObjects(new List<String>{
+                sObjectName
+            });
         } catch (Exception exp) {
         } finally {
             if (!describeResults.isEmpty()) {
@@ -565,7 +525,7 @@ public with sharing class ForceeaService {
                 result.sObjectApiName = describeResults.get(0).getName();
                 result.sObjType = describeResults.get(0).getSObjectType();
 
-                sObjectInfosByApiName.put(result.sObjectApiName.toLowerCase(), result);
+                sObjectInfosBySObjectName.put(result.sObjectApiName.toLowerCase(), result);
                 sObjectInfosBySObjectType.put(result.sObjType, result);
             }
         }
@@ -579,14 +539,16 @@ public with sharing class ForceeaService {
      */
     public static Schema.SObjectType getSObjectType(String sObjectApiName) {
         String sObjectApiNameToLower = sObjectApiName.toLowerCase();
-        if (sObjectInfosByApiName.containsKey(sObjectApiNameToLower)) {
-            return sObjectInfosByApiName.get(sObjectApiNameToLower).sObjType;
+        if (sObjectInfosBySObjectName.containsKey(sObjectApiNameToLower)) {
+            return sObjectInfosBySObjectName.get(sObjectApiNameToLower).sObjType;
         }
 
         Schema.SObjectType result;
         List<Schema.DescribeSObjectResult> describeResults = new List<DescribeSObjectResult>();
         try {
-            describeResults = Schema.describeSObjects(new List<String>{ sObjectApiName });
+            describeResults = Schema.describeSObjects(new List<String>{
+                sObjectApiName
+            });
         } catch (Exception exp) {
         } finally {
             if (!describeResults.isEmpty()) {
@@ -596,11 +558,34 @@ public with sharing class ForceeaService {
                 SObjectInfo info = new SObjectInfo();
                 info.sObjectApiName = name;
                 info.sObjType = result;
-                sObjectInfosByApiName.put(name.toLowerCase(), info);
+                sObjectInfosBySObjectName.put(name.toLowerCase(), info);
             }
         }
 
         return result;
+    }
+
+    /**
+     * @description Retrieves a string with joined List items (integers) using a separator.
+     * @param values The List integer values.
+     * @param separator The separator, e.g. ",".
+     * @return The joined integer values.
+     */
+    public static String getStringFromList(List<Integer> values, String separator) {
+        return String.join(values, separator);
+    }
+
+    /**
+     * @description Retrieves a string with joined List items (strings) using a separator.
+     * @param values The List string values.
+     * @param separator The separator, e.g. ",".
+     * @return The joined string values.
+     */
+    public static String getStringFromList(List<String> values, String separator) {
+        for (Integer counter = 0; counter < values.size(); counter++) {
+            values[counter] = values[counter].trim();
+        }
+        return String.join(values, separator);
     }
 
     /**
@@ -647,6 +632,10 @@ public with sharing class ForceeaService {
             Name = FORCEEA_PROCESS_SETTING_NAME,
             IsTerminated__c = newValue
         );
+    }
+
+    public static Boolean isBigObject(String sObjectApiName) {
+        return sObjectApiName.endsWith('__b');
     }
 
     /**
@@ -696,16 +685,97 @@ public with sharing class ForceeaService {
     }
 
     /**
+     * @description Puts a SaveResult value into a map.
+     * @param mapToProcess The map.
+     * @param key The map key.
+     * @param value The SaveResult value.
+     */
+    public static void putSaveResultIntoMap(
+        Map<String, List<Database.SaveResult>> mapToProcess, String key, Database.SaveResult value) {
+        List<Database.SaveResult> records = new List<Database.SaveResult>();
+
+        if (mapToProcess.containsKey(key)) {
+            records = mapToProcess.get(key);
+        }
+
+        records.add(value);
+        mapToProcess.put(key, records);
+    }
+
+    /**
+     * @description Puts an SObject value into a map.
+     * @param mapToProcess The map.
+     * @param key The map key.
+     * @param value The SObject value.
+     */
+    public static void putSObjectIntoMap(Map<String, List<SObject>> mapToProcess, String key, SObject value) {
+        List<SObject> records = new List<SObject>();
+
+        if (mapToProcess.containsKey(key)) {
+            records = mapToProcess.get(key);
+        }
+
+        records.add(value);
+        mapToProcess.put(key, records);
+    }
+
+    /**
+     * @description Puts SObject values into a map.
+     * @param mapToProcess The map.
+     * @param key The map key.
+     * @param values The SObject values.
+     */
+    public static void putSObjectsIntoMap(Map<String, List<SObject>> mapToProcess, String key, List<SObject> values) {
+        if (mapToProcess == null || values == null || values.isEmpty()) {
+            return;
+        }
+
+        key = (String.isBlank(key)) ? '' : key;
+        if (!mapToProcess.containsKey(key)) {
+            mapToProcess.put(key, new List<SObject>());
+        }
+
+        List<SObject> sObjects = mapToProcess.get(key);
+        sObjects.addAll(values);
+        mapToProcess.put(key, sObjects);
+    }
+
+    /**
+     * @description Puts a string value into a map.
+     * @param mapToProcess The map.
+     * @param key The map key.
+     * @param value The string value.
+     */
+    public static void putStringIntoMap(Map<String, List<String>> mapToProcess, String key, String value) {
+        if (mapToProcess.containsKey(key)) {
+            mapToProcess.get(key).add(value);
+        }
+    }
+
+    /**
+     * @description Puts the string values into a map.
+     * @param mapToProcess The map.
+     * @param key The map key.
+     * @param values The string values.
+     */
+    public static void putStringsIntoMap(Map<String, List<String>> mapToProcess, String key, List<String> values) {
+        if (mapToProcess == null || values == null || values.isEmpty()) {
+            return;
+        }
+
+        if (mapToProcess.containsKey(key)) {
+            mapToProcess.get(key).addAll(values);
+        } else {
+            mapToProcess.put(key, new List<String>(values));
+        }
+    }
+
+    /**
      * @description Checks if the environment is Production org.
      * @return True, if the org is Production.
      */
     public static Boolean recordsCanBeDeletedInThisOrg() {
-        Organization org = [
-            SELECT IsSandbox, OrganizationType, TrialExpirationDate
-            FROM Organization
-            WHERE Id = :UserInfo.getOrganizationId()
-        ];
-
+        Organization org = new ForceeaSelector().selectOrganization();
         // Boolean isSandboxOrg = org.IsSandbox && org.TrialExpirationDate == null;
         // Boolean isScratchOrg = org.IsSandbox && org.TrialExpirationDate != null;
         // Boolean isDeveloperOrg = !org.IsSandbox && org.OrganizationType.equalsIgnoreCase('Developer Edition');
@@ -758,6 +828,16 @@ public with sharing class ForceeaService {
         } else {
             insertNewProcessCustomSettingRecord(newValue);
         }
+    }
+
+    public static Boolean templateContainsMocking(Map<String, FObject> template) {
+        for (String key : template.keySet()) {
+            if (template.get(key).isMocking) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

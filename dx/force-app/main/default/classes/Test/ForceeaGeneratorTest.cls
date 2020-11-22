@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -54,28 +54,23 @@ public class ForceeaGeneratorTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, size1)
-            .setRequiredFields(false)
-            .setDefinition(FObjectOne__c.Id, 'mock type(id)')
-            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+            .setRequiredFields(true)
+            .setDefinition(FObjectOne__c.Id, 'mock type(id)');
         List<Database.SaveResult> results1 = obj1.insertRecords(true);
         List<FObjectOne__c> createdRecords1 = (List<FObjectOne__c>) obj1.getRecords();
         List<FObjectOne__c> insertedRecords1 = (List<FObjectOne__c>) obj1.getInsertedRecords();
         Test.stopTest();
 
         Integer errors = 0;
-        for (FObjectOne__c record : (List<FObjectOne__c>) obj1.getInsertedRecords()) {
-            String str = record.Id;
-            if (!str.contains('mock')) {
-                errors += 1;
-                break;
-            }
+        try {
+            Id recordId = insertedRecords1.get(0).Id;
+        } catch (Exception exp) {
+            errors += 1;
         }
-        for (FObjectTwo__c record : (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
-            String str = record.Id;
-            if (!str.contains('mock')) {
-                errors += 2;
-                break;
-            }
+        try {
+            Id recordId = (Id) obj2.getInsertedRecords().get(0).Id;
+        } catch (Exception exp) {
+            errors += 2;
         }
         if ((createdRecords1.size() + createdRecords2.size()) != (size1 + size2)) {
             errors += 4;
@@ -85,6 +80,10 @@ public class ForceeaGeneratorTest {
         }
         if (!results1.isEmpty() && !results2.isEmpty()) {
             errors += 16;
+        }
+        String def = 'random type(string) minLength(5) maxLength(20) startWith(upper) include(lower,upper)';
+        if (obj1.getAllDefinitions().get('TestTextRequired__c').get(0) != def) {
+            errors += 32;
         }
         System.assertEquals(0, errors, 'mock - errors found');
     }
@@ -139,27 +138,22 @@ public class ForceeaGeneratorTest {
 
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType, size1)
-            .setRequiredFields(false)
-            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+            .setRequiredFields(true);
         List<Database.SaveResult> results1 = obj1.insertRecords(true);
         List<FObjectOne__c> createdRecords1 = (List<FObjectOne__c>) obj1.getRecords();
         List<FObjectOne__c> insertedRecords1 = (List<FObjectOne__c>) obj1.getInsertedRecords();
         Test.stopTest();
 
         Integer errors = 0;
-        for (FObjectOne__c record : (List<FObjectOne__c>) obj1.getInsertedRecords()) {
-            String str = record.Id;
-            if (!str.contains('mock')) {
-                errors += 1;
-                break;
-            }
+        try {
+            Id recordId = insertedRecords1.get(0).Id;
+        } catch (Exception exp) {
+            errors += 1;
         }
-        for (FObjectTwo__c record : (List<FObjectTwo__c>) obj2.getInsertedRecords()) {
-            String str = record.Id;
-            if (!str.contains('mock')) {
-                errors += 2;
-                break;
-            }
+        try {
+            Id recordId = (Id) obj2.getInsertedRecords().get(0).Id;
+        } catch (Exception exp) {
+            errors += 2;
         }
         if ((createdRecords1.size() + createdRecords2.size()) != (size1 + size2)) {
             errors += 4;
@@ -169,6 +163,10 @@ public class ForceeaGeneratorTest {
         }
         if (!results1.isEmpty() && !results2.isEmpty()) {
             errors += 16;
+        }
+        String def = 'random type(string) minLength(5) maxLength(20) startWith(upper) include(lower,upper)';
+        if (obj1.getAllDefinitions().get('TestTextRequired__c').get(0) != def) {
+            errors += 32;
         }
         System.assertEquals(0, errors, 'mock - errors found');
     }

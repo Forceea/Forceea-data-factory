@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -34,7 +34,7 @@ public with sharing class FObjectAsync {
 
     /* INSTANCE VARIABLES & PROPERTIES */
 
-    private ForceeaService.AsyncTransaction asyncTrans { get; set; }
+    private ForceeaAsyncTransaction asyncTrans { get; set; }
     private Boolean hasPartitioning { get; set; }
     private Integer numIterationsToExecute { get; set; }
     private Integer numJobs { get; set; }
@@ -54,7 +54,7 @@ public with sharing class FObjectAsync {
 
     // instance initialization
     {
-        this.asyncTrans = new ForceeaService.AsyncTransaction();
+        this.asyncTrans = new ForceeaAsyncTransaction();
         this.hasPartitioning = false;
         this.numIterationsToExecute = 1;
         this.numJobs = this.getDefaultNumberOfJobs();
@@ -83,7 +83,7 @@ public with sharing class FObjectAsync {
 
         if (!ForceeaService.getJobs().isEmpty()) {
             result = true;
-            String message = MESSAGE_CANNOT_EXEC_PROCESS_BY_USER + ' [' + UserInfo.getName() + '], '+
+            String message = MESSAGE_CANNOT_EXEC_PROCESS_BY_USER + ' [' + UserInfo.getName() + '], ' +
                 MESSAGE_CANNOT_EXEC_PROCESS_BECAUSE;
             ForceeaService.publishUserMessage(ForceeaService.asyncMessageType.MESSAGE_TYPE_INFO, message);
         }
@@ -121,8 +121,7 @@ public with sharing class FObjectAsync {
     private void enqueueJobsOnDelete(List<ForceeaService.FObjectAsync> asyncFObjects) {
         List<ForceeaService.FObjectAsync> asyncFObjectsToDelete = getReversedList(asyncFObjects);
 
-        if (hasBlankPartitionFieldInAnySObject(asyncFObjectsToDelete) || String.isBlank(this.partitionFieldValue)) {
-            //System.debug('.. will use 1 delete job');
+        if (hasBlankPartitionFieldInAnySObject(asyncFObjectsToDelete)) {
             this.numJobs = 1;
             this.hasPartitioning = false;
         } else {
@@ -130,7 +129,7 @@ public with sharing class FObjectAsync {
         }
 
         for (Integer jobId = 1; jobId <= this.numJobs; jobId++) {
-            this.asyncTrans = new ForceeaService.AsyncTransaction();
+            this.asyncTrans = new ForceeaAsyncTransaction();
             this.asyncTrans.numJobUnitsToExecute = 1;
             this.asyncTrans.numProcessUnitsToExecute = this.numJobs;
             this.asyncTrans.operationType = this.operationType;
@@ -147,21 +146,16 @@ public with sharing class FObjectAsync {
      * @description Enqueues jobs when inserting records asynchronously.
      */
     private void enqueueJobsOnInsert() {
-        // initilaize map
-        //System.debug('..initilaize map: numOfFirstRecordsBySObject');
         Map<String, Integer> numOfFirstRecordsBySObject = new Map<String, Integer>();
         for (FObject sObj : this.template.values()) {
             numOfFirstRecordsBySObject.put(sObj.getSObjectName(), 1);
         }
 
-        //System.debug('..enqueue jobs');
         for (Integer jobId = 1; jobId <= numJobs; jobId++) {
-            //System.debug('jobId: ' + jobId);
-            this.asyncTrans = new ForceeaService.AsyncTransaction();
+            this.asyncTrans = new ForceeaAsyncTransaction();
             this.asyncTrans.language = FObject.getGlobalLanguage();
             this.asyncTrans.locality = FObject.getGlobalLocality();
             this.asyncTrans.numFirstRecordsBySObject = new Map<String, Integer>(numOfFirstRecordsBySObject);
-            //System.debug('- numOfFirstRecordsBySObject: ' + this.asyncTrans.numFirstRecordsBySObject);
             this.asyncTrans.numJobUnitsToExecute = this.getNumberOfIterationsForThisJob(jobId);
             this.asyncTrans.numMaxUnitsPerBatch = this.numMaxIterationsPerBatch;
             this.asyncTrans.numProcessUnitsToExecute = this.numIterationsToExecute;
@@ -184,27 +178,30 @@ public with sharing class FObjectAsync {
         Map<String, ForceeaService.FObjectAsync> results = new Map<String, ForceeaService.FObjectAsync>();
 
         for (String key : template.keySet()) {
-            ForceeaService.FObjectAsync obj = new ForceeaService.FObjectAsync();
-            obj.numOfRecords = template.get(key).getNumberOfRecords();
-            obj.partitionFieldName = template.get(key).getPartitionFieldName();
-            obj.sObjectApiName = template.get(key).getSObjectName();
-            obj.setRequiredFields = template.get(key).requiredFieldsShouldBeAutomaticallyConfigured();
+            ForceeaService.FObjectAsync fObjAsync = new ForceeaService.FObjectAsync();
+            FObject fObj = template.get(key);
 
-            obj.definitions = new List<ForceeaService.FieldDefinition>();
-            for (ForceeaDefinition def : template.get(key).definitions) {
+            fObjAsync.numOfRecords = fObj.getNumberOfRecords();
+            fObjAsync.partitionFieldName = fObj.getPartitionFieldName();
+            fObjAsync.sObjectApiName = fObj.getSObjectName();
+            fObjAsync.setRequiredFields = fObj.requiredFieldsShouldBeAutomaticallyConfigured();
+            fObjAsync.bigObjectIndexFieldsString = fObj.bigObjectIndexFieldsString;
+
+            fObjAsync.definitions = new List<ForceeaService.FieldDefinition>();
+            for (ForceeaDefinition def : fObj.definitions) {
                 ForceeaService.FieldDefinition fd = new ForceeaService.FieldDefinition();
                 fd.definitionString = def.definitionString;
                 fd.fieldApiName = def.fieldApiName;
-                obj.definitions.add(fd);
+                fObjAsync.definitions.add(fd);
             }
-            results.put(key, obj);
+            results.put(key, fObjAsync);
         }
 
         return results;
     }
 
     /**
-     * @description Retrieves a list of ForceeaService.FObjectAsync from the template.
+     * @description Retrieves a list of ForceeaService.FObjectAsync objects from the template.
      * @return A list of ForceeaService.FObjectAsync.
      */
     private List<ForceeaService.FObjectAsync> getAsyncFObjectsFromTemplate() {
@@ -215,6 +212,7 @@ public with sharing class FObjectAsync {
             newObj.definitions = obj.definitions;
             newObj.partitionFieldName = obj.partitionFieldName;
             newObj.sObjectApiName = obj.sObjectApiName;
+            newObj.bigObjectIndexFieldsString = obj.bigObjectIndexFieldsString;
             results.add(newObj);
         }
 
@@ -247,15 +245,8 @@ public with sharing class FObjectAsync {
 
         for (FObject obj : fObjects) {
             String sObjectApiName = obj.getSObjectName();
-            //System.debug('sObjectApiName: ' + sObjectApiName);
-
             Integer previousFirstRecord = results.get(sObjectApiName);
             Integer newFirstRecord = previousFirstRecord + obj.getNumberOfRecords() * this.asyncTrans.numJobUnitsToExecute;
-            //System.debug('previousRecord: ' + previousFirstRecord);
-            //System.debug('numJobUnitsToExecute: ' + this.asyncTrans.numJobUnitsToExecute);
-            //System.debug('getNumberOfRecords: ' + obj.getNumberOfRecords());
-            //System.debug('==>>> new first record: ' + newFirstRecord);
-
             results.put(sObjectApiName, newFirstRecord);
         }
 
@@ -341,7 +332,7 @@ public with sharing class FObjectAsync {
         }
         value = value / 1024;
         result = (Integer) value;
-        result = (result == 0) ?1 : result;
+        result = (result == 0) ? 1 : result;
 
         return result;
     }
@@ -352,12 +343,9 @@ public with sharing class FObjectAsync {
      * @return True, if there is at least one SObject to be deleted with a blank Partition Field.
      */
     private Boolean hasBlankPartitionFieldInAnySObject(List<ForceeaService.FObjectAsync> asyncFObjects) {
-        //System.debug('> FObjectAsync.hasBlankPartitionFieldInAnySObject');
         Boolean result = false;
 
         for (ForceeaService.FObjectAsync asyncFObject : asyncFObjects) {
-            //System.debug('partitionFieldName: ' + asyncFObject.partitionFieldName);
-
             if (String.isBlank(asyncFObject.partitionFieldName)) {
                 result = true;
                 break;
@@ -462,6 +450,7 @@ public with sharing class FObjectAsync {
         this.asyncTrans.processId = ForceeaService.processId;
         this.asyncTrans.sector = jobId;
         this.asyncTrans.template = this.asyncTemplate;
+        this.asyncTrans.verbose = FObject.getGlobalVerbose();
     }
 
     /**
@@ -482,6 +471,11 @@ public with sharing class FObjectAsync {
         FObjectAsync.processIsValid = isValid;
     }
 
+    /**
+     * @description Informs the async process that will do benchmarking.
+     * @param doBenchmarking If true, the async process will benchmark.
+     * @return An FObjectAsync instance.
+     */
     @TestVisible
     private FObjectAsync shouldBenchmark(Boolean doBenchmarking) {
         this.shouldBenchmark = doBenchmarking;

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -14,6 +14,8 @@
   https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class ForceeaAddress {
+
+    private static final String MESSAGE_ADDRESSES = 'Loaded addresses from ';
 
     public String street { get; set; }
     public String postalCode { get; set; }
@@ -117,8 +119,8 @@ public with sharing class ForceeaAddress {
         FObject.addressesLibrary.add(
             new ForceeaAddress('Φιλικής Εταιρίας', '18539', 'Πειραιάς', '', country));
 
-        FObject.forceeaStaticDebug(ForceeaService.INFO,
-            ForceeaService.MESSAGE_ADDRESSES + 'Greece in the Greek language');
+        FObject.forceeaDebugStatic(ForceeaService.INFO,
+            MESSAGE_ADDRESSES + 'Greece in the Greek language');
     }
 
     /**
@@ -155,8 +157,8 @@ public with sharing class ForceeaAddress {
         FObject.addressesLibrary.add(
             new ForceeaAddress('West Jackson Boulevard', '60604', 'Chicago', 'IL', country));
 
-        FObject.forceeaStaticDebug(ForceeaService.INFO,
-            ForceeaService.MESSAGE_ADDRESSES + 'United States in the English language');
+        FObject.forceeaDebugStatic(ForceeaService.INFO,
+            MESSAGE_ADDRESSES + 'United States in the English language');
     }
 
 }

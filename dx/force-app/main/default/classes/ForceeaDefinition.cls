@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -17,7 +17,7 @@ public with sharing class ForceeaDefinition {
 
     /* COLLECTIONS */
 
-    public List<FObject.Cluster> clusters = new List<FObject.Cluster>(); // the definition clusters
+    public List<ForceeaCluster> clusters = new List<ForceeaCluster>(); // the definition clusters
     private List<String> permutationValues = new List<String>(); // the values for permutations
 
     /* VARIABLES & PROPERTIES */
@@ -39,14 +39,19 @@ public with sharing class ForceeaDefinition {
     public Integer positionForPermutations { get; set; } // the definition position in permutations
     public String sObjectApiName { get; set; } // the SObject API name of definition
     private String script { get; set; } // the definition script, e.g. random(type) from(1) to(10) scale(0)
-    public FObject.DefinitionType type { get; set; } // the type of the definition
+    public ForceeaDefinitionType type { get; set; } // the type of the definition
+
+    /* CLASSES */
+
+    private class ClusterTypeValidationResult {
+        Integer index { get; set; }
+        Integer countOfParameter { get; set; }
+    }
 
     /* CONSTRUCTOR */
 
     public ForceeaDefinition(FObject fObj, String sObjectApiName, String fieldName, String fieldApiName, Boolean isSystemDeclared,
         Boolean isForUpdate, String definitionString) {
-       //System.debug('> ForceeaDefinition.constructor: ' + definitionString);
-
         this.command = '';
         this.definitionString = definitionString.trim();
         this.fieldName = fieldName.trim();
@@ -63,12 +68,49 @@ public with sharing class ForceeaDefinition {
         this.isValidated = false;
         this.script = '';
         this.sObjectApiName = sObjectApiName.trim();
-        this.type = new FObject.DefinitionType();
+        this.type = new ForceeaDefinitionType();
     }
 
     /* METHODS */
 
-    private Boolean argumentIsValid(FObject.Cluster cluster) {
+    // check the data type of all cluster arguments
+    private Boolean allArgumentsMatch(ForceeaClusterType clusterType, List<String> arguments) {
+        ForceeaService.ValueType clusterValueType = clusterType.valueType;
+
+        ForceeaService.ValueType argumentValueType;
+        for (String argument : arguments) {
+            argumentValueType = getArgumentValueType(argument);
+            if (argumentValueType == clusterValueType) {
+                continue;
+            }
+
+            if (clusterValueType == ForceeaService.ValueType.TYPE_INTEGER &&
+                argumentValueType == ForceeaService.ValueType.TYPE_DECIMAL) {
+                return false;
+            }
+
+            if (clusterValueType == ForceeaService.ValueType.TYPE_DECIMAL &&
+                argumentValueType == ForceeaService.ValueType.TYPE_INTEGER) {
+                continue;
+            }
+
+            if (clusterValueType == ForceeaService.ValueType.TYPE_DATETIME &&
+                argumentValueType == ForceeaService.ValueType.TYPE_DATE) {
+                return false;
+            }
+
+            if (clusterValueType == ForceeaService.ValueType.TYPE_DATE &&
+                argumentValueType == ForceeaService.ValueType.TYPE_DATETIME) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private Boolean argumentIsValid(ForceeaCluster cluster) {
         Boolean result = true;
 
         switch on cluster.parameter.toLowerCase() {
@@ -105,83 +147,18 @@ public with sharing class ForceeaDefinition {
      * @param clusterIndex The cluster index.
      * @return True if the cluster arguments are valid, based on the cluster type.
      */
-    private Boolean argumentMatches(FObject.ClusterType clusterType, Integer clusterIndex) {
-        //System.debug('> argumentMatches: ' + clusterType.parameter + '(' + clusterType.valueType + ')');
-        Boolean result = false;
-        FObject.Cluster cluster = this.clusters.get(clusterIndex);
+    private Boolean argumentsMatch(ForceeaClusterType clusterType, Integer clusterIndex) {
+        ForceeaCluster cluster = this.clusters.get(clusterIndex);
 
-        // check if value must have only 1 item but it has more
-        if (!clusterType.allowsMultipleArguments && cluster.arguments.size() > 1) {
-            //System.debug('allowsMultipleArguments - cluster.arguments.size() > 1');
-            return result;
+        if (valueMustHaveOnlyOneItemButItHasMore(clusterType, cluster) || valueIsWrong(clusterType, cluster)) {
+            return false;
         }
 
-        // value has the correct number of arguments
-        if (String.isNotBlank(clusterType.value) && // if the parameter has a value
-            cluster.arguments.size() == 1 && // and there is only 1 argument
-            clusterType.value != cluster.arguments.get(0)) { // and this is not the expected value
-            //System.debug('cluster.arguments.size():' + cluster.arguments.size());
-            //System.debug('clusterType.value [' + clusterType.value + ']');
-            //System.debug('clusterType.value [' + clusterType.value + ']');
-            //System.debug('cluster.arguments[0] [' + cluster.arguments[0] + ']');
-            return result;
-        }
-        //System.debug('..next');
-        //System.debug('clusterType.value: ' + clusterType.value);
-        //System.debug('cluster.arguments.get(0): ' + cluster.arguments.get(0));
-
-        if (clusterType.value == '' && cluster.arguments.size() == 1 && String.isBlank(cluster.arguments.get(0))) {
-            //System.debug('..blank');
+        if (valueIsBlank(clusterType, cluster) || valueTypeIsString(clusterType)) {
             return true;
         }
 
-        if (clusterType.valueType == FObject.ValueType.TYPE_STRING) {
-            return true;
-        }
-
-        // check the data type of all cluster arguments
-        for (String argument : cluster.arguments) {
-            switch on clusterType.valueType {
-                when TYPE_INTEGER {
-                    try {
-                        Integer value = Integer.valueOf(argument);
-                        result = true;
-                    } catch (System.TypeException ex) {
-                    }
-                }
-                when TYPE_DECIMAL {
-                    try {
-                        Decimal value = Decimal.valueOf(argument);
-                        result = true;
-                    } catch (System.TypeException ex) {
-                    }
-                }
-                when TYPE_DATE {
-                    try {
-                        Date value = Date.valueOf(argument);
-                        result = true;
-                    } catch (System.TypeException ex) {
-                    }
-                }
-                when TYPE_DATETIME {
-                    try {
-                        Datetime value = Datetime.valueOf(argument);
-                        result = true;
-                    } catch (System.TypeException ex) {
-                    }
-                }
-                when TYPE_TIME {
-                    try {
-                        argument = '2018-01-01 ' + argument;
-                        Datetime value = Datetime.valueOf(argument);
-                        result = true;
-                    } catch (System.TypeException ex) {
-                    }
-                }
-            }
-        }
-
-        return result;
+        return allArgumentsMatch(clusterType, cluster.arguments);
     }
 
     /**
@@ -189,36 +166,13 @@ public with sharing class ForceeaDefinition {
      * @param clusterType The cluster type.
      * @return A boolean value.
      */
-    private Boolean clusterTypeMatches(FObject.ClusterType clusterType) {
-        //System.debug('> ForceeaDefinition.clusterTypeMatches: ' + clusterType.valueType);
-        Boolean result = false;
-
-        Integer countOfParameter = 0; // counts how many times a cluster parameter is found
-        Integer index; // the position of a definition cluster with a specified cluster type parameter
-        //System.debug('cluster: ' + this.clusters);
-
-        // find how many times the Parameter exists and its position (index)
-        Integer counter = 0;
-        for (FObject.Cluster cluster : this.clusters) {
-            //System.debug('cluster.parameter: ' + cluster.parameter);
-            if (clusterType.parameter == cluster.parameter) { // if parameter is valid
-                countOfParameter++;
-                index = counter;
-            }
-            if (!argumentIsValid(cluster)) {
-                return false;
-            }
-            counter++;
-        }
-
-        // if parameter is not found or found more than once
-        if (countOfParameter != 1) {
+    private Boolean clusterTypeExists(ForceeaClusterType clusterType) {
+        ClusterTypeValidationResult results = getClusterTypeValidationResult(clusterType);
+        if (results.index == -1 || parameterIsNotFoundOrIsFoundMoreThanOnce(results.countOfParameter)) {
             return false;
         }
 
-        result = argumentMatches(clusterType, index);
-        //System.debug('cluster type matches: ' + result);
-        return result;
+        return argumentsMatch(clusterType, results.index);
     }
 
     /**
@@ -231,10 +185,9 @@ public with sharing class ForceeaDefinition {
         String fieldApiName = this.fieldApiName.toLowerCase();
 
         for (ForceeaDefinition def : this.fObj.definitions) {
-            Boolean definitionIsValid = (def.isForUpdate && this.fObj.dmlIsUpdate)
-                || (!def.isForUpdate && !this.fObj.dmlIsUpdate);
+            Boolean definitionIsValid = (def.isForUpdate && fObj.dmlIsUpdate)
+                || (!def.isForUpdate && !fObj.dmlIsUpdate);
 
-            //System.debug(def.definitionString + ' ' + def.isFunction);
             if (definitionIsValid && !def.isFunction && def.fieldApiName.toLowerCase() == fieldApiName) {
                 counter++;
             }
@@ -248,16 +201,72 @@ public with sharing class ForceeaDefinition {
         return result;
     }
 
+    private ForceeaService.ValueType getArgumentValueType(String argument) {
+        ForceeaService.ValueType result;
+
+        // IMPORTANT: DO NOT CHANGE THE ORDER OF TYPES
+
+        try {
+            Integer value = Integer.valueOf(argument);
+            return ForceeaService.ValueType.TYPE_INTEGER;
+        } catch (System.TypeException ex) { }
+
+        try {
+            Decimal value = Decimal.valueOf(argument);
+            return ForceeaService.ValueType.TYPE_DECIMAL;
+        } catch (System.TypeException ex) { }
+
+        try {
+            Datetime value = Datetime.valueOf(argument);
+            return ForceeaService.ValueType.TYPE_DATETIME;
+        } catch (System.TypeException ex) { }
+
+        try {
+            Date value = Date.valueOf(argument);
+            return ForceeaService.ValueType.TYPE_DATE;
+        } catch (System.TypeException ex) { }
+
+        try {
+            Datetime value = Datetime.valueOf('2020-01-01 ' + argument);
+            return ForceeaService.ValueType.TYPE_TIME;
+        } catch (System.TypeException ex) { }
+
+        return ForceeaService.ValueType.TYPE_STRING;
+    }
+
+    // find how many times the Parameter exists and its position (index)
+    private ClusterTypeValidationResult getClusterTypeValidationResult(ForceeaClusterType clusterType) {
+        Integer countOfParameter = 0; // counts how many times a cluster parameter is found
+        Integer counter = 0;
+        Integer index = 0; // the position of a definition cluster with a specified cluster type parameter
+
+        for (ForceeaCluster cluster : this.clusters) {
+            if (parameterIsValid(clusterType, cluster)) {
+                countOfParameter++;
+                index = counter;
+            }
+            if (!argumentIsValid(cluster)) {
+                index = -1;
+                break;
+            }
+            counter++;
+        }
+
+        ClusterTypeValidationResult result = new ClusterTypeValidationResult();
+        result.countOfParameter = countOfParameter;
+        result.index = index;
+
+        return result;
+    }
+
     /**
      * @description Retrieves the definition type.
      * @return The definition type.
      */
-    private FObject.DefinitionType getType() {
-        //System.debug('> ForceeaDefinition.getType');
-        FObject.DefinitionType result;
+    private ForceeaDefinitionType getType() {
+        ForceeaDefinitionType result;
 
-        for (FObject.DefinitionType defType : FObject.definitionTypes) {
-            //System.debug(defType.description);
+        for (ForceeaDefinitionType defType : FObject.definitionTypes) {
             if (typeMatches(defType)) {
                 return defType;
             }
@@ -279,218 +288,231 @@ public with sharing class ForceeaDefinition {
      * @return A boolean value.
      */
     private Boolean isValidForFieldDataType() {
-       //System.debug('> ForceeaDefinitons.isValidForFieldDataType: ' + this.definitionString);
-        Boolean result = false;
-
-        Schema.DisplayType fieldType =  FObject.globalFieldsMapBySObject
-            .get(this.sObjectApiName.toLowerCase())
-            .get(this.fieldApiName.toLowerCase()).dataType;
-        FObject.DefinitionTypeId typeId = this.type.id;
-        //System.debug('fieldApiName: ' + this.fieldApiName);
-        //System.debug('fieldType: ' + fieldType);
-        //System.debug('typeId: ' + typeId);
-
+        ForceeaService.DefinitionTypeId typeId = this.type.id;
         if (this.fieldApiName == ForceeaService.RECORD_TYPE_ID) {
-            if (
-                typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_STRING ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_PICKLIST ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_PICKLIST ||
-                    typeId == FObject.DefinitionTypeId.STATIC_STRING
+            if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_STRING ||
+                typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST ||
+                typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
+                typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
+                typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST ||
+                typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
                 ) {
                 return true;
+            } else {
+                return false;
             }
         }
+
+        Boolean result = false;
+        Schema.DisplayType fieldType = FObject.globalFieldsMapBySObject
+            .get(this.sObjectApiName.toLowerCase())
+            .get(this.fieldApiName.toLowerCase()).dataType;
 
         switch on fieldType {
             when STRING, TEXTAREA {
                 result = true;
-                if (
-                    typeId == FObject.DefinitionTypeId.MOCK_ID ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_PICKLIST ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
-                        typeId == FObject.DefinitionTypeId.SERIAL_LOOKUP ||
-                        typeId == FObject.DefinitionTypeId.STATIC_LOOKUP ||
-                        typeId == FObject.DefinitionTypeId.SERIAL_PICKLIST
+                if (typeId == ForceeaService.DefinitionTypeId.MOCK_ID ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP
                     ) {
                     result = false;
                 }
             }
             when DATE {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.FUNCTION_ADD ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_DATE ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_DATE ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_DATE ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_DATE
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.FUNCTION_ADD ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_DATE ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_DATE ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_DATETIME ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_DATE ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_DATETIME ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DATE ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DATETIME ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_DATE ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_DATETIME
                     ) {
                     result = true;
                 }
             }
             when INTEGER, LONG {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.FUNCTION_ADD ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_DECIMAL ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_INTEGER ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_INTEGER
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.FUNCTION_ADD ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_DECIMAL ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DECIMAL ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_DECIMAL ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER
                     ) {
                     result = true;
                 }
             }
             when PERCENT, CURRENCY, DOUBLE {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.FUNCTION_ADD ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_DECIMAL ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_INTEGER ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_DECIMAL ||
-                    typeId == FObject.DefinitionTypeId.STATIC_INTEGER
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.FUNCTION_ADD ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_DECIMAL ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DECIMAL ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_DECIMAL ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER
                     ) {
                     result = true;
                 }
             }
             when BOOLEAN {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_BOOLEAN ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_STRING ||
-                    typeId == FObject.DefinitionTypeId.STATIC_STRING
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_BOOLEAN ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
                     ) {
                     result = true;
                 }
             }
             when EMAIL {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_BOOLEAN ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_EMAIL ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_INTEGER ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_STRING ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_STRING ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_TIME ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_LIST ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_INTEGER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_STRING
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.FUNCTION_CONVERT ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_EMAIL ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
                     ) {
                     result = true;
                 }
             }
             when PICKLIST, MULTIPICKLIST, COMBOBOX {
                 result = true;
-                if (typeId == FObject.DefinitionTypeId.MOCK_ID ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.STATIC_LOOKUP
+                if (typeId == ForceeaService.DefinitionTypeId.FUNCTION_ADD ||
+                    typeId == ForceeaService.DefinitionTypeId.MOCK_ID ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP
                     ) {
                     result = false;
                 }
             }
             when DATETIME {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.FUNCTION_ADD ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_DATE ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_DATETIME ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_DATE ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_DATETIME ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_DATE ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_DATETIME ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_DATE ||
-                    typeId == FObject.DefinitionTypeId.STATIC_DATETIME
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.FUNCTION_ADD ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_DATE ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_DATETIME ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_DATETIME ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_DATETIME ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DATETIME ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_DATETIME
                     ) {
                     result = true;
                 }
             }
             when TIME {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_TIME ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_TIME ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_TIME
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_TIME ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_TIME ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_TIME ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_TIME
                     ) {
                     result = true;
                 }
             }
             when PHONE {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_STRING ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_PHONE ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_LIST ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_INTEGER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_STRING
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_PHONE ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
                     ) {
                     result = true;
                 }
             }
             when REFERENCE {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.STATIC_LOOKUP
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
                     ) {
                     result = true;
                 }
             }
             when URL {
-                if (typeId == FObject.DefinitionTypeId.COPY_FIELD ||
-                    typeId == FObject.DefinitionTypeId.COPY_LOOKUP ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_INTEGER ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_LIST_STRING ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_STRING ||
-                    typeId == FObject.DefinitionTypeId.RANDOM_URL ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_LIST ||
-                    typeId == FObject.DefinitionTypeId.SERIAL_NUMBER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_BLANK ||
-                    typeId == FObject.DefinitionTypeId.STATIC_INTEGER ||
-                    typeId == FObject.DefinitionTypeId.STATIC_STRING
+                if (typeId == ForceeaService.DefinitionTypeId.COPY_FIELD ||
+                    typeId == ForceeaService.DefinitionTypeId.COPY_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.FUNCTION_CONVERT ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_URL ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
                     ) {
                     result = true;
                 }
             }
             when BASE64 {
                 result = true;
-                if (
-                    typeId == FObject.DefinitionTypeId.MOCK_ID ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_PICKLIST ||
-                        typeId == FObject.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
-                        typeId == FObject.DefinitionTypeId.SERIAL_LOOKUP ||
-                        typeId == FObject.DefinitionTypeId.SERIAL_PICKLIST ||
-                        typeId == FObject.DefinitionTypeId.STATIC_LOOKUP
+                if (typeId == ForceeaService.DefinitionTypeId.FUNCTION_ADD ||
+                    typeId == ForceeaService.DefinitionTypeId.MOCK_ID ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST ||
+                    typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LOOKUP ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST ||
+                    typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP
                     ) {
                     result = false;
                 }
             }
             when ID {
-                if (typeId == FObject.DefinitionTypeId.MOCK_ID) {
+                if (typeId == ForceeaService.DefinitionTypeId.MOCK_ID) {
                     this.fObj.isMocking = true;
                     result = true;
                 }
@@ -511,16 +533,23 @@ public with sharing class ForceeaDefinition {
         return result;
     }
 
+    private Boolean parameterIsNotFoundOrIsFoundMoreThanOnce(Integer countOfParameter) {
+        return countOfParameter != 1;
+    }
+
+    private Boolean parameterIsValid(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+        return clusterType.parameter == cluster.parameter;
+    }
+
     public void setPermutations() {
-        //System.debug('> ForceeaDefinition.setPermutations - for: ' + this.definitionString);
         if (!modeIsPermutation()) {
             return;
         }
-        //System.debug('..definitionModeIsPermutation');
 
         List<String> results = new List<String>();
         switch on this.type.id {
-            when SERIAL_LIST, SERIAL_PICKLIST {
+            when SERIAL_LIST_STRING, SERIAL_LIST_INTEGER, SERIAL_LIST_DECIMAL,
+                SERIAL_LIST_DATE, SERIAL_LIST_DATETIME, SERIAL_LIST_TIME, SERIAL_PICKLIST {
                 results = new ForceeaGenerator(this).getListValuesForPermutations();
             }
             when SERIAL_LOOKUP {
@@ -534,7 +563,6 @@ public with sharing class ForceeaDefinition {
         this.permutationValues = results;
         this.fObj.permutationsList.add(this.permutationValues);
         this.positionForPermutations = this.fObj.permutationsList.size() - 1;
-        //System.debug('permutationValues:' + this.permutationValues);
     }
 
     /**
@@ -547,33 +575,28 @@ public with sharing class ForceeaDefinition {
 
     /**
      * @description Checks if the definition matches a definition type.
-	 * @param defType The definition type.
+	 * @param definitionType The definition type.
 	 * @return True if the definition matches the definition type.
 	 */
-    private Boolean typeMatches(FObject.DefinitionType defType) {
-        //System.debug('> ForceeaDefinition.definitionTypeMatches - match defType: ' + defType.description);
+    private Boolean typeMatches(ForceeaDefinitionType definitionType) {
         Boolean result = false;
 
-        if (defType.command != this.command) {
+        if (definitionType.command != this.command) {
             return false;
         }
 
         // assess each Cluster Type
         Integer numValidClusterTypes = 0;
-        for (FObject.ClusterType ct : defType.clusterTypes) {
-            if (clusterTypeMatches(ct)) {
+        for (ForceeaClusterType clusterType : definitionType.clusterTypes) {
+            if (clusterTypeExists(clusterType)) {
                 numValidClusterTypes++;
             } else {
                 return false;
             }
         }
 
-        //System.debug('numValidClusterTypes: ' + numValidClusterTypes);
-        //System.debug('defType.clusterTypes.size(): ' + defType.clusterTypes.size());
-        //System.debug('this.clusters.size(): ' + this.clusters.size());
-
         // if all Cluster Types are valid, the Definition Type is found
-        if (numValidClusterTypes == defType.clusterTypes.size() && numValidClusterTypes == this.clusters.size()) {
+        if (numValidClusterTypes == definitionType.clusterTypes.size() && numValidClusterTypes == this.clusters.size()) {
             result = true;
         }
 
@@ -584,7 +607,6 @@ public with sharing class ForceeaDefinition {
      * @description Validates a field definition.
      */
     public void validate() {
-       //System.debug('> ForceeaDefinition.validate: ' + this.isValidated);
         if (this.isValidated) {
             return;
         }
@@ -604,8 +626,6 @@ public with sharing class ForceeaDefinition {
      * @description Validates data type.
      */
     private void validateDataType() {
-       //System.debug('> ForceeaDefinition.validateDataType');
-
         if (!this.isValid || this.isVirtualField) {
             return;
         }
@@ -623,14 +643,11 @@ public with sharing class ForceeaDefinition {
      * @description Validates definition type.
      */
     private void validateType() {
-       //System.debug('> ForceeaDefinition.validateType');
         if (!this.isValid) {
             return;
         }
 
-        //System.debug('clusters: ' + this.clusters);
-        FObject.DefinitionType defType = getType();
-        //System.debug('defType: ' + defType.id);
+        ForceeaDefinitionType defType = getType();
 
         if (defType == null) {
             this.fObj.addError(this.fieldApiName,
@@ -650,7 +667,7 @@ public with sharing class ForceeaDefinition {
             return;
         }
 
-        FObject.Field field = ForceeaService.getField(this.sObjectApiName, this.fieldApiName);
+        ForceeaFieldInfo field = ForceeaService.getField(this.sObjectApiName, this.fieldApiName);
         if (!field.allowsMultipleDefinitions && fieldHasMultipleDefinitions()) {
             this.fObj.addError(this.fieldApiName,
                 'Field [' + this.fieldApiName + '] does not accept multiple definitions');
@@ -662,8 +679,6 @@ public with sharing class ForceeaDefinition {
      * @description Validates when the field is virtual.
      */
     private void validateVirtualField() {
-       //System.debug('> ForceeaDefinition.validateVirtualField');
-
         if (!this.isValid || !this.isVirtualField) {
             return;
         }
@@ -675,6 +690,28 @@ public with sharing class ForceeaDefinition {
                     '] of virtual field [' + this.fieldApiName + ']');
             this.isValid = false;
         }
+    }
+
+    private Boolean valueIsWrong(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+        return clusterType.value != null && // the parameter has a value
+            cluster.arguments.size() == 1 && // there is only 1 argument
+            clusterType.value != cluster.arguments.get(0); // this is not the expected value
+    }
+
+    private Boolean valueIsBlank(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+        return clusterType.value == '' &&
+            cluster.arguments.size() == 1 &&
+            String.isBlank(cluster.arguments.get(0));
+    }
+
+    private Boolean valueMustHaveOnlyOneItemButItHasMore(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+        return !clusterType.allowsMultipleArguments &&
+            cluster.arguments.size() > 1;
+    }
+
+    private Boolean valueTypeIsString(ForceeaClusterType clusterType) {
+        return clusterType.valueType == ForceeaService.ValueType.TYPE_STRING &&
+            (clusterType.value == null || clusterType.value != '');
     }
 
 }

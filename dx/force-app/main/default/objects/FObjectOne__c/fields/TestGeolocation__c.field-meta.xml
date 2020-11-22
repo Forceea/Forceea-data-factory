@@ -5,7 +5,7 @@
     <externalId>false</externalId>
     <label>TestGeolocation</label>
     <required>false</required>
-    <scale>2</scale>
+    <scale>5</scale>
     <trackTrending>false</trackTrending>
     <type>Location</type>
 </CustomField>

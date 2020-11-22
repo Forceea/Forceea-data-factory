@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -78,6 +78,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomDate_fromEqualsTo_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -93,6 +94,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomDate_fromGreaterThanTo_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -319,6 +321,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomDatetime_fromDatetimeEqualsToDatetime_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -336,6 +339,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomDatetime_fromDatetimeGreaterThanToDatetime_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -352,6 +356,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomDatetime_fromDatetimeGreaterThanToDate_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -368,6 +373,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomDatetime_fromDateGreaterThanToDatetime_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -430,6 +436,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomTime_fromTimeEqualsToTime_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -446,6 +453,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomTime_fromTimeLessThanToTime_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -462,6 +470,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomTime_invalidArgument_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1187,6 +1196,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomNumber_fromEqualsTo_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1204,6 +1214,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomNumber_fromGreaterThanTo_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1450,6 +1461,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomString_minEqualsZero_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1467,6 +1479,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomString_minLessThanZero_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1484,6 +1497,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomString_minGreaterThanMax_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1599,6 +1613,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomText_minEqualsMax_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1615,6 +1630,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomText_minEqualsZero_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -1631,6 +1647,7 @@ public class ForceeaGeneratorRandomTest {
 
     @IsTest
     private static void randomText_minLessThanZero_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();

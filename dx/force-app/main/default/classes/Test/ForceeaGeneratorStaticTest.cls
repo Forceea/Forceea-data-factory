@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -53,6 +53,8 @@ public class ForceeaGeneratorStaticTest {
 
     @IsTest
     private static void staticBoolean_insertBlank_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestCheckbox__c, 'static value("")');
@@ -70,6 +72,8 @@ public class ForceeaGeneratorStaticTest {
 
     @IsTest
     private static void staticBoolean_updateBlank_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.TestCheckbox__c, 'static value(true)');
@@ -556,6 +560,8 @@ public class ForceeaGeneratorStaticTest {
 
     @IsTest
     private static void staticId_valid_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.Id, 'static value(a0F0E000009ICSaUAO)');
@@ -569,6 +575,8 @@ public class ForceeaGeneratorStaticTest {
 
     @IsTest
     private static void staticId_virtualField_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition('$Test', 'static value(a0F0E000009ICSaUAO)')
@@ -582,7 +590,9 @@ public class ForceeaGeneratorStaticTest {
     }
 
     @IsTest
-    private static void staticId_insertBlank_expectSuccess() {
+    private static void staticId_insertBlank_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.Id, 'static value("")');
@@ -598,7 +608,8 @@ public class ForceeaGeneratorStaticTest {
     }
 
     @IsTest
-    private static void staticId_updateBlank_expectSuccess() {
+    private static void staticId_updateBlank_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
             obj.insertRecords(true);
@@ -1092,19 +1103,23 @@ public class ForceeaGeneratorStaticTest {
 
     @IsTest
     private static void staticRecordType_invalid_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.RecordTypeId, 'static value(RecordTypeAX)');
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
 
-        String expectedResult = 'Invalid record type [RecordTypeAX] for definition [static value(RecordTypeAX)]';
+        String expectedResult = 'Invalid record type [RecordTypeAX] in definition [static value(RecordTypeAX)]';
         String actualResult = obj.getErrors().get('RecordTypeId').get(0);
         System.assertEquals(expectedResult, actualResult, 'static value - errors found');
     }
 
     @IsTest
     private static void staticRecordType_insertBlank_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.RecordTypeId, 'static value("")');
@@ -1118,6 +1133,8 @@ public class ForceeaGeneratorStaticTest {
 
     @IsTest
     private static void staticRecordType_updateBlank_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
             .setDefinition(FObjectOne__c.RecordTypeId, 'static value(RecordTypeA)');
@@ -1214,6 +1231,8 @@ public class ForceeaGeneratorStaticTest {
 
     @IsTest
     private static void staticString_twoArguments_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(' FObjectOne__c ', 10);
         obj.setDefinition('testtext__c', 'Static Value(One, "Two and Three")');

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -14,7 +14,7 @@
   https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 @IsTest
-public class ForceeaGeneratorSerialLookupTest {
+public class ForceeaGeneratorStaticLookupTest {
 
     @IsTest
     private static void staticLookupForceea_valid_expectSuccess() {
@@ -88,7 +88,7 @@ public class ForceeaGeneratorSerialLookupTest {
     }
 
     @IsTest
-    private static void staticLookupValueForceea_lookupRecordsExists_expectSuccess() {
+    private static void staticLookupValueForceea_lookupRecordsExist_expectSuccess() {
         FObject.setSeed(1);
         String whereValue = 'Hot';
         Integer errors = 0;
@@ -127,6 +127,27 @@ public class ForceeaGeneratorSerialLookupTest {
         if (refObjectRecord.TestText__c != whereValue) {
             errors++;
         }
+        System.assertEquals(0, errors, 'static lookup - errors found');
+    }
+
+    @IsTest
+    private static void staticLookupValueForceea_lookupRecordsNotExist_expectSuccess() {
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setVariable('value', 'Invalid')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestLookup__c, 'static lookup(FObjectTwo__c) ' +
+                'field(TestText__c) value({@value}) source(forceea)');
+        Test.stopTest();
+
+        // check if the lookupId exists in every record of FObjectOne__c
+        Integer errors = 0;
+        for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
+            if (String.isNotBlank(objRecord.TestLookup__c)) {
+                errors++;
+            }
+        }
+
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -200,7 +221,6 @@ public class ForceeaGeneratorSerialLookupTest {
             'a0', 'a1'
         };
         for (FObjectOne__c objRecord : [SELECT TestLookup__r.TestPicklistA__c FROM FObjectOne__c LIMIT 1000]) {
-           //System.debug(objRecord.TestLookup__r.TestPicklistA__c);
             if (!values.contains(objRecord.TestLookup__r.TestPicklistA__c)) {
                 errors++;
             }
@@ -249,6 +269,27 @@ public class ForceeaGeneratorSerialLookupTest {
         if (refObjectRecord.TestText__c != whereValue) {
             errors++;
         }
+        System.assertEquals(0, errors, 'static lookup - errors found');
+    }
+
+    @IsTest
+    private static void staticLookupValueSalesforce_lookupRecordsNotExist_expectSuccess() {
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setVariable('value', 'Invalid')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+            .setDefinition(FObjectOne__c.TestLookup__c, 'static lookup(FObjectTwo__c) ' +
+                'field(TestText__c) value({@value}) source(salesforce)');
+        Test.stopTest();
+
+        // check if the lookupId exists in every record of FObjectOne__c
+        Integer errors = 0;
+        for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
+            if (String.isNotBlank(objRecord.TestLookup__c)) {
+                errors++;
+            }
+        }
+
         System.assertEquals(0, errors, 'static lookup - errors found');
     }
 
@@ -398,6 +439,7 @@ public class ForceeaGeneratorSerialLookupTest {
 
     @IsTest
     private static void staticLookup_invalidLookup_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -415,6 +457,7 @@ public class ForceeaGeneratorSerialLookupTest {
 
     @IsTest
     private static void staticLookup_nullLookup_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();
@@ -431,6 +474,7 @@ public class ForceeaGeneratorSerialLookupTest {
 
     @IsTest
     private static void staticLookup_invalidSource_expectFailure() {
+        FObject.setExceptionHandling('continue');
         FObject.setSeed(1);
 
         Test.startTest();

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -108,7 +108,7 @@ public class ForceeaGeneratorRandomPicklistTest {
 
     @IsTest
     private static void randomPicklist_controllingFieldAfterDependentField_expectSuccess() {
-        FObject.setGlobalVerbose('info');
+        FObject.setGlobalVerbose('info'); // DO NOT REMOVE
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
@@ -239,6 +239,8 @@ public class ForceeaGeneratorRandomPicklistTest {
 
     @IsTest
     private static void randomPicklistVirtualField_valid_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition('$Test', 'random type(picklist)')

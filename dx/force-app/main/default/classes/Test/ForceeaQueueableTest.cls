@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -16,11 +16,12 @@
 @IsTest
 public class ForceeaQueueableTest {
 
-    public class MyException extends Exception {}
+    public class MyException extends Exception {
+    }
 
     @IsTest
     private static void getLogMessage_isTerminated_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
         fq.operationType = ForceeaService.OperationType.ASYNC_INSERT;
         fq.isTerminated = true;
@@ -36,7 +37,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getLogMessageOnFailure_delete_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
         fq.operationType = ForceeaService.OperationType.ASYNC_DELETE;
         fq.jobId = 1;
@@ -54,7 +55,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getLogMessageOnFailure_insert_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
         fq.operationType = ForceeaService.OperationType.ASYNC_INSERT;
         fq.jobId = 1;
@@ -72,7 +73,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getMaxNumOfRecordsToDeletePerBatch_withMaxUnitsPerBatch_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
         fq.numMaxUnitsPerBatch = 10;
 
@@ -93,7 +94,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getMaxNumOfRecordsToDeletePerBatch_withoutMaxUnitsPerBatch_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -113,7 +114,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void handleOnTerminated_isNotTerminated_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Test.startTest();
@@ -127,7 +128,7 @@ public class ForceeaQueueableTest {
     @IsTest
     private static void handleOnTerminated_isTerminated_expectSuccess() {
         FObjectAsync.terminate();
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Test.startTest();
@@ -140,7 +141,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void publishLogMessageOnFailure_invalidProcess_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -165,7 +166,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void shouldTryAgainAfterError_1error_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -186,7 +187,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void shouldTryAgainAfterError_5errors_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -207,7 +208,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void shouldTryAgainAfterError_6errors_expectSuccess() {
-        ForceeaService.AsyncTransaction async = new ForceeaService.AsyncTransaction();
+        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;

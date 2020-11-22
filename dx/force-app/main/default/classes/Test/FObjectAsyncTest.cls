@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -166,17 +166,128 @@ public class FObjectAsyncTest {
     }
 
     @IsTest
-    private static void insertRecords_setRequiredFields_expectSuccess() {
+    private static void insertRecords_setRequiredFieldsTrue_expectSuccess() {
         Integer maxIterationsPerBatch = 1;
         Integer numIterations = 10;
         Integer numJobs = 1;
 
         Test.startTest();
-        getFObjectAsync(templateNoRequiredField(), maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+        getFObjectAsync(templateSetRequiredFields(), maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+            .insertRecords();
+        Test.stopTest();
+
+        System.assert(FObjectAsync.processIsValid(), 'insertRecords - errors found');
+    }
+
+    @IsTest
+    private static void insertRecords_setRequiredFieldsFalse_expectFailure() {
+        Integer maxIterationsPerBatch = 1;
+        Integer numIterations = 10;
+        Integer numJobs = 1;
+
+        Test.startTest();
+        getFObjectAsync(templateWithoutRequiredFields(), maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
             .insertRecords();
         Test.stopTest();
 
         System.assert(!FObjectAsync.processIsValid(), 'insertRecords - errors found');
+    }
+
+    @IsTest
+    private static void insertRecords_variables_expectSuccess() {
+        Integer maxIterationsPerBatch = 0;
+        Integer numIterations = 10;
+        Integer numJobs = 2;
+        FObject.setGlobalVariable('globalVar', 'global');
+        Map<String, FObject> template = templateVariables();
+
+        Test.startTest();
+        getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+            .insertRecords();
+        Test.stopTest();
+
+        Integer errors = 0;
+        List<FObjectOne__c> records = [SELECT TestText__c FROM FObjectOne__c];
+        for (FObjectOne__c record : records) {
+            if (record.TestText__c != 'local - global') {
+                errors++;
+                break;
+            }
+        }
+        Boolean resultIsValid = (errors == 0) && (records.size() == 1 * numJobs * FOBJECT1_NUM_RECORDS);
+        System.assert(resultIsValid, 'insertRecords - errors found');
+    }
+
+    @IsTest
+    private static void insertRecords_verboseNone_expectSuccess() {
+        Integer maxIterationsPerBatch = 0;
+        Integer numIterations = 10;
+        Integer numJobs = 2;
+        FObject.setGlobalVerbose('none');
+        Map<String, FObject> template = template3();
+
+        Test.startTest();
+        getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+            .insertRecords();
+        Test.stopTest();
+
+        Integer errors = 0;
+        List<String> debugLogs = FObject.getGlobalDebugLogs();
+
+        if (debugLogs.contains('- Definition [static value(test)] of [TestText__c] is valid.') ||
+            debugLogs.contains('Will insert the created records of [FObjectOne__c].')) {
+            errors++;
+        }
+
+        System.assert(errors == 0, 'insertRecords - errors found');
+    }
+
+    @IsTest
+    private static void insertRecords_verboseInfo_expectSuccess() {
+        Integer maxIterationsPerBatch = 0;
+        Integer numIterations = 10;
+        Integer numJobs = 2;
+        FObject.setGlobalVerbose('info');
+        Map<String, FObject> template = template3();
+
+        Test.startTest();
+        getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+            .insertRecords();
+        Test.stopTest();
+
+        Integer errors = 0;
+        List<String> debugLogs = FObject.getGlobalDebugLogs();
+
+        if (debugLogs.contains('- Definition [static value(test)] of [TestText__c] is valid.') ||
+            debugLogs.contains('Will insert the created records of [FObjectOne__c].')) {
+            errors++;
+        }
+
+        System.assert(errors == 0, 'insertRecords - errors found');
+    }
+
+    @IsTest
+    private static void insertRecords_verboseDebug_expectSuccess() {
+        Integer maxIterationsPerBatch = 0;
+        Integer numIterations = 10;
+        Integer numJobs = 2;
+        FObject.setGlobalVerbose('debug');
+        Map<String, FObject> template = template3();
+
+        Test.startTest();
+        getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
+            .insertRecords();
+        Test.stopTest();
+
+        Integer errors = 0;
+        List<String> debugLogs = FObject.getGlobalDebugLogs();
+
+        if (!debugLogs.contains('- Definition [static value(test)] of [TestText__c] is valid.') ||
+            !debugLogs.contains('Will insert the created records of [FObjectOne__c].')) {
+            errors++;
+        }
+
+        System.assert(errors == 0, 'insertRecords - errors found');
     }
 
     @IsTest
@@ -258,13 +369,13 @@ public class FObjectAsyncTest {
         template.get('FObjectTwos')
             .setNumberOfRecords(10)
             .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
-            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '1)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(1)')
             .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
             .insertRecords(true);
         template.get('FObjectTwos')
             .setNumberOfRecords(201)
             .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
-            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '2)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(2)')
             .insertRecords(true);
 
         Test.startTest();
@@ -274,7 +385,7 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        System.assert(records.size() == 11, 'deleteRecords - errors found');
+        System.assert(records.size() == 1, 'deleteRecords - errors found');
     }
 
     @IsTest
@@ -331,7 +442,7 @@ public class FObjectAsyncTest {
         Integer maxIterationsPerBatch = 10;
 
         Test.startTest();
-        new FObjectAsync(templateFObjectOnes())
+        new FObjectAsync(template3())
             .setNumberOfIterations(numIterations)
             .setNumberOfJobs(1)
             .setMaxNumberOfIterationsPerBatch(maxIterationsPerBatch)
@@ -350,7 +461,7 @@ public class FObjectAsyncTest {
         String partitionFieldValue = 'df';
 
         Test.startTest();
-        FObjectAsync async = new FObjectAsync(templateFObjectOnes())
+        FObjectAsync async = new FObjectAsync(template3())
             .setNumberOfIterations(numIterations)
             .setNumberOfJobs(1)
             .setMaxNumberOfIterationsPerBatch(maxIterationsPerBatch)
@@ -364,7 +475,7 @@ public class FObjectAsyncTest {
     @IsTest
     private static void setProcessIsValid_isInvalid_expectSuccess() {
         Test.startTest();
-        FObjectAsync async = new FObjectAsync(templateFObjectOnes());
+        FObjectAsync async = new FObjectAsync(template3());
         FObjectAsync.setProcessIsValid(false);
         Test.stopTest();
 
@@ -374,7 +485,7 @@ public class FObjectAsyncTest {
     @IsTest
     private static void setProcessIsValid_isValid_expectSuccess() {
         Test.startTest();
-        FObjectAsync async = new FObjectAsync(templateFObjectOnes());
+        FObjectAsync async = new FObjectAsync(template3());
         Test.stopTest();
 
         System.assert(FObjectAsync.processIsValid() == true, 'setProcessIsValid - errors found');
@@ -383,7 +494,7 @@ public class FObjectAsyncTest {
     @IsTest
     private static void terminateAsyncProcess_valid_expectSuccess() {
         Test.startTest();
-        FObjectAsync async = new FObjectAsync(templateFObjectOnes());
+        FObjectAsync async = new FObjectAsync(template3());
         FObjectAsync.terminate();
         Test.stopTest();
 
@@ -411,34 +522,11 @@ public class FObjectAsyncTest {
 
     /* TEMPLATES */
 
-    public static Map<String, FObject> templatePartition() {
-        Map<String, FObject> template = new Map<String, FObject>();
-
-        template.put('FObjectTwos', new FObject('FObjectTwo__c')
-            .setNumberOfRecords(10)
-            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
-            .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
-            .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
-        );
-        template.put('FObjectOnes', new FObject('FObjectOne__c')
-            .setNumberOfRecords(100)
-            .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
-            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FobjectTwo__c) source(forceea)')
-            .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(FObjectOne__c.TestText__c,
-                'random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)')
-            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
-        );
-
-        return template;
-    }
-
     private static Map<String, FObject> template1() {
         Map<String, FObject> template = new Map<String, FObject>();
 
         template.putAll(template2());
-        template.put('FObjectOnes', new FObject('FObjectOne__c')
+        template.put('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
             .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
             .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FobjectTwo__c) source(forceea)')
@@ -452,19 +540,9 @@ public class FObjectAsyncTest {
         return template;
     }
 
-    private static Map<String, FObject> templateFObjectOnes() {
-        return new Map<String, FObject>{
-            'FObjectOnes' => new FObject('FObjectOne__c')
-                .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
-                .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
-                .setDefinition(FObjectOne__c.TestText__c, 'static value(test)')
-                .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
-        };
-    }
-
     private static Map<String, FObject> template1Invalid() {
         return new Map<String, FObject>{
-            'FObjectOnes' => new FObject('FObjectOne__c')
+            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
                 .setDefinition(FObjectOne__c.TestText__c, 'staticx value(test)')
         };
     }
@@ -472,7 +550,7 @@ public class FObjectAsyncTest {
     private static Map<String, FObject> template2() {
         Map<String, FObject> template = new Map<String, FObject>();
 
-        template.put('FObjectTwos', new FObject('FObjectTwo__c')
+        template.put('FObjectTwos', new FObject(FObjectTwo__c.SObjectType)
             .setNumberOfRecords(FOBJECT2_NUM_RECORDS)
             .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
             .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(number) from(1) step(1) scale(0)')
@@ -483,15 +561,42 @@ public class FObjectAsyncTest {
         return template;
     }
 
-    private static Map<String, FObject> templateNoRequiredField() {
-        Map<String, FObject> template = new Map<String, FObject>();
-        template.put('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
-            .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
-            .setRequiredFields(false)
-            .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
-        );
+    private static Map<String, FObject> template3() {
+        return new Map<String, FObject>{
+            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+                .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
+                .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
+                .setDefinition(FObjectOne__c.TestText__c, 'static value(test)')
+                .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+        };
+    }
 
-        return template;
+    private static Map<String, FObject> templateVariables() {
+        return new Map<String, FObject>{
+            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+                .setVariable('localVar', 'local')
+                .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
+                .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
+                .setDefinition(FObjectOne__c.TestText__c, 'static value({@localVar} - {@globalVar})')
+                .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+        };
+    }
+
+    private static Map<String, FObject> templateWithoutRequiredFields() {
+        return new Map<String, FObject>{
+            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+                .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
+                .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
+        };
+    }
+
+    private static Map<String, FObject> templateSetRequiredFields() {
+        return new Map<String, FObject>{
+            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+                .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
+                .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
+                .setRequiredFields(true)
+        };
     }
 
 }

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -23,43 +23,44 @@ public class ForceeaUtilityTest {
 
     /**
      * @description Validates the field definitions.
-     * @param obj The FObject.
+     * @param sObjectApiName The SObject API name.
      * @param fieldApiName The field API name.
-     * @param validDefinitions The list of valid definitions.
-     * @param invalidDefinitions The list of invalid definitions.
+     * @param validByDefinition The map with key:definition, value:definition is valid (true/false).
      * @return A boolean value.
      */
     public static Boolean definitionsAreValid(
-        FObject obj, String fieldApiName, List<String> validDefinitions, List<String> invalidDefinitions) {
-        List<String> definitions = new List<String>(validDefinitions);
-        definitions.addAll(invalidDefinitions);
-        for (String definition : definitions) {
-            obj.setDefinition(fieldApiName, definition);
-        }
-
-        obj.getRecords();
-
-        String expectedResult = '';
-        Integer counter = 0;
+        String sObjectApiName, String fieldApiName, Map<String, Boolean> validByDefinition) {
         Integer errors = 0;
-        for (String actualResult : obj.getErrors().get(fieldApiName)) {
-            if (!actualResult.startsWith('Invalid definition [') || !actualResult.contains('for the data type of field')) {
-                continue;
-            }
-            expectedResult = 'Invalid definition [' + invalidDefinitions.get(counter) +
-                '] for the data type of field [' + fieldApiName + ']';
-            if (expectedResult == actualResult) {
-                counter++;
+
+        for (String definitionString : validByDefinition.keySet()) {
+            FObject obj = new FObject(sObjectApiName, 1)
+                .setDefinition(fieldApiName, definitionString);
+            obj.validateDefinitions();
+
+            if (validByDefinition.get(definitionString) == true) {
+                if (definitionHasError(obj, definitionString, fieldApiName)) {
+                    errors++;
+                }
+            } else {
+                if (!definitionHasError(obj, definitionString, fieldApiName)) {
+                    errors++;
+                }
             }
         }
 
-        if (counter != invalidDefinitions.size()) {
-            errors += 1;
-        }
-        if (!FObject.processIsValid()) {
-            errors += 2;
-        }
         return (errors == 0) ? true : false;
+    }
+
+    private static Boolean definitionHasError(FObject obj, String definitionString, String fieldApiName) {
+        String errorMessage = 'Invalid definition [' + definitionString + '] for the data type of field [' + fieldApiName + ']';
+        List<String> errors = obj.getErrors().get(fieldApiName);
+        if (errors == null || errors.isEmpty()) {
+            return false;
+        } else if (errors.contains(errorMessage)) {
+            return true;
+        }
+
+        return false;
     }
 
     public static List<Id> getLookupIds(FObject obj) {

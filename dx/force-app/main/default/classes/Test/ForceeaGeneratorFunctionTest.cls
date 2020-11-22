@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -365,6 +365,8 @@ public class ForceeaGeneratorFunctionTest {
 
     @IsTest
     private static void functionAdd_daysInvalid_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestInteger__c, 'random type(number) from(10) to(5) scale(2)')
@@ -383,6 +385,8 @@ public class ForceeaGeneratorFunctionTest {
 
     @IsTest
     private static void functionAdd_refFieldIsInvalid_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestInteger__c, 'random type(number) from(1) to(5) scale(2)')
@@ -401,6 +405,8 @@ public class ForceeaGeneratorFunctionTest {
 
     @IsTest
     private static void functionAdd_refFieldIsNotNumber_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestInteger__c, 'random type(list) value(a,b,c)')
@@ -413,6 +419,70 @@ public class ForceeaGeneratorFunctionTest {
         Integer errors = 0;
         if (FObject.processIsValid()) {
             errors++;
+        }
+        System.assertEquals(0, errors, 'function - errors found');
+    }
+
+    @IsTest
+    private static void functionConvert_lowercase_expectSuccess() {
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestText__c,
+                'random type(string) minLength(20) maxLength(20) startWith(upper) include(lower,upper)')
+            .setDefinition(FObjectOne__c.TestText__c, 'function-convert to(lower)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj.insertRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        for (FObjectOne__c record : (List<FObjectOne__c>) obj.getRecords()) {
+            if (!record.TestText__c.isAllLowerCase()) {
+                errors++;
+                break;
+            }
+        }
+        System.assertEquals(0, errors, 'function - errors found');
+    }
+
+    @IsTest
+    private static void functionConvert_uppercase_expectSuccess() {
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestText__c,
+                'random type(string) minLength(20) maxLength(20) startWith(upper) include(lower,upper)')
+            .setDefinition(FObjectOne__c.TestText__c, 'function-convert to(upper)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj.insertRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        for (FObjectOne__c record : (List<FObjectOne__c>) obj.getRecords()) {
+            if (!record.TestText__c.isAllUpperCase()) {
+                errors++;
+                break;
+            }
+        }
+        System.assertEquals(0, errors, 'function - errors found');
+    }
+
+    @IsTest
+    private static void functionConvert_invalidArgument_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestText__c,
+                'random type(string) minLength(20) maxLength(20) startWith(upper) include(lower,upper)')
+            .setDefinition(FObjectOne__c.TestText__c, 'function-convert to(xyz)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj.insertRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        for (String error : obj.getErrors().get('TestText__c')) {
+            if (!error.contains('Invalid parameter [xyz] in definition [function-convert to(xyz)]')) {
+                errors++;
+            }
         }
         System.assertEquals(0, errors, 'function - errors found');
     }

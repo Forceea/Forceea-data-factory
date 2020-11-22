@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -183,6 +183,8 @@ public class FObjectTest {
 
     @IsTest
     private static void createRecords_invalidRecordNumber_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.createRecords(0);
@@ -216,7 +218,7 @@ public class FObjectTest {
         obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
         Test.stopTest();
 
-        System.assert(obj.queryLimit == FObject.DEFAULT_QUERY_LIMIT, 'createRecords - errors found');
+        System.assert(obj.getQueryLimit() == FObject.DEFAULT_QUERY_LIMIT, 'createRecords - errors found');
     }
 
     @IsTest
@@ -228,19 +230,19 @@ public class FObjectTest {
             .setQueryLimit(myLimit);
         Test.stopTest();
 
-        System.assert(obj.queryLimit == 1, 'createRecords - errors found');
+        System.assert(obj.getQueryLimit() == 1, 'createRecords - errors found');
     }
 
     @IsTest
     private static void createRecords_validateQueryLimitMoreThanMax_expectSuccess() {
-        Integer myLimit = 11000;
+        Integer myLimit = 51000;
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setQueryLimit(myLimit);
         Test.stopTest();
 
-        System.assert(obj.queryLimit == 10000, 'createRecords - errors found');
+        System.assert(obj.getQueryLimit() == 50000, 'createRecords - errors found');
     }
 
     @IsTest
@@ -252,7 +254,7 @@ public class FObjectTest {
             .setQueryLimit(myLimit);
         Test.stopTest();
 
-        System.assert(obj.queryLimit == myLimit, 'createRecords - errors found');
+        System.assert(obj.getQueryLimit() == myLimit, 'createRecords - errors found');
     }
 
     @IsTest
@@ -264,19 +266,19 @@ public class FObjectTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         Test.stopTest();
 
-        System.assert(obj.queryLimit == 1, 'createRecords - errors found');
+        System.assert(obj.getQueryLimit() == 1, 'createRecords - errors found');
     }
 
     @IsTest
     private static void createRecords_validateGlobalQueryLimitMoreThanMax_expectSuccess() {
-        Integer myLimit = 11000;
+        Integer myLimit = 51000;
 
         FObject.setGlobalQueryLimit(myLimit);
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         Test.stopTest();
 
-        System.assert(obj.queryLimit == 10000, 'createRecords - errors found');
+        System.assert(obj.getQueryLimit() == 50000, 'createRecords - errors found');
     }
 
     @IsTest
@@ -288,7 +290,7 @@ public class FObjectTest {
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         Test.stopTest();
 
-        System.assert(obj.queryLimit == myLimit, 'createRecords - errors found');
+        System.assert(obj.getQueryLimit() == myLimit, 'createRecords - errors found');
     }
 
     @IsTest
@@ -427,6 +429,8 @@ public class FObjectTest {
 
     @IsTest
     private static void fObjectConstructor_invalidSObject_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(' FObjectOneX__c ');
         Test.stopTest();
@@ -438,6 +442,8 @@ public class FObjectTest {
 
     @IsTest
     private static void fObjectConstructor_blankSObject_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject('');
         Test.stopTest();
@@ -508,6 +514,21 @@ public class FObjectTest {
     }
 
     @IsTest
+    private static void fObjectConstructor_nullRecord_expectSuccess() {
+        FObjectOne__c record;
+
+        Test.startTest();
+        FObject obj = new FObject(record, 'Group1');
+        Test.stopTest();
+
+        Integer errors = 0;
+        if (String.isNotBlank(obj.getSObjectName())) {
+            errors++;
+        }
+        System.assertEquals(0, errors, 'FObject constructor - errors found');
+    }
+
+    @IsTest
     private static void fObjectConstructor_recordsWithoutGroup_expectSuccess() {
         List<FObjectOne__c> records = new List<FObjectOne__c>();
         for (Integer counter = 1; counter <= 10; counter++) {
@@ -553,6 +574,49 @@ public class FObjectTest {
             errors += 2;
         }
         System.assertEquals(0, errors, 'FObject constructor - errors found');
+    }
+
+    @IsTest
+    private static void getGlobalQueryLimit_standard_expectSuccess() {
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType);
+        Integer result = obj.getGlobalQueryLimit();
+        Test.stopTest();
+
+        System.assertEquals(FObject.DEFAULT_QUERY_LIMIT, result, 'getGlobalQueryLimit - error found');
+    }
+
+    @IsTest
+    private static void getGlobalVerbose_none_expectSuccess() {
+        Test.startTest();
+        String result = FObject.getGlobalVerbose();
+        Test.stopTest();
+
+        System.assertEquals('none', result, 'getGlobalVerbose - error found');
+    }
+
+    @IsTest
+    private static void getGlobalVerbose_info_expectSuccess() {
+        String mode = 'Info';
+        FObject.setGlobalVerbose(mode);
+
+        Test.startTest();
+        String result = FObject.getGlobalVerbose();
+        Test.stopTest();
+
+        System.assertEquals(mode.toLowerCase(), result, 'getGlobalVerbose - error found');
+    }
+
+    @IsTest
+    private static void getGlobalVerbose_debug_expectSuccess() {
+        String mode = 'Debug';
+        FObject.setGlobalVerbose(mode);
+
+        Test.startTest();
+        String result = FObject.getGlobalVerbose();
+        Test.stopTest();
+
+        System.assertEquals(mode.toLowerCase(), result, 'getGlobalVerbose - error found');
     }
 
     @IsTest
@@ -704,6 +768,8 @@ public class FObjectTest {
 
     @IsTest
     private static void getRecords_afterRecordsAreDeleted_expectSuccess() {
+        FObject.setSeed(1);
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition('TestText__c', 'random type(list) value(v1,v2,v3)')
@@ -891,6 +957,7 @@ public class FObjectTest {
     private static void setStandardPricebookEntries_virtualFieldExists_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(Product2.SObjectType, 10)
+            .setRequiredFields(true)
             .setDefinition(Product2.Name, 'static value("Product-")')
             .setDefinition(Product2.Name, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinition(Product2.Description, 'random type(text) minLength(25) maxLength(50)')
@@ -901,21 +968,21 @@ public class FObjectTest {
 
         Integer errors = 0;
         Integer counter = 1;
-        List<PricebookEntry> entries = [SELECT UnitPrice FROM PricebookEntry];
-        for (PricebookEntry record : entries) {
+        for (PricebookEntry record : [SELECT UnitPrice FROM PricebookEntry]) {
             if (record.UnitPrice != counter) {
                 errors++;
             }
             counter++;
         }
 
-        System.assert(!entries.isEmpty(), 'setStandardPricebookEntries - errors found');
+        System.assertEquals(0, errors, 'setStandardPricebookEntries - errors found');
     }
 
     @IsTest
-    private static void setStandardPricebookEntries_virtualFieldNotExists_expectSuccess() {
+    private static void setStandardPricebookEntries_virtualFieldNotExists_expectFailure() {
         Test.startTest();
         FObject obj = new FObject(Product2.SObjectType, 10)
+            .setRequiredFields(true)
             .setDefinition(Product2.Name, 'static value("Product-")')
             .setDefinition(Product2.Name, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinition(Product2.Description, 'random type(text) minLength(25) maxLength(50)')
@@ -925,7 +992,7 @@ public class FObjectTest {
         Test.stopTest();
 
         Integer errors = 0;
-        String errorMessage = 'Invalid virtual field [$WrongStandardPrice] in method setStandardPricebookEntries';
+        String errorMessage = 'Invalid virtual field [$WrongStandardPrice] in method [setStandardPricebookEntries]';
         if (!obj.getErrors().get('Product2').get(0).startsWith(errorMessage)) {
             errors++;
         }
@@ -936,6 +1003,7 @@ public class FObjectTest {
     private static void setStandardPricebookEntries_getInsertedEntries_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(Product2.SObjectType, 10)
+            .setRequiredFields(true)
             .setDefinition(Product2.Name, 'static value("Product-")')
             .setDefinition(Product2.Name, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinition(Product2.Description, 'random type(text) minLength(25) maxLength(50)')
@@ -961,12 +1029,26 @@ public class FObjectTest {
     }
 
     @IsTest
-    private static void setStandardPricebookEntries_notMethodInvoked_expectFailure() {
+    private static void setStandardPricebookEntries_noMethodInvoked_expectSuccess() {
         Test.startTest();
-        FObject obj = new FObject('Product2', 10)
+        FObject obj = new FObject(Product2.SObjectType, 10)
+            .setRequiredFields(true)
             .setDefinition('Name', 'static value("Product ")')
             .setDefinition('Name', 'serial type(number) from(100) step(1) scale(0)')
             .setDefinition('Description', 'static value(12.34)');
+        obj.insertRecords(true);
+        Test.stopTest();
+
+        List<PricebookEntry> entries = [SELECT Id FROM PricebookEntry];
+        System.assert(entries.isEmpty(), 'setStandardPricebookEntries - errors found');
+    }
+
+    @IsTest
+    private static void setStandardPricebookEntries_nonProduct2SObject_expectSuccess() {
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(v1,v2,v3)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         Test.stopTest();
 

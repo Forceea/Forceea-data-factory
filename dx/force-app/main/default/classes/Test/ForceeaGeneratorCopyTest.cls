@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -59,6 +59,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copy_invalidField_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition(FObjectOne__c.TestDecimal__c, 'random type(number) from(1) to(100) scale(0)')
@@ -236,6 +238,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copy_fieldEqualsDefinitionField_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
@@ -251,14 +255,16 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromText_expectSuccess() {
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
+        FObject.setSeed(1);
+
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'random type(picklist)')
             .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getRecords();
         Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
-        Test.startTest();
 
+        Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType)
             .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
             .setDefinition(FObjectOne__c.TestText__c, 'copy field(TestLookup__c) from(FObjectTwo__c.TestpicklistA__c)')
@@ -280,6 +286,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromReference_expectSuccess() {
+        FObject.setSeed(1);
+
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 20)
             .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
@@ -308,9 +316,36 @@ public class ForceeaGeneratorCopyTest {
     }
 
     @IsTest
-    private static void copyLookup_fromDate_expectSuccess() {
-        Test.startTest();
+    private static void copyLookup_fromId_expectSuccess() {
+        FObject.setSeed(1);
 
+        Test.startTest();
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
+        obj2.insertRecords(true);
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
+            .setDefinition(FObjectOne__c.TestText__c, 'copy field(TestLookup__c) from(FObjectTwo__c.Id)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj1.insertRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        for (FObjectOne__c record : [SELECT TestLookup__c, TestText__c FROM FObjectOne__c]) {
+            if (record.TestLookup__c != record.TestText__c) {
+                errors++;
+                break;
+            }
+        }
+        System.assertEquals(0, errors, 'copy - errors found');
+    }
+
+    @IsTest
+    private static void copyLookup_fromDate_expectSuccess() {
+        FObject.setSeed(1);
+
+        Test.startTest();
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
             .setDefinition('Testdate__c', 'random type(date) from(2018-01-01) to(2018-12-31)')
             .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
@@ -324,7 +359,6 @@ public class ForceeaGeneratorCopyTest {
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj1.insertRecords(true);
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
-
         Test.stopTest();
 
         Integer errors = 0;
@@ -340,27 +374,28 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromDatetimeToDatetime_expectSuccess() {
-        Test.startTest();
+        FObject.setSeed(1);
 
-        FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
-            .setDefinition('Testdatetime__c', 'random type(datetime) from(2018-01-01) to(2018-12-31)')
+        Test.startTest();
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 10)
+            .setDefinition(FObjectTwo__c.TestDatetime__c, 'random type(datetime) from(2018-01-01) to(2018-12-31)')
             .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
         obj2.insertRecords(true);
         List<FObjectTwo__c> records2 = (List<FObjectTwo__c>) obj2.getInsertedRecords();
         Map<Id, FObjectTwo__c> lookupRecordsMap = new Map<Id, FObjectTwo__c>(records2);
 
-        FObject obj1 = new FObject(FObjectOne__c.SObjectType)
-            .setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(forceea)')
-            .setDefinition('Testdatetime__c', 'copy field(TestLookup__c) from(FObjectTwo__c.Testdatetime__c)')
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
+            .setDefinition(FObjectOne__c.TestDatetime__c, 'copy field(TestLookup__c) from(FObjectTwo__c.TestDateTime__c)')
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj1.insertRecords(true);
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
-
         Test.stopTest();
 
         Integer errors = 0;
         for (Integer counter = 0; counter < records1.size(); counter++) {
             Id lookupId = records1.get(counter).TestLookup__c;
+
             if (String.valueOf(lookupRecordsMap.get(lookupId).TestDatetime__c) !=
                 String.valueOf(records1.get(counter).TestDatetime__c)) {
                 errors++;
@@ -371,8 +406,9 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromDatetimeToText_expectSuccess() {
-        Test.startTest();
+        FObject.setSeed(1);
 
+        Test.startTest();
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
             .setDefinition('Testdatetime__c', 'random type(datetime) from(2018-01-01) to(2018-12-31)')
             .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
@@ -386,7 +422,6 @@ public class ForceeaGeneratorCopyTest {
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj1.insertRecords(true);
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj1.getRecords();
-
         Test.stopTest();
 
         Integer errors = 0;
@@ -402,6 +437,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromTime_expectSuccess() {
+        FObject.setSeed(1);
+
         Test.startTest();
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
             .setDefinition('Testtime__c', 'static value(23:59:59)')
@@ -431,6 +468,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromPicklist_expectSuccess() {
+        FObject.setSeed(1);
+
         Test.startTest();
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
             .setDefinition(FObjectTwo__c.TestPicklistA__c, 'random type(picklist)')
@@ -460,6 +499,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromCurrency_expectSuccess() {
+        FObject.setSeed(1);
+
         Test.startTest();
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
             .setDefinition('TestCurrency__c', 'random type(number) from(1) to(100) scale(2)')
@@ -489,6 +530,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromCheckbox_expectSuccess() {
+        FObject.setSeed(1);
+
         Test.startTest();
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
             .setDefinition('TestCheckbox__c', 'random type(boolean)')
@@ -518,6 +561,8 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_fromUrl_expectSuccess() {
+        FObject.setSeed(1);
+
         Test.startTest();
         FObject obj2 = new FObject(FObjectTwo__c.SObjectType)
             .setDefinition('TestUrl__c', 'random type(url)')
@@ -547,6 +592,7 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_invalidCopyField_expectFailure() {
+        FObject.setExceptionHandling('continue');
         String definitionString = 'copy field(TestlookupX__c) from(FObjectTwo__c.TestpicklistA__c)';
 
         Test.startTest();
@@ -563,6 +609,7 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_invalidLookupObject_expectFailure() {
+        FObject.setExceptionHandling('continue');
         String definitionString = 'copy field(TestLookup__c) from(FObjecttwoX__c.TestpicklistA__c)';
 
         Test.startTest();
@@ -579,13 +626,14 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_invalidLookupField_expectFailure() {
+        FObject.setExceptionHandling('continue');
         String definitionString = 'copy field(TestLookup__c) from(FObjectTwo__c.TestpicklistX__c)';
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
-        obj.setDefinition('TestText__c', definitionString);
-        obj.insertRecords(true);
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(forceea)')
+            .setDefinition('TestText__c', definitionString)
+            .createRecords();
         Test.stopTest();
 
         String expectedResult = 'Invalid lookup field [FObjectTwo__c.TestpicklistX__c] in definition [' + definitionString + ']';
@@ -595,17 +643,35 @@ public class ForceeaGeneratorCopyTest {
 
     @IsTest
     private static void copyLookup_lookupFieldEqualsDefinitionField_expectFailure() {
+        FObject.setExceptionHandling('continue');
         String definitionString = 'copy field(TestText__c) from(FObjectTwo__c.TestpicklistA__c)';
 
         Test.startTest();
-        FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(forceea)');
-        obj.setDefinition('TestText__c', definitionString);
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
+            .setDefinition(FObjectOne__c.TestText__c, definitionString);
         obj.insertRecords(true);
         Test.stopTest();
 
         String expectedResult = 'The field [TestText__c] cannot be the same as the definition field ' +
             'in definition [' + definitionString + ']';
+        String actualResult = obj.getErrors().get('TestText__c').get(0);
+        System.assertEquals(expectedResult, actualResult, 'copy - errors found');
+    }
+
+    @IsTest
+    private static void copyLookup_fromFieldIsNotLookup_expectFailure() {
+        FObject.setExceptionHandling('continue');
+        String definitionString = 'copy field(TestInteger__c) from(FObjectTwo__c.TestpicklistA__c)';
+
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
+            .setDefinition(FObjectOne__c.TestText__c, definitionString)
+            .createRecords();
+        Test.stopTest();
+
+        String expectedResult = 'The [from] field [TestInteger__c] is not a lookup or virtual field';
         String actualResult = obj.getErrors().get('TestText__c').get(0);
         System.assertEquals(expectedResult, actualResult, 'copy - errors found');
     }

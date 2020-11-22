@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -119,8 +119,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
         Test.startTest();
         FObject obj1 = new FObject('User', 10)
-            .setRequiredFields(true);
-        obj1.setDefinition('IsActive', 'random type(boolean)');
+            .setRequiredFields(true)
+            .setDefinition('IsActive', 'random type(boolean)');
         obj1.insertRecords(true);
 
         FObject obj2 = new FObject('FObjectFour__c');
@@ -140,6 +140,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookup_invalidObject_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition('TestLookup__c', 'random lookup(InvalidObject) source(Forceea)');
@@ -154,6 +156,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookup_nullObject_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition('TestLookup__c', 'random lookup() source(Forceea)');
@@ -167,6 +171,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookup_invalidSource_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source(ForceeaX)');
@@ -180,6 +186,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookup_nullSource_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) source()');
@@ -268,6 +276,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookupGroupForceea_blankGroupName_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition('TestLookup__c', 'random lookup(FObjectTwo__c) group() source(Forceea)');
@@ -365,7 +375,7 @@ public class ForceeaGeneratorRandomLookupTest {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
             .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) field(TestpicklistA__c) value(a1) source(Forceea)')
-            .setDefinition(FObjectOne__c.TestTextRequired__c, 'random type(picklist)');
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
@@ -481,6 +491,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookupValue_invalidField_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(
@@ -770,6 +782,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookupExceptGroup_blankGroupName_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         obj.setDefinition('TestLookup__c',
@@ -953,6 +967,8 @@ public class ForceeaGeneratorRandomLookupTest {
 
     @IsTest
     private static void randomLookupWhere_invalidWhereClause_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj1 = new FObject(FObjectTwo__c.SObjectType, 10)
             .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(list) value(d1,d2)')

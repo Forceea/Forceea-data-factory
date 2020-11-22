@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Index xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TestIndex</fullName>
+    <fields>
+        <name>TestPartition__c</name>
+        <sortDirection>ASC</sortDirection>
+    </fields>
+    <fields>
+        <name>TestId__c</name>
+        <sortDirection>ASC</sortDirection>
+    </fields>
+    <fields>
+        <name>TestText__c</name>
+        <sortDirection>ASC</sortDirection>
+    </fields>
+    <fields>
+        <name>TestInteger__c</name>
+        <sortDirection>ASC</sortDirection>
+    </fields>
+    <label>TestIndex</label>
+</Index>

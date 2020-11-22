@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -123,7 +123,7 @@ public class FObjectFieldsTest {
         obj.deleteDefinitions('TestTextX__c');
         Test.stopTest();
 
-        System.assertEquals('Invalid field [TestTextX__c] in method deleteDefinitions',
+        System.assertEquals('Invalid field [TestTextX__c] in method [deleteDefinitions]',
             obj.getErrors().get('FObjectOne__c').get(0), 'deleteDefinitions - wrong error message for invalid field');
     }
 
@@ -137,7 +137,7 @@ public class FObjectFieldsTest {
         obj.deleteDefinitions(' ');
         Test.stopTest();
 
-        System.assertEquals('Invalid field [] in method deleteDefinitions',
+        System.assertEquals('Invalid field [] in method [deleteDefinitions]',
             obj.getErrors().get('FObjectOne__c').get(0), 'deleteDefinitions - wrong error message for invalid field');
     }
 

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -15,9 +15,17 @@
 */
 public with sharing class ForceeaName {
 
+    /* CONSTANTS */
+
+    public static final String MESSAGE_NAMES = 'Loaded first & last names from';
+
+    /* VARIABLES & PROPERTIES */
+
     public String FirstName { get; set; }
     public String LastName { get; set; }
     public String Gender { get; set; }
+
+    /* CONSTRUCTORS */
 
     public ForceeaName() {
         this.FirstName = '';
@@ -124,7 +132,7 @@ public with sharing class ForceeaName {
         FObject.firstNamesLibraryByGender.put(gender, mFirstNames);
         FObject.lastNamesLibraryByGender.put(gender, mLastNames);
 
-        FObject.forceeaStaticDebug(ForceeaService.INFO, ForceeaService.MESSAGE_NAMES + ' Greece in the Greek language');
+        FObject.forceeaDebugStatic(ForceeaService.INFO, MESSAGE_NAMES + ' Greece in the Greek language');
     }
 
     /**
@@ -185,7 +193,7 @@ public with sharing class ForceeaName {
         FObject.firstNamesLibraryByGender.put(gender, mFirstNames);
         FObject.lastNamesLibraryByGender.put(gender, mLastNames);
 
-        FObject.forceeaStaticDebug(ForceeaService.INFO, ForceeaService.MESSAGE_NAMES + ' United States in the English language');
+        FObject.forceeaDebugStatic(ForceeaService.INFO, MESSAGE_NAMES + ' United States in the English language');
     }
 
 }

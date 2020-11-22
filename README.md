@@ -1,11 +1,11 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
-# Forceea 2.2.0
+# Forceea 2.3.0
 
 ### What is Forceea?
 Forceea (forsi:a) is a powerful data factory for Salesforce, it's based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
 * allows developers to easily create SObject records for test methods.
-* facilitates administrators or business users to populate any org with SObject records for testing or demonstration purposes.
+* facilitates administrators or business users to populate any org with SObject or Big Object records for testing or demonstration purposes.
 
 ### How can you deploy it?
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
@@ -24,17 +24,18 @@ or this link for **Sandboxes**:
                                                                                                                        
 You may also use the Salesforce CLI command
 ```
-sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVbJQAU -r -u <UsernameOrOrgAlias>
+sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVgTQAU -r -u <UsernameOrOrgAlias>
 ```
 
 ### What can Forceea do?
-* Creates records for standard or custom SObjects, for any standard or custom field.
-* Can insert/update records synchronously (for test methods) or insert/delete records asynchronously (for populating your org with millions of records).
-* Has an easy way to define data.
-* Automatically defines required fields.
-* Can create data for fields of the data types: Integer, Currency, Double, Date, Datetime, Time, Boolean, String, TextArea, Percent, Reference, Geolocation, Email, Phone, URL, Base64, Picklist and MultiPicklist.
+* Inserts, updates and deletes records for standard or custom SObjects, synchronously (for test methods) or asynchronously (for populating your org with millions of records).
+* Inserts, updates and deletes records for standard or custom Big Objects, synchronously or asynchronously.
+* Supports all field data types of any standard or custom field.
+* Supports Dadela data generation language for field definitions.
+* Can automatically define the required fields.
 * Handles Record Types and field dependencies (dependent picklists).
 * Supports record groups for inserting and deleting records.
+* Provides Templates for constructing a DataFactory class that can be used for flexible data generation.
 * Uses DML Optimizer to reduce the number of insert statements with Templates.
 * Supports variables and functions.
 * Validates the definitions based on the field data type.
@@ -45,5 +46,5 @@ sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVbJQAU -r -u <UsernameOrO
 * Visit [forceea.com](https://www.forceea.com)
 ---
 
-### Give you opinion about Forceea by completing this [Survey](https://www.surveymonkey.co.uk/r/M6BJMKT)
 ### Are you a Forceea user? Join our [LinkedIn](https://www.linkedin.com/groups/8943965) group!
+#### Give you opinion about Forceea by completing this [Survey](https://www.surveymonkey.co.uk/r/M6BJMKT)

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -15,12 +15,43 @@
 */
 public with sharing class ForceeaGenerator {
 
+    /* CLASSES */
+
+    /**
+     * @description A picklist info object.
+     */
+    public class PicklistInfo {
+        public String validFor;
+    }
+
+    /* CONSTANTS */
+
+    public static final String MESSAGE_INVALID_PARAMETER = 'Invalid parameter';
+
+    private static final String PARAMETER_EXCEPT = 'except';
+    private static final String PARAMETER_FIELD = 'field';
+    private static final String PARAMETER_FROM = 'from';
+    private static final String PARAMETER_GROUP = 'group';
+    private static final String PARAMETER_LOOKUP = 'lookup';
+    private static final String PARAMETER_SCALE = 'scale';
+    private static final String PARAMETER_MODE = 'mode';
+    private static final String PARAMETER_SOURCE = 'source';
+    private static final String PARAMETER_TO = 'to';
+    private static final String PARAMETER_VALUE = 'value';
+    private static final String PARAMETER_WHERE = 'where';
+
     /* COLLECTIONS */
 
     // lookup types used in serial lookup
     public static Set<String> lookupModesSet = new Set<String>{
         'cyclical', 'first', 'last', 'null', 'permutation'
     };
+    // the lookup SObject's records map
+    Map<Id, SObject> lookupRecordsById { get; set; }
+    //
+    private List<String> lookupIds { get; set; }
+    private Set<String> lookupIdsSet { get; set; }
+
     // the valid sources
     private static Set<String> sourcesSet = new Set<String>{
         ForceeaService.SOURCE_FORCEEA, ForceeaService.SOURCE_SALESFORCE
@@ -63,8 +94,11 @@ public with sharing class ForceeaGenerator {
     private ForceeaDefinition def { get; set; }
     private FObject fObj { get; set; }
     private Integer numRecords { get; set; }
+    private String lookupFromFieldApiName { get; set; }
+    private String lookupSObjectApiName { get; set; }
+    private String fieldApiName { get; set; }
 
-    /* CONSTRUCTOR */
+    /* CONSTRUCTORS */
 
     public ForceeaGenerator(ForceeaDefinition def) {
         this.def = def;
@@ -140,8 +174,41 @@ public with sharing class ForceeaGenerator {
      * @return A Boolean value.
      */
     private Boolean fieldIsCheckbox(String fieldApiName) {
-        FObject.Field field = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
-        return (field.dataType == Schema.DisplayType.BOOLEAN);
+        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        return (field != null && field.dataType == Schema.DisplayType.BOOLEAN);
+    }
+
+    private Boolean fieldIsDatetime(String fieldApiName) {
+        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        return (field != null && field.dataType == Schema.DisplayType.DATETIME);
+    }
+
+    private Boolean fieldIsLookup(String fieldApiName) {
+        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        return (field != null && field.dataType == Schema.DisplayType.REFERENCE);
+    }
+
+    private Boolean fromFieldIsNotLookupOrVirtualField() {
+        Boolean fieldIsLookupOrBoolean =
+            ForceeaService.fieldIsVirtual(this.fieldApiName) || fieldIsLookup(this.fieldApiName);
+
+        if (!fieldIsLookupOrBoolean) {
+            this.fObj.addError(this.def.fieldApiName,
+                'The [from] field [' + this.fieldApiName + '] is not a lookup or virtual field');
+            return true;
+        }
+
+        return false;
+    }
+
+    private Boolean fromFieldIsTheSameAsDefinitionField() {
+        if (this.fieldApiName.equalsIgnoreCase(this.def.fieldApiName)) {
+            this.fObj.addError(this.def.fieldApiName, 'The field [' + this.fieldApiName +
+                '] cannot be the same as the definition field in definition [' + this.def.definitionString + ']');
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -153,7 +220,7 @@ public with sharing class ForceeaGenerator {
         String result = '';
         String par = parameter.toLowerCase();
 
-        for (FObject.Cluster cluster : this.def.clusters) {
+        for (ForceeaCluster cluster : this.def.clusters) {
             if (par == cluster.parameter) { // parameter is found
                 result = cluster.arguments[0];
                 if (result.startsWith('"')) {
@@ -175,9 +242,8 @@ public with sharing class ForceeaGenerator {
         List<String> results = new List<String>();
         String par = parameter.toLowerCase();
 
-        for (FObject.Cluster cluster : this.def.clusters) {
+        for (ForceeaCluster cluster : this.def.clusters) {
             if (par == cluster.parameter) { // parameter is found
-
                 for (String arg : cluster.arguments) {
                     String result = arg;
                     if (result.startsWith('"')) {
@@ -200,82 +266,50 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getCopiedLookupValues(String referenceFieldName, String fromSObjectDotField) {
         List<String> results = new List<String>();
+        this.fieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
+            this.fObj.getSObjectName(), referenceFieldName, null, this.def.fieldApiName, 'copy-field');
 
-        String fieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
-            this.fObj.sObjectApiName, referenceFieldName, null, this.def.fieldApiName, 'copy-field');
-        if (String.isBlank(fieldApiName)) {
+        if (shouldReturnEmptyResultsFromCopiedLookupValues1(fromSObjectDotField)) {
             return results;
         }
 
-        if (fieldApiName.equalsIgnoreCase(this.def.fieldApiName)) {
-            this.fObj.addError(this.def.fieldApiName, 'The field [' + fieldApiName +
-                '] cannot be the same as the definition field in definition [' + this.def.definitionString + ']');
+        setLookupIds();
+        setLookupRecordsMap();
+        if (shouldReturnEmptyResultsFromCopiedLookupValues2()) {
             return results;
         }
 
-        String lookupSObjectName = fromSObjectDotField.trim().substringBefore('.');
-        String lookupSObjectApiName = ForceeaService.getSObjectApiName(
-            this.fObj, this.def.definitionString, lookupSObjectName, this.def.fieldApiName, 'lookup');
-        if (this.fObj.processMustTerminate()) {
-            return results;
-        }
+        return getCopiedLookupValuesBasedOnDataType();
+    }
 
-        String lookupFromFieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
-            lookupSObjectApiName, fromSObjectDotField.trim().substringAfter('.'), null, this.def.fieldApiName, 'copy-from');
-        if (String.isBlank(lookupFromFieldApiName)) {
-            return results;
-        }
-
-        // get the lookup field values
-        Integer fieldPosition = getFieldPosition(fieldApiName);
-
-        List<String> lookupIds = new List<String>(this.fObj.fieldValuesMatrix.get(fieldPosition));
-        Set<String> lookupIdsSet = new Set<String>(lookupIds);
-
-        String soqlQuery = 'SELECT Id, ' + lookupFromFieldApiName +
-            ' FROM ' + lookupSObjectApiName +
-            ' WHERE Id IN :lookupIdsSet LIMIT ' + String.valueOf(this.fObj.queryLimit);
-
-        Map<Id, SObject> lookupRecordsMap; // the lookup SObject's records map
-        try { //query the database and populate the lookup records map
-            lookupRecordsMap = new Map<Id, SObject>(Database.query(soqlQuery));
-        } catch (QueryException ex) {
-            this.fObj.addError(fieldApiName,
-                ForceeaService.MESSAGE_FOUND_ERRORS_SELECTING_FROM_LOOKUP + ' [' + lookupSObjectApiName +
-                '] of [' + this.fObj.sObjectApiName + ']: ' + ex.getMessage());
-        } finally {
-            if (lookupRecordsMap.isEmpty() || this.fObj.processMustTerminate()) {
-                return results;
-            }
-        }
-
-        // get the field data type
-        Schema.DisplayType valueType = getFieldDataType();
-
+    private List<String> getCopiedLookupValuesBasedOnDataType() {
+        List<String> results = new List<String>();
         String val = '';
         Datetime dt;
 
-        if (valueType == Schema.DisplayType.DATETIME) { // the field is Datatime
-            for (String lookupId : lookupIds) {
-                dt = (Datetime) lookupRecordsMap.get(lookupId).get(lookupFromFieldApiName); // get the datetime value
+        if (fieldIsDatetime(this.def.fieldApiName)) {
+            for (String lookupId : this.lookupIds) {
+                dt = (Datetime) this.lookupRecordsById.get(lookupId).get(this.lookupFromFieldApiName);
                 val = String.valueOf(dt);
+
                 if (String.isBlank(val)) {
                     results.add('');
                 } else {
                     results.add(val);
                 }
             }
-        } else { // the field is not Datatime
-            for (String lookupId : lookupIds) {
-                val = String.valueOf(lookupRecordsMap.get(lookupId).get(lookupFromFieldApiName));
-                if (String.isBlank(val)) {
-                    results.add('');
-                } else {
-                    results.add(val);
-                }
-            }
+            return results;
         }
 
+        // the field is not Datatime
+        for (String lookupId : this.lookupIds) {
+            val = String.valueOf(this.lookupRecordsById.get(lookupId).get(this.lookupFromFieldApiName));
+            if (String.isBlank(val)) {
+                results.add('');
+            } else {
+                results.add(val);
+            }
+        }
         return results;
     }
 
@@ -289,7 +323,7 @@ public with sharing class ForceeaGenerator {
         fieldName = fieldName.trim();
 
         String fieldApiName = ForceeaService.getFieldApiName(
-            this.fObj, this.def.definitionString, this.fObj.sObjectApiName, fieldName, null,
+            this.fObj, this.def.definitionString, this.fObj.getSObjectName(), fieldName, null,
             this.def.fieldApiName, 'copy-field');
         if (String.isBlank(fieldApiName)) {
             return results;
@@ -304,8 +338,6 @@ public with sharing class ForceeaGenerator {
 
         Integer thisFieldPosition = getFieldPosition(this.def.fieldApiName);
         Integer fieldPosition = getFieldPosition(fieldApiName);
-        //System.debug('thisFieldPosition: ' + thisFieldPosition);
-        //System.debug('fieldPosition: ' + fieldPosition);
 
         if (thisFieldPosition < fieldPosition || fieldPosition == -1) {
             results = getCopiedFieldValuesFromExisting(fieldApiName);
@@ -350,12 +382,12 @@ public with sharing class ForceeaGenerator {
 
         switch on this.def.type.id {
             when COPY_FIELD {
-                String field = getClusterArgument(ForceeaService.PARAMETER_FIELD);
+                String field = getClusterArgument(PARAMETER_FIELD);
                 results = getCopiedFieldValues(field);
             }
             when COPY_LOOKUP {
-                String referenceFieldName = getClusterArgument(ForceeaService.PARAMETER_FIELD);
-                String fromSObjectDotField = getClusterArgument(ForceeaService.PARAMETER_FROM);
+                String referenceFieldName = getClusterArgument(PARAMETER_FIELD);
+                String fromSObjectDotField = getClusterArgument(PARAMETER_FROM);
                 results = getCopiedLookupValues(referenceFieldName, fromSObjectDotField);
             }
         }
@@ -368,13 +400,13 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getFunctionAddValues() {
-        String fieldName = getClusterArgument(ForceeaService.PARAMETER_FIELD);
+        String fieldName = getClusterArgument(PARAMETER_FIELD);
         Integer currentFieldPosition = getFieldPosition(this.def.fieldApiName);
         List<String> currentValues = this.fObj.fieldValuesMatrix.get(currentFieldPosition);
         List<String> valuesToAdd = getCopiedFieldValues(fieldName);
 
         List<String> results = new List<String>();
-        if (this.fObj.processMustTerminate()) {
+        if (FObject.processMustTerminate()) {
             return results;
         }
 
@@ -395,14 +427,16 @@ public with sharing class ForceeaGenerator {
                 Decimal currentValue = Decimal.valueOf(currentStringValue) + valueToAdd;
                 results.add(currentValue.toPlainString());
                 continue;
-            } catch (TypeException exp) { }
+            } catch (TypeException exp) {
+            }
 
             try {
                 Decimal currentValueTime = Datetime.valueOf(currentStringValue).getTime() + valueToAdd * 86400 * 1000;
                 Datetime value = Datetime.newInstance((Long) currentValueTime);
                 results.add(String.valueOf(value));
                 continue;
-            } catch (TypeException exp) { }
+            } catch (TypeException exp) {
+            }
 
             try {
                 Date currentValue = Date.valueOf(currentStringValue);
@@ -410,9 +444,41 @@ public with sharing class ForceeaGenerator {
                 Date value = currentValue.addDays(daysToAdd);
                 results.add(String.valueOf(value));
                 continue;
-            } catch (TypeException exp) { }
+            } catch (TypeException exp) {
+            }
 
             errorsFound = true;
+        }
+
+        return results;
+    }
+
+    /**
+     * @description Create values for function-convert.
+     * @return A list of string values.
+     */
+    private List<String> getFunctionConvertValues() {
+        List<String> results = new List<String>();
+        if (FObject.processMustTerminate()) {
+            return results;
+        }
+
+        String parameter = getClusterArgument(PARAMETER_TO);
+        Integer currentFieldPosition = getFieldPosition(this.def.fieldApiName);
+        List<String> currentValues = this.fObj.fieldValuesMatrix.get(currentFieldPosition);
+
+        switch on parameter {
+            when 'lower' {
+                results = ForceeaService.convertListToLowercase(currentValues);
+            }
+            when 'upper' {
+                results = ForceeaService.convertListToUppercase(currentValues);
+            }
+            when else {
+                String errorMessage = MESSAGE_INVALID_PARAMETER + ' [' + parameter + '] ' +
+                    ForceeaService.MESSAGE_IN_DEFINITION + ' [' + this.def.definitionString + ']';
+                this.fObj.addError(this.def.fieldApiName, errorMessage);
+            }
         }
 
         return results;
@@ -425,13 +491,16 @@ public with sharing class ForceeaGenerator {
     private List<String> getFunctionValues() {
         List<String> results = new List<String>();
 
-        if (this.fObj.processMustTerminate()) {
+        if (FObject.processMustTerminate()) {
             return results;
         }
 
         switch on this.def.type.id {
             when FUNCTION_ADD {
                 results = getFunctionAddValues();
+            }
+            when FUNCTION_CONVERT {
+                results = getFunctionConvertValues();
             }
         }
 
@@ -447,7 +516,7 @@ public with sharing class ForceeaGenerator {
             return Schema.DisplayType.ANYTYPE;
         }
 
-        FObject.Field field = ForceeaService.getField(this.fObj.sObjectApiName, this.def.fieldApiName);
+        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), this.def.fieldApiName);
         return field.dataType;
     }
 
@@ -465,7 +534,7 @@ public with sharing class ForceeaGenerator {
             return Schema.DisplayType.ANYTYPE;
         }
 
-        return ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName).dataType;
+        return ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName).dataType;
     }
 
     /**
@@ -478,7 +547,7 @@ public with sharing class ForceeaGenerator {
      */
     private Map<String, Set<String>> getFieldDependenciesMap(String controllingField, String dependentField) {
         Map<String, Set<String>> results = new Map<String, Set<String>>();
-        Map<String, Schema.SObjectField> sObjectFieldsByName = ForceeaService.getSObjectFieldsByName( this.fObj.sObjectApiName);
+        Map<String, Schema.SObjectField> sObjectFieldsByName = ForceeaService.getSObjectFieldsByName(this.fObj.getSObjectName());
 
         Schema.DescribeFieldResult controllingFieldInfo = sObjectFieldsByName.get(controllingField).getDescribe();
         List<Schema.PicklistEntry> controllingValues = controllingFieldInfo.getPicklistValues();
@@ -492,7 +561,7 @@ public with sharing class ForceeaGenerator {
 
         for (Schema.PicklistEntry currDependentValue : dependentValues) {
             String jsonString = JSON.serialize(currDependentValue);
-            FObject.PicklistInfo info = (FObject.PicklistInfo) JSON.deserialize(jsonString, FObject.PicklistInfo.class);
+            PicklistInfo info = (PicklistInfo) JSON.deserialize(jsonString, PicklistInfo.class);
             String hexString = EncodingUtil.convertToHex(EncodingUtil.base64Decode(info.validFor)).toUpperCase();
             Integer baseCount = 0;
 
@@ -527,16 +596,15 @@ public with sharing class ForceeaGenerator {
      * @return A list of picklist values.
      */
     private List<String> getFieldPicklistValuesExcludingExceptions() {
-        //System.debug('> ForceeaGenerator.getFieldPicklistValuesExcludingExceptions');
         List<String> picklistValues = new List<String>();
         String fieldApiName = this.def.fieldApiName.toLowerCase();
 
-        FObject.Field field = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
+        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         for (Schema.PicklistEntry picklistEntry : field.picklistValues) {
             picklistValues.add(picklistEntry.getValue());
         }
 
-        List<String> exceptions = getClusterArguments(ForceeaService.PARAMETER_EXCEPT);
+        List<String> exceptions = getClusterArguments(PARAMETER_EXCEPT);
         return ForceeaService.removeValuesFromList(picklistValues, exceptions);
     }
 
@@ -565,17 +633,16 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     public List<String> getListValuesForPermutations() {
-        //System.debug('> ForceeaGenerator.getListValuesForPermutations');
         List<String> results = new List<String>();
         this.def.hasPermutation = true;
 
-        if (this.def.fieldApiName  == ForceeaService.RECORD_TYPE_ID) {
+        if (this.def.fieldApiName == ForceeaService.RECORD_TYPE_ID) {
             return getRecordTypeIdsExcludingExceptions();
         }
 
         switch on getClusterArgument('type').toLowerCase() {
             when 'list' {
-                results = getClusterArguments(ForceeaService.PARAMETER_VALUE);
+                results = getClusterArguments(PARAMETER_VALUE);
             }
             when 'picklist' {
                 results = getFieldPicklistValuesExcludingExceptions();
@@ -641,12 +708,11 @@ public with sharing class ForceeaGenerator {
      */
     private List<SObject> getLookupRecordsFromForceea(
         String lookupSObjectApiName, String lookupFieldApiName, String groupName) {
-        //System.debug('> getLookupRecordsFromForceea');
         List<SObject> results = new List<SObject>();
         String key = lookupSObjectApiName.toLowerCase() + '.' + groupName.trim().toLowerCase() ;
 
-        if (FObject.globalInsertedRecordsBySObjectGroup.containsKey(key)) {
-            results = FObject.globalInsertedRecordsBySObjectGroup.get(key);
+        if (FObject.globalInsertedRecordsByGroup.containsKey(key)) {
+            results = FObject.globalInsertedRecordsByGroup.get(key);
         }
 
         if (results.isEmpty() && this.def.isSystemDeclared) {
@@ -665,40 +731,32 @@ public with sharing class ForceeaGenerator {
      */
     private List<SObject> getLookupRecordsFromSalesforce(
         String lookupSObjectApiName, String lookupFieldApiName, String whereClause) {
-        //System.debug('> getLookupRecordsFromSalesforce');
-
-        Boolean isActiveFieldExists = existsIsActiveStandardField(lookupSObjectApiName);
-
-        String soqlQuery = 'SELECT Id';
-        if (String.isNotBlank(lookupFieldApiName)) {
-            soqlQuery += ', ' + lookupFieldApiName;
-        }
-
-        soqlQuery += ' FROM ' + lookupSObjectApiName;
-        if (String.isNotBlank(whereClause)) {
-            soqlQuery += ' WHERE ' + whereClause;
-        }
-
-        if (this.fObj.excludeInactiveLookupRecords && isActiveFieldExists) {
-            if (String.isBlank(whereClause)) {
-                soqlQuery += ' WHERE IsActive = true';
-            } else {
-                soqlQuery += ' AND IsActive = true';
-            }
-        }
-
-        soqlQuery += ' LIMIT ' + String.valueOf(this.fObj.queryLimit);
 
         List<SObject> results = new List<SObject>();
         try {
-            results = Database.query(soqlQuery);
+            Boolean isActiveFieldExists = existsIsActiveStandardField(lookupSObjectApiName);
+            ForceeaSelector selector = new ForceeaSelector()
+                .setField(lookupFieldApiName)
+                .setFrom(lookupSObjectApiName)
+                .setWhere(whereClause)
+                .excludeInactive(this.fObj.excludeInactiveLookupRecords)
+                .isActiveFieldExists(isActiveFieldExists)
+                .setLimit(this.fObj.getQueryLimit());
+
+            results = Database.query(selector.getQueryString());
         } catch (QueryException ex) {
             String key = (String.isBlank(lookupFieldApiName)) ? this.def.fieldApiName : lookupFieldApiName;
             this.fObj.addError(key, ForceeaService.MESSAGE_FOUND_ERRORS_SELECTING_FROM_LOOKUP + ' [' +
-                lookupSObjectApiName + '] of [' + this.fObj.sObjectApiName + ']: ' + ex.getMessage());
+                lookupSObjectApiName + '] of [' + this.fObj.getSObjectName() + ']: ' + ex.getMessage());
         }
 
         return results;
+    }
+
+    private String getLookupSObjectApiName(String fromSObjectDotField) {
+        String lookupSObjectName = fromSObjectDotField.trim().substringBefore('.');
+        return ForceeaService.getSObjectApiName(
+            this.fObj, this.def.definitionString, lookupSObjectName, this.def.fieldApiName, 'lookup');
     }
 
     /**
@@ -718,7 +776,6 @@ public with sharing class ForceeaGenerator {
     private List<String> getLookupValues(String command, String source,
         String lookupSObjectName, String lookupFieldName, List<String> lookupValues,
         List<String> lookupExceptions, String groupName, String whereClause, String lookupMode, Boolean shouldGetUniqueValues) {
-        //System.debug('> getLookupValues - command: ' + command + ', hasPermutation: ' + this.def.hasPermutation);
         List<String> results = new List<String>();
         String fieldApiName = this.def.fieldApiName;
 
@@ -733,7 +790,7 @@ public with sharing class ForceeaGenerator {
 
         String lookupFieldApiName = ''; // may be blank because of the definition random lookup(SObject)
         if (String.isNotBlank(lookupFieldName)) {
-            lookupFieldApiName = ForceeaService.getFieldApiNameFromKey(this.fObj.sObjectApiName, lookupFieldName, null);
+            lookupFieldApiName = ForceeaService.getFieldApiNameFromKey(lookupSObjectApiName, lookupFieldName, null);
 
             if (String.isBlank(lookupFieldApiName)) {
                 this.fObj.addError(fieldApiName,
@@ -757,7 +814,7 @@ public with sharing class ForceeaGenerator {
                 lookupRecords = getLookupRecordsFromSalesforce(lookupSObjectApiName, lookupFieldName, whereClause);
             }
         }
-        if (this.fObj.processMustTerminate()) {
+        if (FObject.processMustTerminate()) {
             return results;
         }
 
@@ -792,16 +849,15 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     public List<String> getLookupValuesForPermutations() {
-        //System.debug('> getLookupValuesForPermutations');
         this.def.hasPermutation = true;
 
-        String source = getClusterArgument(ForceeaService.PARAMETER_SOURCE);
-        String lookupObject = getClusterArgument(ForceeaService.PARAMETER_LOOKUP);
-        String lookupFieldName = getClusterArgument(ForceeaService.PARAMETER_FIELD);
-        List<String> lookupValues = getClusterArguments(ForceeaService.PARAMETER_VALUE);
-        List<String> exceptions = getClusterArguments(ForceeaService.PARAMETER_EXCEPT);
-        String groupName = getClusterArgument(ForceeaService.PARAMETER_GROUP);
-        String whereClause = getClusterArgument(ForceeaService.PARAMETER_WHERE);
+        String source = getClusterArgument(PARAMETER_SOURCE);
+        String lookupObject = getClusterArgument(PARAMETER_LOOKUP);
+        String lookupFieldName = getClusterArgument(PARAMETER_FIELD);
+        List<String> lookupValues = getClusterArguments(PARAMETER_VALUE);
+        List<String> exceptions = getClusterArguments(PARAMETER_EXCEPT);
+        String groupName = getClusterArgument(PARAMETER_GROUP);
+        String whereClause = getClusterArgument(PARAMETER_WHERE);
 
         return getLookupValues(ForceeaService.COMMAND_SERIAL, source, lookupObject, lookupFieldName, lookupValues,
             exceptions, groupName, whereClause, ForceeaService.MODE_PERMUTATION, true);
@@ -814,11 +870,11 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getMockedIds(Schema.SObjectType sObjectType) {
         List<String> results = new List<String>();
-        String prefix = sObjectType.getDescribe().getKeyPrefix() + 'mock';
+        String prefix = sObjectType.getDescribe().getKeyPrefix();
 
         for (Integer counter = 0; counter < this.numRecords; counter++) {
             String serialNumber = String.valueOf(FObject.mockingSerialNumber++);
-            results.add(prefix + '0'.repeat(8 - serialNumber.length()) + serialNumber);
+            results.add(prefix + '0'.repeat(12 - serialNumber.length()) + serialNumber);
         }
 
         return results;
@@ -846,7 +902,7 @@ public with sharing class ForceeaGenerator {
      * @return The serialized record number of next record.
      */
     public Integer getNumberOfNextRecord() {
-        return FObject.numFirstRecordsBySObject.get(this.fObj.sObjectApiName);
+        return FObject.numFirstRecordsBySObject.get(this.fObj.getSObjectName());
     }
 
     /**
@@ -854,8 +910,6 @@ public with sharing class ForceeaGenerator {
      * @return The list of permutation values.
      */
     private List<String> getPermutationValues(Integer permutationPosition) {
-        //System.debug('> getPermutationValues - permutationPosition: ' + permutationPosition);
-        //System.debug('this.fObj.permutationValues: ' + this.fObj.permutationValues);
         List<String> results = new List<String>();
         if (permutationPosition == null || permutationPosition < 0) {
             return results;
@@ -878,7 +932,6 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getPicklistValuesWithRespectToDependencies(
         String dependentFieldApiName, String controllingFieldApiName, List<String> inclusions, List<String> exceptions) {
-        //System.debug('> getPicklistValuesWithRespect');
         exceptions = ForceeaService.convertListToLowercase(exceptions);
         Integer controllingFieldPosition = getFieldPosition(controllingFieldApiName);
 
@@ -1169,11 +1222,11 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getRandomListValues() {
         List<String> results = new List<String>();
-        List<String> arguments = getClusterArguments(ForceeaService.PARAMETER_VALUE);
+        List<String> arguments = getClusterArguments(PARAMETER_VALUE);
 
         if (this.def.fieldApiName == ForceeaService.RECORD_TYPE_ID) {
             List<String> recordTypeIds = getRecordTypeIdsFromDeveloperNames(arguments);
-            if (this.fObj.processMustTerminate()) {
+            if (FObject.processMustTerminate()) {
                 return results;
             }
             return getRandomValuesFromList(recordTypeIds);
@@ -1194,14 +1247,14 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getRandomListValuesForPicklists() {
-        List<String> arguments = getClusterArguments(ForceeaService.PARAMETER_VALUE);
+        List<String> arguments = getClusterArguments(PARAMETER_VALUE);
         List<String> values = new List<String>();
         String fieldApiName = this.def.fieldApiName;
 
         // get all picklist values
         List<String> picklistValues = new List<String>();
 
-        FObject.Field depField = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
+        ForceeaFieldInfo depField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         for (Schema.PicklistEntry picklistEntry : depField.picklistValues) {
             picklistValues.add(picklistEntry.getValue());
         }
@@ -1355,19 +1408,17 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getRandomPicklistValues() {
-        //System.debug('> ForceeaGenerator.getRandomPicklistValues');
-
         String fieldApiName = this.def.fieldApiName;
         if (fieldApiName == ForceeaService.RECORD_TYPE_ID) {
             return getRandomRecordTypes();
         }
 
         // get dependent and controlling fields
-        FObject.Field dependentField = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
+        ForceeaFieldInfo dependentField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         String controllingFieldApiName = dependentField.controllingFieldApiName;
 
         List<String> results = new List<String>();
-        List<String> exceptions = getClusterArguments(ForceeaService.PARAMETER_EXCEPT);
+        List<String> exceptions = getClusterArguments(PARAMETER_EXCEPT);
         if (String.isBlank(controllingFieldApiName) || this.fObj.isUpdate || fieldIsCheckbox(controllingFieldApiName)) {
             List<String> picklistValues = getFieldPicklistValuesExcludingExceptions();
             results = getRandomValuesFromList(picklistValues);
@@ -1583,7 +1634,7 @@ public with sharing class ForceeaGenerator {
                 'in definition [' + this.def.definitionString + ']');
         }
 
-        if (this.fObj.processMustTerminate()) {
+        if (FObject.processMustTerminate()) {
             return results;
         }
 
@@ -1682,30 +1733,30 @@ public with sharing class ForceeaGenerator {
 
         switch on this.def.type.id {
             when RANDOM_NUMBER {
-                Decimal fromArgm = Decimal.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM));
-                Decimal toArgm = Decimal.valueOf(getClusterArgument(ForceeaService.PARAMETER_TO));
-                Integer scaleArgm = Integer.valueOf(getClusterArgument(ForceeaService.PARAMETER_SCALE));
+                Decimal fromArgm = Decimal.valueOf(getClusterArgument(PARAMETER_FROM));
+                Decimal toArgm = Decimal.valueOf(getClusterArgument(PARAMETER_TO));
+                Integer scaleArgm = Integer.valueOf(getClusterArgument(PARAMETER_SCALE));
                 results = getRandomNumbers(fromArgm, toArgm, scaleArgm);
             }
             when RANDOM_DATE {
-                Date fromArgm = Date.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM));
-                Date toArgm = Date.valueOf(getClusterArgument(ForceeaService.PARAMETER_TO));
+                Date fromArgm = Date.valueOf(getClusterArgument(PARAMETER_FROM));
+                Date toArgm = Date.valueOf(getClusterArgument(PARAMETER_TO));
                 results = getRandomDates(fromArgm, toArgm);
             }
             when RANDOM_DATETIME {
                 Datetime fromArgm;
                 Datetime toArgm;
                 try {
-                    fromArgm = Datetime.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM));
+                    fromArgm = Datetime.valueOf(getClusterArgument(PARAMETER_FROM));
                 } catch (TypeException ex) {
                     fromArgm = Datetime.newInstance(
-                        Date.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM)), Time.newInstance(0, 0, 0, 0));
+                        Date.valueOf(getClusterArgument(PARAMETER_FROM)), Time.newInstance(0, 0, 0, 0));
                 }
                 try {
-                    toArgm = Datetime.valueOf(getClusterArgument(ForceeaService.PARAMETER_TO));
+                    toArgm = Datetime.valueOf(getClusterArgument(PARAMETER_TO));
                 } catch (TypeException ex) {
                     toArgm = Datetime.newInstance(
-                        Date.valueOf(getClusterArgument(ForceeaService.PARAMETER_TO)), Time.newInstance(0, 0, 0, 0));
+                        Date.valueOf(getClusterArgument(PARAMETER_TO)), Time.newInstance(0, 0, 0, 0));
                 }
                 results = getRandomDatetimes(fromArgm, toArgm);
             }
@@ -1713,12 +1764,12 @@ public with sharing class ForceeaGenerator {
                 Datetime fromArgm;
                 Datetime toArgm;
                 try {
-                    fromArgm = Datetime.valueOf('2020-1-1 ' + getClusterArgument(ForceeaService.PARAMETER_FROM));
+                    fromArgm = Datetime.valueOf('2020-1-1 ' + getClusterArgument(PARAMETER_FROM));
                 } catch (TypeException ex) {
                     fromArgm = Datetime.valueOf('2020-1-1 00:00:00');
                 }
                 try {
-                    toArgm = Datetime.valueOf('2020-1-1 ' + getClusterArgument(ForceeaService.PARAMETER_TO));
+                    toArgm = Datetime.valueOf('2020-1-1 ' + getClusterArgument(PARAMETER_TO));
                 } catch (TypeException ex) {
                     fromArgm = Datetime.valueOf('2020-1-1 23:59:59');
                 }
@@ -1741,31 +1792,31 @@ public with sharing class ForceeaGenerator {
                 results = getRandomBooleans();
             }
             when RANDOM_FIRSTNAME {
-                String nameGroup = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String nameGroup = getClusterArgument(PARAMETER_GROUP);
                 results = getRandomFirstNames(nameGroup);
             }
             when RANDOM_LASTNAME {
-                String nameGroup = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String nameGroup = getClusterArgument(PARAMETER_GROUP);
                 results = getRandomLastNames(nameGroup);
             }
             when RANDOM_STREET {
-                String addressGroup = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String addressGroup = getClusterArgument(PARAMETER_GROUP);
                 results = getRandomStreets(addressGroup);
             }
             when RANDOM_POSTALCODE {
-                String addressGroup = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String addressGroup = getClusterArgument(PARAMETER_GROUP);
                 results = getRandomPostalCodes(addressGroup);
             }
             when RANDOM_CITY {
-                String addressGroup = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String addressGroup = getClusterArgument(PARAMETER_GROUP);
                 results = getRandomCities(addressGroup);
             }
             when RANDOM_STATE {
-                String addressGroup = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String addressGroup = getClusterArgument(PARAMETER_GROUP);
                 results = getRandomStates(addressGroup);
             }
             when RANDOM_COUNTRY {
-                String addressGroup = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String addressGroup = getClusterArgument(PARAMETER_GROUP);
                 results = getRandomCountries(addressGroup);
             }
             when RANDOM_STRING {
@@ -1785,20 +1836,20 @@ public with sharing class ForceeaGenerator {
                 results = getRandomPhoneNumbers(formatString);
             }
             when RANDOM_LOOKUP {
-                String source = getClusterArgument(ForceeaService.PARAMETER_SOURCE);
-                String lookupObject = getClusterArgument(ForceeaService.PARAMETER_LOOKUP);
-                String lookupField = getClusterArgument(ForceeaService.PARAMETER_FIELD);
-                List<String> lookupValues = getClusterArguments(ForceeaService.PARAMETER_VALUE);
-                List<String> lookupExceptValues = getClusterArguments(ForceeaService.PARAMETER_EXCEPT);
-                String groupName = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String source = getClusterArgument(PARAMETER_SOURCE);
+                String lookupObject = getClusterArgument(PARAMETER_LOOKUP);
+                String lookupField = getClusterArgument(PARAMETER_FIELD);
+                List<String> lookupValues = getClusterArguments(PARAMETER_VALUE);
+                List<String> lookupExceptValues = getClusterArguments(PARAMETER_EXCEPT);
+                String groupName = getClusterArgument(PARAMETER_GROUP);
                 results = getLookupValues(ForceeaService.COMMAND_RANDOM, source,
                     lookupObject, lookupField, lookupValues, lookupExceptValues,
                     groupName, null, null, false);
             }
             when RANDOM_LOOKUP_WHERE {
-                String source = getClusterArgument(ForceeaService.PARAMETER_SOURCE);
-                String lookupObject = getClusterArgument(ForceeaService.PARAMETER_LOOKUP);
-                String whereClause = getClusterArgument(ForceeaService.PARAMETER_WHERE);
+                String source = getClusterArgument(PARAMETER_SOURCE);
+                String lookupObject = getClusterArgument(PARAMETER_LOOKUP);
+                String whereClause = getClusterArgument(PARAMETER_WHERE);
                 results = getLookupValues(ForceeaService.COMMAND_RANDOM, source, lookupObject, null, null,
                     null, '', whereClause, null, false);
             }
@@ -1813,8 +1864,6 @@ public with sharing class ForceeaGenerator {
      * @return A list of values.
      */
     private List<String> getRandomValuesFromList(List<String> values) {
-        //System.debug('> ForceeaGenerator.getRandomValuesFromList');
-
         List<String> results = new List<String>();
         Integer size = values.size();
 
@@ -1847,7 +1896,7 @@ public with sharing class ForceeaGenerator {
     private List<String> getRecordTypeIdsExcludingExceptions() {
         List<String> results = new List<String>();
         List<String> exceptions = ForceeaService.convertListToLowercase(
-            getClusterArguments(ForceeaService.PARAMETER_EXCEPT)
+            getClusterArguments(PARAMETER_EXCEPT)
         );
 
         if (exceptions.isEmpty()) {
@@ -1879,7 +1928,7 @@ public with sharing class ForceeaGenerator {
                 results.add(this.fObj.recordTypeIdsByDeveloperName.get(nameToLowerCase));
             } else {
                 this.fObj.addError(this.def.fieldApiName,
-                    'Invalid record type [' + name + '] for definition [' + this.def.definitionString + ']');
+                    'Invalid record type [' + name + '] in definition [' + this.def.definitionString + ']');
             }
         }
 
@@ -1950,15 +1999,13 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getSerialListValues(List<String> values, Integer permutationPosition) {
-        //System.debug('> getSerialStrings');
-
         List<String> results = new List<String>();
 
         if (values.isEmpty()) {
             return results;
         }
 
-        String mode = getClusterArgument(ForceeaService.PARAMETER_MODE);
+        String mode = getClusterArgument(PARAMETER_MODE);
         Integer counter = 0;
         Integer size = values.size();
 
@@ -2001,7 +2048,6 @@ public with sharing class ForceeaGenerator {
             }
         }
 
-        //System.debug('permutationPosition: ' + permutationPosition + ', values: ' + results);
         return results;
     }
 
@@ -2017,8 +2063,7 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getSerialLookupValues(
         List<SObject> lookupRecords, List<String> lookupValues,
-        List<String> lookupExceptions, String lookupFieldApiName, String fieldApiName,  String lookupMode) {
-        //System.debug('> getSerialLookupValues');
+        List<String> lookupExceptions, String lookupFieldApiName, String fieldApiName, String lookupMode) {
         List<String> results = new List<String>();
 
         List<String> lookupIds = getLookupIds(lookupRecords, lookupValues, lookupExceptions,
@@ -2077,10 +2122,6 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     private List<String> getSerialNumbers(Decimal fromNumber, Decimal stepNumber, Integer scale) {
-        //System.debug('> getSerialNumbers');
-        //System.debug('getNumberOfNextRecord: ' + getNumberOfNextRecord());
-        //System.debug('nextRecordNumbersBySObject: ' + FObject.numFirstRecordsBySObject);
-
         List<String> results = new List<String>();
 
         Decimal val = fromNumber + (getNumberOfNextRecord() - 1) * stepNumber;
@@ -2089,7 +2130,6 @@ public with sharing class ForceeaGenerator {
             val += stepNumber;
         }
 
-        //System.debug('getSerialNumbers: ' + results);
         return results;
     }
 
@@ -2124,47 +2164,47 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getSerialValues() {
         List<String> results = new List<String>();
-        //System.debug('> getSerialValues');
 
         switch on this.def.type.id {
             when SERIAL_PICKLIST {
                 results = getSerialPicklistValues(this.def.positionForPermutations);
             }
-            when SERIAL_LIST {
-                List<String> values = getClusterArguments(ForceeaService.PARAMETER_VALUE);
+            when SERIAL_LIST_STRING, SERIAL_LIST_INTEGER, SERIAL_LIST_DECIMAL,
+                SERIAL_LIST_DATE, SERIAL_LIST_DATETIME, SERIAL_LIST_TIME {
+                List<String> values = getClusterArguments(PARAMETER_VALUE);
                 results = getSerialListValues(values, this.def.positionForPermutations);
             }
             when SERIAL_NUMBER {
-                Decimal fromArgm = Decimal.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM));
+                Decimal fromArgm = Decimal.valueOf(getClusterArgument(PARAMETER_FROM));
                 Decimal stepArgm = Decimal.valueOf(getClusterArgument('step'));
-                Integer scaleArgm = Integer.valueOf(getClusterArgument(ForceeaService.PARAMETER_SCALE));
+                Integer scaleArgm = Integer.valueOf(getClusterArgument(PARAMETER_SCALE));
                 results = getSerialNumbers(fromArgm, stepArgm, scaleArgm);
             }
             when SERIAL_DATE {
-                Date fromArgm = Date.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM));
+                Date fromArgm = Date.valueOf(getClusterArgument(PARAMETER_FROM));
                 Integer stepArgm = Integer.valueOf(getClusterArgument('step'));
                 results = getSerialDates(fromArgm, stepArgm);
             }
             when SERIAL_DATETIME {
                 Datetime fromArgm;
                 try {
-                    fromArgm = Datetime.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM));
+                    fromArgm = Datetime.valueOf(getClusterArgument(PARAMETER_FROM));
                 } catch (TypeException ex) {
                     fromArgm = Datetime.newInstance(
-                        Date.valueOf(getClusterArgument(ForceeaService.PARAMETER_FROM)), Time.newInstance(0, 0, 0, 0));
+                        Date.valueOf(getClusterArgument(PARAMETER_FROM)), Time.newInstance(0, 0, 0, 0));
                 }
                 Decimal stepArgm = Decimal.valueOf(getClusterArgument('step'));
                 results = getSerialDatetimes(fromArgm, stepArgm);
             }
             when SERIAL_LOOKUP {
-                String source = getClusterArgument(ForceeaService.PARAMETER_SOURCE);
-                String lookupObject = getClusterArgument(ForceeaService.PARAMETER_LOOKUP);
-                String lookupField = getClusterArgument(ForceeaService.PARAMETER_FIELD);
-                String whereClause = getClusterArgument(ForceeaService.PARAMETER_WHERE);
-                String lookupMode = getClusterArgument(ForceeaService.PARAMETER_MODE);
-                List<String> lookupValues = getClusterArguments(ForceeaService.PARAMETER_VALUE);
-                List<String> exceptions = getClusterArguments(ForceeaService.PARAMETER_EXCEPT);
-                String groupName = getClusterArgument(ForceeaService.PARAMETER_GROUP);
+                String source = getClusterArgument(PARAMETER_SOURCE);
+                String lookupObject = getClusterArgument(PARAMETER_LOOKUP);
+                String lookupField = getClusterArgument(PARAMETER_FIELD);
+                String whereClause = getClusterArgument(PARAMETER_WHERE);
+                String lookupMode = getClusterArgument(PARAMETER_MODE);
+                List<String> lookupValues = getClusterArguments(PARAMETER_VALUE);
+                List<String> exceptions = getClusterArguments(PARAMETER_EXCEPT);
+                String groupName = getClusterArgument(PARAMETER_GROUP);
                 results = getLookupValues(ForceeaService.COMMAND_SERIAL, source, lookupObject, lookupField, lookupValues,
                     exceptions, groupName, whereClause, lookupMode, false);
             }
@@ -2184,8 +2224,14 @@ public with sharing class ForceeaGenerator {
      */
     private List<String> getStaticLookupValues(List<SObject> lookupRecords, List<String> lookupValues,
         List<String> lookupExceptions, String lookupFieldApiName, String fieldApiName) {
-        List<String> lookupIds = getLookupIds(lookupRecords, lookupValues, lookupExceptions,
-            lookupFieldApiName, fieldApiName);
+        List<String> results = new List<String>();
+
+        List<String> lookupIds = getLookupIds(
+            lookupRecords, lookupValues, lookupExceptions, lookupFieldApiName, fieldApiName);
+        if (lookupIds.isEmpty()) {
+            return results;
+        }
+
         return getStaticValuesFromValue(lookupIds.get(0));
     }
 
@@ -2197,18 +2243,18 @@ public with sharing class ForceeaGenerator {
         List<String> results = new List<String>();
 
         switch on this.def.type.id {
-            when STATIC_STRING , STATIC_INTEGER , STATIC_DECIMAL , STATIC_DATE, STATIC_TIME,  STATIC_DATETIME{
-                String value = getClusterArgument(ForceeaService.PARAMETER_VALUE);
+            when STATIC_STRING, STATIC_INTEGER, STATIC_DECIMAL, STATIC_DATE, STATIC_TIME, STATIC_DATETIME {
+                String value = getClusterArgument(PARAMETER_VALUE);
                 results = getStaticValues(value);
             }
-            when STATIC_LOOKUP{
-                String lookupObject = getClusterArgument(ForceeaService.PARAMETER_LOOKUP);
-                String lookupField = getClusterArgument(ForceeaService.PARAMETER_FIELD);
-                List<String> lookupValues = getClusterArguments(ForceeaService.PARAMETER_VALUE);
-                List<String> lookupExceptions = getClusterArguments(ForceeaService.PARAMETER_EXCEPT);
-                String groupName = getClusterArgument(ForceeaService.PARAMETER_GROUP);
-                String whereClause = getClusterArgument(ForceeaService.PARAMETER_WHERE);
-                String source = getClusterArgument(ForceeaService.PARAMETER_SOURCE);
+            when STATIC_LOOKUP {
+                String lookupObject = getClusterArgument(PARAMETER_LOOKUP);
+                String lookupField = getClusterArgument(PARAMETER_FIELD);
+                List<String> lookupValues = getClusterArguments(PARAMETER_VALUE);
+                List<String> lookupExceptions = getClusterArguments(PARAMETER_EXCEPT);
+                String groupName = getClusterArgument(PARAMETER_GROUP);
+                String whereClause = getClusterArgument(PARAMETER_WHERE);
+                String source = getClusterArgument(PARAMETER_SOURCE);
                 results = getLookupValues('static', source, lookupObject, lookupField, lookupValues,
                     lookupExceptions, groupName, whereClause, null, false);
             }
@@ -2227,14 +2273,16 @@ public with sharing class ForceeaGenerator {
         String fieldApiName = this.def.fieldApiName;
 
         if (fieldApiName.equalsIgnoreCase(ForceeaService.RECORD_TYPE_ID)) {
-            List<String> recordTypeIds = getRecordTypeIdsFromDeveloperNames(new List<String> {argument});
-            if (this.fObj.processMustTerminate()) {
+            List<String> recordTypeIds = getRecordTypeIdsFromDeveloperNames(new List<String>{
+                argument
+            });
+            if (FObject.processMustTerminate()) {
                 return results;
             }
             return getStaticValuesFromValue(recordTypeIds.get(0));
         }
 
-        FObject.Field depField = ForceeaService.getField(this.fObj.sObjectApiName, fieldApiName);
+        ForceeaFieldInfo depField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         Set<Schema.DisplayType> types = new Set<DisplayType>{
             Schema.DisplayType.PICKLIST, Schema.DisplayType.MULTIPICKLIST
         };
@@ -2260,7 +2308,7 @@ public with sharing class ForceeaGenerator {
         }
 
         if (String.isBlank(ctrlFieldApiName) || // the controlling field is a Checkbox or there is no controlling field
-            ForceeaService.getField(this.fObj.sObjectApiName, ctrlFieldApiName).dataType == Schema.DisplayType.BOOLEAN) {
+            ForceeaService.getField(this.fObj.getSObjectName(), ctrlFieldApiName).dataType == Schema.DisplayType.BOOLEAN) {
             results = getRandomValuesFromList(arguments);
         } else { // there is a controlling field
             results = getPicklistValuesWithRespectToDependencies(fieldApiName, ctrlFieldApiName, arguments, null);
@@ -2289,7 +2337,6 @@ public with sharing class ForceeaGenerator {
      * @return A list of string values.
      */
     public List<String> getValues() {
-        //System.debug('> getValues');
         List<String> results = new List<String>();
 
         if (this.def.isFunction) {
@@ -2315,6 +2362,52 @@ public with sharing class ForceeaGenerator {
         }
 
         return results;
+    }
+
+    private void setLookupIds() {
+        Integer fieldPosition = getFieldPosition(this.fieldApiName);
+        this.lookupIds = new List<String>(this.fObj.fieldValuesMatrix.get(fieldPosition));
+        this.lookupIdsSet = new Set<String>(this.lookupIds);
+    }
+
+    private void setLookupRecordsMap() {
+        try {
+            String soqlQuery = 'SELECT ' + this.lookupFromFieldApiName +
+                ' FROM ' + this.lookupSObjectApiName +
+                ' WHERE Id IN :lookupIdsSet' +
+                ' LIMIT ' + String.valueOf(this.fObj.getQueryLimit());
+            this.lookupRecordsById = new Map<Id, SObject>(Database.query(soqlQuery));
+        } catch (QueryException exp) {
+            this.fObj.addError(this.fieldApiName,
+                ForceeaService.MESSAGE_FOUND_ERRORS_SELECTING_FROM_LOOKUP + ' [' + this.lookupSObjectApiName +
+                    '] of [' + this.fObj.getSObjectName() + ']: ' + exp.getMessage());
+        }
+    }
+
+    private Boolean shouldReturnEmptyResultsFromCopiedLookupValues1(String fromSObjectDotField) {
+        if (String.isBlank(this.fieldApiName) ||
+            fromFieldIsTheSameAsDefinitionField() ||
+            fromFieldIsNotLookupOrVirtualField()) {
+            return true;
+        }
+
+        this.lookupSObjectApiName = getLookupSObjectApiName(fromSObjectDotField);
+        if (FObject.processMustTerminate()) {
+            return true;
+        }
+
+        this.lookupFromFieldApiName = ForceeaService.getFieldApiName(this.fObj, this.def.definitionString,
+            this.lookupSObjectApiName, fromSObjectDotField.trim().substringAfter('.'),
+            null, this.def.fieldApiName, 'copy-from');
+        if (String.isBlank(this.lookupFromFieldApiName)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private Boolean shouldReturnEmptyResultsFromCopiedLookupValues2() {
+        return this.lookupRecordsById.isEmpty() || FObject.processMustTerminate();
     }
 
     /**

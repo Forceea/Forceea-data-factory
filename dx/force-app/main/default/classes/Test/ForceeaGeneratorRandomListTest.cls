@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.2.0)
+  Forceea data factory (v2.3.0)
   Copyright (C) 2020 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -117,6 +117,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes1_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value("one, two)');
@@ -128,6 +130,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes2_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(one", two)');
@@ -139,6 +143,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes3_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(one, "two)');
@@ -150,6 +156,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes4_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(one, two")');
@@ -161,6 +169,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes5_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value("one, "two")');
@@ -172,6 +182,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes6_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(one", "two")');
@@ -183,6 +195,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes7_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value("one", "two)');
@@ -194,6 +208,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_doubleQuotes8_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value("one", two")');
@@ -204,7 +220,9 @@ public class ForceeaGeneratorRandomListTest {
     }
 
     @IsTest
-    private static void randomList_doubleQuotes9_expectSucess() {
+    private static void randomList_doubleQuotes9_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value("one"two", three)');
@@ -215,7 +233,9 @@ public class ForceeaGeneratorRandomListTest {
     }
 
     @IsTest
-    private static void randomList_doubleQuotes10_expectSucess() {
+    private static void randomList_doubleQuotes10_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition(FObjectOne__c.TestText__c, 'random type(list) value("one"two", "three")');
@@ -481,6 +501,8 @@ public class ForceeaGeneratorRandomListTest {
 
     @IsTest
     private static void randomList_invalidRecordType_expectFailure() {
+        FObject.setExceptionHandling('continue');
+
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition('RecordTypeId', 'random type(list) value(RecordTypeX)');
@@ -488,7 +510,7 @@ public class ForceeaGeneratorRandomListTest {
         List<FObjectOne__c> records = (List<FObjectOne__c>) obj.getRecords();
         Test.stopTest();
 
-        String expectedResult = 'Invalid record type [RecordTypeX] for definition [random type(list) value(RecordTypeX)]';
+        String expectedResult = 'Invalid record type [RecordTypeX] in definition [random type(list) value(RecordTypeX)]';
         String actualResult = obj.getErrors().get('RecordTypeId').get(0);
         System.assertEquals(expectedResult, actualResult, 'random list - errors found');
     }
