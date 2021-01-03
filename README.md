@@ -10,14 +10,14 @@ Forceea (forsi:a) is a powerful data factory for Salesforce, it's based on [Dade
 ### How can you deploy it?
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
 
-<a href="https://nmitrakis.com/ForceeaInstallProduction">
+<a href="https://rebrand.ly/8g3jl">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
 
 or this link for **Sandboxes**:
 
-<a href="https://nmitrakis.com/ForceeaInstallTest">
+<a href="https://rebrand.ly/cxfgy">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
@@ -42,7 +42,7 @@ sfdx force:package:install -w 10 -b 10 -p 04t4I000000gVgTQAU -r -u <UsernameOrO
 * Has an extended error messaging system.
 
 ### How can you find more information?
-* Read [Forceea Success Guide](https://nmitrakis.com/ForceeaSuccessGuide)
+* Read [Forceea Success Guide](https://rebrand.ly/cgh14)
 * Visit [forceea.com](https://www.forceea.com)
 ---
 
