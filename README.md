@@ -1,5 +1,9 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
+# 📢 Join our 1st online [Forceea User Meeting - Summer 21](https://www.eventbrite.com/e/forceea-user-meeting-summer-21-tickets-154181947355)
+
+on July 10, 4 PM UTC
+       
 # Forceea 2.4
 
 ### What is Forceea?
