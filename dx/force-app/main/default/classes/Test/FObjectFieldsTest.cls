@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -15,6 +15,221 @@
 */
 @IsTest
 public class FObjectFieldsTest {
+
+    @IsTest
+    private static void appendDefinitionsAfterId_invalidId_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .appendDefinitionsAfterId('nRdGs2')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.add('4 TestText__c serial type(number) from(1) step(1) scale(0)');
+        initialDefs.add('5 TestTextRequired__c static value(test1)');
+        initialDefs.add('6 TestText__c static value(test2)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinition - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitionsAfterId_afterNoDef_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .appendDefinitionsAfterId('nRNOG1'); // the 1st TestText__c definition
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(3, '3 TestTextRequired__c static value(test)');
+        initialDefs.add('4 TestText__c serial type(number) from(1) step(1) scale(0)');
+        initialDefs.add('5 TestTextRequired__c static value(test1)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinition - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitionsAfterId_after1Def_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .appendDefinitionsAfterId('nRNOG1') // the 1st TestText__c definition
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test)');
+        initialDefs.add('5 TestText__c serial type(number) from(1) step(1) scale(0)');
+        initialDefs.add('6 TestTextRequired__c static value(test1)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinition - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitionsAfterId_after2Defs_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .appendDefinitionsAfterId('nRNOG1') // the 1st TestText__c definition
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test3)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestText__c static value(test3)');
+        initialDefs.add('5 TestTextRequired__c static value(test)');
+        initialDefs.add('6 TestText__c serial type(number) from(1) step(1) scale(0)');
+        initialDefs.add('7 TestTextRequired__c static value(test1)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinition - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitions_withoutNewDef_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+
+            .appendDefinitions('TestText__c')
+            .setDefinition(FObjectOne__c.TestDate__c, 'random type(date) from(2021-12-1) to(2021-12-31)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test)');
+        initialDefs.add('5 TestTextRequired__c static value(test1)');
+        initialDefs.add('6 TestDate__c random type(date) from(2021-12-1) to(2021-12-31)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitions_afterOtherDef_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+
+            .appendDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestDate__c, 'random type(date) from(2021-12-1) to(2021-12-31)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test)');
+        initialDefs.add('5 TestTextRequired__c static value(test1)');
+        initialDefs.add('6 TestDate__c random type(date) from(2021-12-1) to(2021-12-31)');
+        initialDefs.add('7 TestText__c static value(test2)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitions_1Fields1Def_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+
+            .appendDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test3)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestText__c static value(test3)');
+        initialDefs.add('5 TestTextRequired__c static value(test)');
+        initialDefs.add('6 TestTextRequired__c static value(test1)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitions_1Fields2Defs_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+
+            .appendDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test3)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test4)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestText__c static value(test3)');
+        initialDefs.add('5 TestText__c static value(test4)');
+        initialDefs.add('6 TestTextRequired__c static value(test)');
+        initialDefs.add('7 TestTextRequired__c static value(test1)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinitions - errors found');
+    }
 
     @IsTest
     private static void deleteAllDefinitions_declareNoDefinitions_expectSuccess() {
@@ -64,6 +279,137 @@ public class FObjectFieldsTest {
         Test.stopTest();
 
         System.assertNotEquals(hash1, hash2, 'deleteAllDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void deleteDefinitionWithId_invalidId_expectSuccess() {
+        String def1 = 'random type(number) from(1) to(100) scale(0)';
+        String def2 = 'random type(number) from(1) to(100) scale(0)';
+        String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
+        String def4 = 'random TYPE(number)  from(1) to(100) scale(0)';
+        String def5 = 'random type(picklist)';
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestDecimal__c, def1) // pbwMs1
+            .setDefinition(FObjectOne__c.TestText__c, def2) // icLoR1
+            .setDefinition(FObjectOne__c.TestText__c, def3) // icLoR2
+            .setDefinition(FObjectOne__c.TestText__c, def4) // JgZwB1
+            .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
+
+        Test.startTest();
+        obj1.deleteDefinitionWithId('icLFR1');
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
+        obj1.getRecords();
+        Test.stopTest();
+
+        Integer counter = 0;
+        Integer errors = 0;
+        for (String item : FObject.getGlobalDebugLogs()) {
+            if (item.contains('Definition [' + def1 + '] of [TestDecimal__c] is valid with ID [pbwMs1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def2 + '] of [TestText__c] is valid with ID [icLoR1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def3 + '] of [TestText__c] is valid with ID [icLoR2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
+                counter++;
+            } else if (item.contains('Will delete the definition with ID [icLoR1]')) {
+                errors++;
+            }
+        }
+
+        System.assert(counter == 5 && errors == 0, 'deleteDefinitionWithId - errors found');
+    }
+
+    @IsTest
+    private static void deleteDefinitionWithId_0Def_expectSuccess() {
+        String def1 = 'random type(number) from(1) to(100) scale(0)';
+        String def2 = 'random type(number) from(1) to(100) scale(0)';
+        String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
+        String def4 = 'random TYPE(number)  from(1) to(100) scale(0)';
+        String def5 = 'random type(picklist)';
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestDecimal__c, def1) // pbwMs1
+            .setDefinition(FObjectOne__c.TestText__c, def2) // icLoR1
+            .setDefinition(FObjectOne__c.TestText__c, def3) // icLoR2
+            .setDefinition(FObjectOne__c.TestText__c, def4) // JgZwB1
+            .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
+
+        Test.startTest();
+        obj1.deleteDefinitionWithId('icLoR1');
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
+        obj1.getRecords();
+        Test.stopTest();
+
+        Integer counter = 0;
+        Integer errors = 0;
+        for (String item : FObject.getGlobalDebugLogs()) {
+            if (item.contains('Definition [' + def1 + '] of [TestDecimal__c] is valid with ID [pbwMs1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def2 + '] of [TestText__c] is valid with ID [icLoR1]')) {
+                errors++;
+            } else if (item.contains('Definition [' + def3 + '] of [TestText__c] is valid with ID [icLoR2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
+                counter++;
+            } else if (item.contains('Will delete the definition with ID [icLoR1]')) {
+                errors++;
+            }
+        }
+
+        System.assert(counter == 4 && errors == 0, 'deleteDefinitionWithId - errors found');
+    }
+
+    @IsTest
+    private static void deleteDefinitionWithId_2Defs_expectSuccess() {
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
+
+        String def1 = 'random type(number) from(1) to(100) scale(0)';
+        String def2 = 'random type(number) from(1) to(100) scale(0)';
+        String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
+        String def4 = 'random TYPE(number)  from(1) to(100) scale(0)';
+        String def5 = 'random type(picklist)';
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestDecimal__c, def1) // pbwMs1
+            .setDefinition(FObjectOne__c.TestTextRequired__c, def2) // pPzqK1
+            .setDefinition(FObjectOne__c.TestText__c, def2) // icLoR1
+            .setDefinition(FObjectOne__c.TestText__c, def3) // icLoR2
+            .setDefinition(FObjectOne__c.TestText__c, def4) // JgZwB1
+            .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
+
+        Test.startTest();
+        obj1.deleteDefinitionWithId('icLoR1');
+        obj1.deleteDefinitionWithId('Htzod1');
+        obj1.insertRecords(true);
+        Test.stopTest();
+
+        Integer counter = 0;
+        Integer errors = 0;
+        for (String item : FObject.getGlobalDebugLogs()) {
+            if (item.contains('Definition [' + def1 + '] of [TestDecimal__c] is valid with ID [pbwMs1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def2 + '] of [TestText__c] is valid with ID [icLoR1]')) {
+                errors++;
+            } else if (item.contains('Definition [' + def3 + '] of [TestText__c] is valid with ID [icLoR2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
+                errors++;
+            } else if (item.contains('Will delete the definition with ID [icLoR1]')) {
+                counter++;
+            } else if (item.contains('Will delete the definition with ID [Htzod1]')) {
+                counter++;
+            }
+        }
+
+        System.assert(counter == 5 && errors == 0, 'deleteDefinitionWithId - errors found');
     }
 
     @IsTest
@@ -205,6 +551,408 @@ public class FObjectFieldsTest {
         Test.stopTest();
 
         System.assert(obj.getPartitionFieldName() == 'ForceeaPartition__c', 'getPartitionFieldName - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_noDefinitionsToReplace_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .replaceDefinitions(FObjectOne__c.TestDate__c);
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_withoutNewDef_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .replaceDefinitions(FObjectOne__c.TestLookup__c);
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_1Field1Def_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .replaceDefinitions('TestLookup__c')
+            .setDefinition(FObjectOne__c.TestLookup__c, 'serial lookup(FObjectTwo__c) mode(cyclical) source(forceea)')
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(number) from(1) to(100) scale(2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(1, '1 TestLookup__c serial lookup(FObjectTwo__c) mode(cyclical) source(forceea)');
+        initialDefs.add('4 TestText__c random type(number) from(1) to(100) scale(2)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_1Field2Defs_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+
+            .replaceDefinitions(FObjectOne__c.TestTextRequired__c)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test!)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'random type(number) from(1) to(100) scale(2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(3, '3 TestTextRequired__c static value(test!)');
+        initialDefs.add('4 TestTextRequired__c random type(number) from(1) to(100) scale(2)');
+        initialDefs.add('5 TestText__c serial type(number) from(1) step(1) scale(0)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_Field3Defs_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestTextRequired__c)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'random type(number) from(1) to(100) scale(2)')
+
+            .setDefinition(FObjectOne__c.TestText__c, 'random type(number) from(1) to(100) scale(2)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(3, '3 TestTextRequired__c static value(test1)');
+        initialDefs.add('4 TestTextRequired__c random type(number) from(1) to(100) scale(2)');
+        initialDefs.add('5 TestText__c serial type(number) from(1) step(1) scale(0)');
+        initialDefs.add('6 TestText__c random type(number) from(1) to(100) scale(2)');
+        initialDefs.add('7 TestTextRequired__c static value(test2)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_2Fields2Defs_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestTextRequired__c)
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test2)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test3)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test)');
+        initialDefs.add('5 TestTextRequired__c static value(test1)');
+        initialDefs.add('6 TestTextRequired__c static value(test2)');
+        initialDefs.add('7 TestTextRequired__c static value(test3)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_2FieldsOtherDef_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestTextRequired__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test2)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test3)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test2)');
+        initialDefs.set(3, '3 TestTextRequired__c static value(test)');
+        initialDefs.add('4 TestTextRequired__c static value(test1)');
+        initialDefs.add('5 TestTextRequired__c static value(test2)');
+        initialDefs.add('6 TestTextRequired__c static value(test3)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_2Fields4Defs_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestTextRequired__c)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test2)')
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test1)');
+        initialDefs.add('5 TestTextRequired__c static value(test2)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitions_virtualField_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition('$MyVirtualField', 'static value(test)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
+
+            .replaceDefinitions(FObjectOne__c.TestTextRequired__c)
+
+            .replaceDefinitions('$MyVirtualField')
+            .setDefinition('$MyVirtualField', 'static value(virtual)')
+
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
+
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test2)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test3)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test)');
+        initialDefs.add('5 $MyVirtualField static value(virtual)');
+        initialDefs.add('6 TestTextRequired__c static value(test1)');
+        initialDefs.add('7 TestTextRequired__c static value(test2)');
+        initialDefs.add('8 TestTextRequired__c static value(test3)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitionWithId_noDef_expectSuccess() {
+        String def1 = 'random type(number) from(1) to(100) scale(0)';
+        String def2 = 'random type(number) from(1) to(100) scale(0)';
+        String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
+        String def4 = 'random TYPE(number)  from(1) to(100) scale(0)';
+        String def5 = 'random type(picklist)';
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestDecimal__c, def1) // pbwMs1
+            .setDefinition(FObjectOne__c.TestText__c, def2) // icLoR1
+            .setDefinition(FObjectOne__c.TestText__c, def3) // icLoR2
+            .setDefinition(FObjectOne__c.TestText__c, def4) // JgZwB1
+            .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
+
+        Test.startTest();
+        obj1.replaceDefinitionWithId('icLoR1');
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
+        obj1.getRecords();
+        Test.stopTest();
+
+        Integer counter = 0;
+        for (String item : FObject.getGlobalDebugLogs()) {
+            if (item.contains('Definition [' + def1 + '] of [TestDecimal__c] is valid with ID [pbwMs1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def3 + '] of [TestText__c] is valid with ID [icLoR2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
+                counter++;
+            }
+        }
+
+        System.assertEquals(4, counter, 'replaceDefinitionWithId - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitionWithId_1Def_expectSuccess() {
+        String def1 = 'random type(number) from(1) to(100) scale(0)';
+        String def2 = 'random type(number) from(1) to(100) scale(0)';
+        String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
+        String def4 = 'random TYPE(number)  from(1) to(100) scale(0)';
+        String def5 = 'random type(picklist)';
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestDecimal__c, def1) // pbwMs1
+            .setDefinition(FObjectOne__c.TestText__c, def2) // icLoR1
+            .setDefinition(FObjectOne__c.TestText__c, def3) // icLoR2
+            .setDefinition(FObjectOne__c.TestText__c, def4) // JgZwB1
+            .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
+
+        Test.startTest();
+        obj1.replaceDefinitionWithId('icLoR1')
+            .setDefinition(FObjectOne__c.TestText__c, def4);
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
+        obj1.getRecords();
+        Test.stopTest();
+
+        Integer counter = 0;
+        for (String item : FObject.getGlobalDebugLogs()) {
+            if (item.contains('Definition [' + def1 + '] of [TestDecimal__c] is valid with ID [pbwMs1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def3 + '] of [TestText__c] is valid with ID [icLoR2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
+                counter++;
+            } else if (item.contains('Will replace the definition with ID [icLoR1]')) {
+                counter++;
+            }
+        }
+
+        System.assertEquals(5, counter, 'replaceDefinitionWithId - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitionWithId_1DefAfterOther_expectSuccess() {
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
+
+        String def1 = 'random type(number) from(1) to(100) scale(0)';
+        String def2 = 'random type(number) from(1) to(100) scale(0)';
+        String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
+        String def4 = 'random TYPE(number)  from(1) to(100) scale(0)';
+        String def5 = 'random type(picklist)';
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestDecimal__c, def1) // pbwMs1
+            .setDefinition(FObjectOne__c.TestText__c, def2) // icLoR1
+            .setDefinition(FObjectOne__c.TestText__c, def3) // icLoR2
+            .setDefinition(FObjectOne__c.TestText__c, def4) // JgZwB1
+            .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
+
+        Test.startTest();
+        obj1.replaceDefinitionWithId('icLoR1')
+            .setDefinition(FObjectOne__c.TestText__c, def4)
+            .setDefinition(FObjectOne__c.TestTextRequired__c, def4)
+            .setDefinition(FObjectOne__c.TestText__c, def2);
+        obj1.getRecords();
+        Test.stopTest();
+
+        Integer counter = 0;
+        for (String item : FObject.getGlobalDebugLogs()) {
+            if (item.contains('Definition [' + def1 + '] of [TestDecimal__c] is valid with ID [pbwMs1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB2]')) {
+                counter++;
+            }  else if (item.contains('Definition [' + def2 + '] of [TestText__c] is valid with ID [icLoR3]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def3 + '] of [TestText__c] is valid with ID [icLoR2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
+                counter++;
+            } else if (item.contains('Will replace the definition with ID [icLoR1]')) {
+                counter++;
+            }
+        }
+
+        System.assertEquals(7, counter, 'replaceDefinitionWithId - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitionWithId_2Defs_expectSuccess() {
+        String def1 = 'random type(number) from(1) to(100) scale(0)';
+        String def2 = 'random type(number) from(1) to(100) scale(0)';
+        String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
+        String def4 = 'random TYPE(number)  from(1) to(100) scale(0)';
+        String def5 = 'random type(picklist)';
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition(FObjectOne__c.TestDecimal__c, def1) // pbwMs1
+            .setDefinition(FObjectOne__c.TestText__c, def2) // icLoR1
+            .setDefinition(FObjectOne__c.TestText__c, def3) // icLoR2
+            .setDefinition(FObjectOne__c.TestText__c, def4) // JgZwB1
+            .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
+
+        Test.startTest();
+        obj1.replaceDefinitionWithId('icLoR1')
+            .setDefinition(FObjectOne__c.TestText__c, def4)
+            .setDefinition(FObjectOne__c.TestText__c, def2);
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
+        obj1.getRecords();
+        Test.stopTest();
+
+        Integer counter = 0;
+        for (String item : FObject.getGlobalDebugLogs()) {
+            if (item.contains('Definition [' + def1 + '] of [TestDecimal__c] is valid with ID [pbwMs1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def2 + '] of [TestText__c] is valid with ID [icLoR3]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def3 + '] of [TestText__c] is valid with ID [icLoR2]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def4 + '] of [TestText__c] is valid with ID [JgZwB1]')) {
+                counter++;
+            } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
+                counter++;
+            }
+        }
+
+        System.assertEquals(6, counter, 'replaceDefinitionWithId - errors found');
     }
 
     @IsTest
@@ -615,6 +1363,47 @@ public class FObjectFieldsTest {
         Test.stopTest();
 
         System.assert(isValid == false, 'virtualField - errors found');
+    }
+
+    /* TEMPLATES */
+
+    private static Map<String, FObject> template1() {
+        Map<String, FObject> template = new Map<String, FObject>();
+
+        template.putAll(template2());
+        template.put('FObjectOnes', new FObject(FObjectOne__c.SObjectType, 20)
+            .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
+            .setDefinition(FObjectOne__c.TestText__c,
+                'random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+        );
+
+        return template;
+    }
+
+    private static Map<String, FObject> template2() {
+        return new Map<String, FObject>{
+            'FObjectTwos' => new FObject(FObjectTwo__c.SObjectType, 10)
+                .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
+                .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(number) from(1) step(1) scale(0)')
+                .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
+        };
+    }
+
+    /* UTILITY METHODS */
+
+    private static List<String> getDefinitionPositions(String key, Map<String, FObject> template) {
+        List<String> results = new List<String>();
+        Integer counter = 0;
+
+        for (ForceeaDefinition def : template.get(key).definitions) {
+            String str = counter + ' ' + def.fieldApiName + ' ' + def.definitionString;
+            results.add(str);
+            counter++;
+        }
+
+        return results;
     }
 
 }

@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -32,7 +32,7 @@ public with sharing class ForceeaVariable {
         this.isGlobalVariable = isGlobalVariable;
     }
 
-    public ForceeaVariable(String name, Date value, Boolean isGlobalVariable) { // TODO check usage
+    public ForceeaVariable(String name, Date value, Boolean isGlobalVariable) {
         this.name = name;
         this.dateValue = value;
         this.isGlobalVariable = isGlobalVariable;
@@ -47,12 +47,6 @@ public with sharing class ForceeaVariable {
     public ForceeaVariable(String name, Decimal value, Boolean isGlobalVariable) {
         this.name = name;
         this.decimalValue = value;
-        this.isGlobalVariable = isGlobalVariable;
-    }
-
-    public ForceeaVariable(String name, Integer value, Boolean isGlobalVariable) { // TODO check usage
-        this.name = name;
-        this.integerValue = value;
         this.isGlobalVariable = isGlobalVariable;
     }
 

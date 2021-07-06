@@ -4,6 +4,7 @@
     <columns>NAME</columns>
     <columns>RECORDTYPE</columns>
     <columns>TestLookup__c</columns>
+    <columns>TestLookupOther__c</columns>
     <columns>TestCheckbox__c</columns>
     <columns>TestAutoNumber__c</columns>
     <columns>TestFormulaNumber__c</columns>

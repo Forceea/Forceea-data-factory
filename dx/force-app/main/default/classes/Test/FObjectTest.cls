@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -553,6 +553,35 @@ public class FObjectTest {
     }
 
     @IsTest
+    private static void fObjectConstructor_recordsWithoutGroupForUpdate_expectSuccess() {
+        final String TEXT = 'Test';
+
+        List<FObjectOne__c> records = new List<FObjectOne__c>();
+        for (Integer counter = 1; counter <= 10; counter++) {
+            records.add(new FObjectOne__c(
+                TestTextRequired__c = 'Tests' + String.valueOf(counter)
+            ));
+        }
+        insert records;
+
+        Test.startTest();
+        FObject obj = new FObject(records)
+            .setVariable('text', TEXT)
+            .setDefinitionForUpdate(FObjectOne__c.TestTextRequired__c, 'static value({@text})')
+            .updateFields('');
+        obj.updateRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        for (FObjectOne__c record : [SELECT TestTextRequired__c FROM FObjectOne__c]) {
+            if (record.TestTextRequired__c != TEXT) {
+                errors++;
+            }
+        }
+        System.assertEquals(0, errors, 'FObject constructor - errors found');
+    }
+
+    @IsTest
     private static void fObjectConstructor_recordsWithGroup_expectSuccess() {
         List<FObjectOne__c> records = new List<FObjectOne__c>();
         for (Integer counter = 1; counter <= 10; counter++) {
@@ -572,6 +601,36 @@ public class FObjectTest {
         }
         if (obj.getSObjectName() != 'FObjectOne__c') {
             errors += 2;
+        }
+        System.assertEquals(0, errors, 'FObject constructor - errors found');
+    }
+
+    @IsTest
+    private static void fObjectConstructor_recordsWithGroupForUpdate_expectSuccess() {
+        final String TEXT = 'Test';
+        final String RECORD_GROUP = 'Group1';
+
+        List<FObjectOne__c> records = new List<FObjectOne__c>();
+        for (Integer counter = 1; counter <= 10; counter++) {
+            records.add(new FObjectOne__c(
+                TestTextRequired__c = 'Tests' + String.valueOf(counter)
+            ));
+        }
+        insert records;
+
+        Test.startTest();
+        FObject obj = new FObject(records, RECORD_GROUP)
+            .setVariable('text', TEXT)
+            .setDefinitionForUpdate(FObjectOne__c.TestTextRequired__c, 'static value({@text})')
+            .updateFields(RECORD_GROUP);
+        obj.updateRecords(true);
+        Test.stopTest();
+
+        Integer errors = 0;
+        for (FObjectOne__c record : [SELECT TestTextRequired__c FROM FObjectOne__c]) {
+            if (record.TestTextRequired__c != TEXT) {
+                errors++;
+            }
         }
         System.assertEquals(0, errors, 'FObject constructor - errors found');
     }
@@ -776,7 +835,7 @@ public class FObjectTest {
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
-        obj.deleteRecords('TestText__c = \'v1\'');
+        obj.deleteRecords('TestText__c = \'v1\'', true);
         Test.stopTest();
 
         Boolean condition1 = true;
@@ -951,6 +1010,101 @@ public class FObjectTest {
         Test.stopTest();
 
         System.assert(FObject.getGlobalDebugLogs().isEmpty(), 'setVerbose - errors found');
+    }
+
+    @IsTest
+    private static void setSource_previousForceeaNewSalesforce_expectSuccess() {
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 5)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
+        obj2.insertRecords(true);
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setVariable('source', ForceeaService.SOURCE_FORCEEA)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestLookupOther__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj1.insertRecords(true);
+
+        Test.startTest();
+        obj1
+            .setNumberOfRecords(20)
+            .setSource(ForceeaService.SOURCE_SALESFORCE);
+        obj1.insertRecords(true);
+        Integer soqlQueries = Limits.getQueries();
+        Test.stopTest();
+
+        System.assert(newSourceIsValid(ForceeaService.SOURCE_SALESFORCE, obj1, soqlQueries, 2, 30),
+            'The source was not set correctly');
+    }
+
+    @IsTest
+    private static void setSource_previousForceeaNewSalesforce1Def_expectSuccess() {
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 5)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
+        obj2.insertRecords(true);
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setVariable('source', ForceeaService.SOURCE_FORCEEA)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestLookupOther__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj1.insertRecords(true);
+
+        Test.startTest();
+        obj1
+            .setNumberOfRecords(20)
+            .setSource(FObjectOne__c.TestLookup__c, ForceeaService.SOURCE_SALESFORCE);
+        obj1.insertRecords(true);
+        Integer soqlQueries = Limits.getQueries();
+        Test.stopTest();
+
+        System.assert(newSourceIsValidFor1Def(ForceeaService.SOURCE_SALESFORCE, obj1, soqlQueries, 1, 30),
+            'The source was not set correctly');
+    }
+
+    @IsTest
+    private static void setSource_previousForceeaNewSalesforceBeforeDef_expectSuccess() {
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 5)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
+        obj2.insertRecords(true);
+
+        Test.startTest();
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setVariable('source', ForceeaService.SOURCE_FORCEEA)
+            .setSource(ForceeaService.SOURCE_SALESFORCE)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestLookupOther__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj1.insertRecords(true);
+        Integer soqlQueries = Limits.getQueries();
+        Test.stopTest();
+
+        System.assert(newSourceIsValid(ForceeaService.SOURCE_FORCEEA, obj1, soqlQueries, 0, 10),
+            'The source was not set correctly');
+    }
+
+    @IsTest
+    private static void setSource_previousSalesforceNewForceea_expectSuccess() {
+        FObject obj2 = new FObject(FObjectTwo__c.SObjectType, 5)
+            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)');
+        obj2.insertRecords(true);
+
+        FObject obj1 = new FObject(FObjectOne__c.SObjectType, 10)
+            .setVariable('source', ForceeaService.SOURCE_SALESFORCE)
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestLookupOther__c, 'random lookup(FObjectTwo__c) source({@source})')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+        obj1.insertRecords(true);
+
+        Test.startTest();
+        obj1
+            .setSource(ForceeaService.SOURCE_FORCEEA);
+        obj1.insertRecords(true);
+        Integer soqlQueries = Limits.getQueries();
+        Test.stopTest();
+
+        System.assert(newSourceIsValid(ForceeaService.SOURCE_FORCEEA, obj1, soqlQueries, 0, 20),
+            'The source was not set correctly');
     }
 
     @IsTest
@@ -1297,6 +1451,50 @@ public class FObjectTest {
         Test.stopTest();
 
         System.assert(FObject.processIsValid(), 'variables - errors found');
+    }
+
+    /* UTILITY METHODS */
+
+    private static Boolean definitionStringsAreValid(String newSource, FObject fObj) {
+        String definition1 = fObj.getDefinitions(FObjectOne__c.TestLookup__c).get(0);
+        String definition2 = fObj.getDefinitions(FObjectOne__c.TestLookupOther__c).get(0);
+        String newSourceCluster = 'source(' + newSource + ')';
+
+        return definition1.contains(newSourceCluster) && definition2.contains(newSourceCluster);
+    }
+
+    private static Boolean definitionStringsIsValid(String newSource, FObject fObj) {
+        String newSourceCluster = 'source(' + newSource + ')';
+        return fObj
+            .getDefinitions(FObjectOne__c.TestLookup__c)
+            .get(0)
+            .contains(newSourceCluster);
+    }
+
+    private static Boolean newSourceIsValid(String newSource, FObject fObj,
+        Integer numOfActualSoqlQueries, Integer numOfExpectedSoqlQueries,
+        Integer numOfExpectedInsertedRecords) {
+
+        return definitionStringsAreValid(newSource, fObj) &&
+            numOfQueriesIsCorrect(numOfActualSoqlQueries, numOfExpectedSoqlQueries) &&
+            numOfInsertedRecordsIsCorrect(numOfExpectedInsertedRecords);
+    }
+
+    private static Boolean newSourceIsValidFor1Def(String newSource, FObject fObj,
+        Integer numOfActualSoqlQueries, Integer numOfExpectedSoqlQueries,
+        Integer numOfExpectedInsertedRecords) {
+
+        return definitionStringsIsValid(newSource, fObj) &&
+            numOfQueriesIsCorrect(numOfActualSoqlQueries, numOfExpectedSoqlQueries) &&
+            numOfInsertedRecordsIsCorrect(numOfExpectedInsertedRecords);
+    }
+
+    private static Boolean numOfInsertedRecordsIsCorrect(Integer numOfExpectedInsertedRecords) {
+        return FObject.getInsertedRecords(FObjectOne__c.SObjectType).size() == numOfExpectedInsertedRecords;
+    }
+
+    private static Boolean numOfQueriesIsCorrect(Integer numOfActualSoqlQueries, Integer numOfExpectedSoqlQueries) {
+        return numOfExpectedSoqlQueries == numOfActualSoqlQueries;
     }
 
 }

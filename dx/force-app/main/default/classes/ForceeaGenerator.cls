@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -35,7 +35,7 @@ public with sharing class ForceeaGenerator {
     private static final String PARAMETER_LOOKUP = 'lookup';
     private static final String PARAMETER_SCALE = 'scale';
     private static final String PARAMETER_MODE = 'mode';
-    private static final String PARAMETER_SOURCE = 'source';
+    public static final String PARAMETER_SOURCE = 'source';
     private static final String PARAMETER_TO = 'to';
     private static final String PARAMETER_VALUE = 'value';
     private static final String PARAMETER_WHERE = 'where';

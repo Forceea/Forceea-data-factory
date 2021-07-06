@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -16,9 +16,11 @@
 @IsTest
 public class FObjectSetDefinitionTest {
 
+    private static final String EXCEPTION_CONTINUE = 'continue';
+    
     @IsTest
     private static void isValidForFieldDataType_base64_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'Body';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -89,7 +91,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_boolean_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestCheckbox__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -160,7 +162,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_combobox_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'Subject';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -231,7 +233,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_currency_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestCurrency__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -302,7 +304,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_date_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestDate__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -373,7 +375,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_datetime_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestDatetime__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -444,7 +446,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_decimal_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestDecimal__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -515,7 +517,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_email_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestEmail__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -586,7 +588,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_id_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'Id';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -657,7 +659,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_integer_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestInteger__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -728,7 +730,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_multiPicklist_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestMultiPicklistA__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -799,7 +801,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_percent_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestPercent__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -870,7 +872,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_picklist_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestPicklistC__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -941,7 +943,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_phone_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestPhone__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1012,7 +1014,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_recordType_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'RecordTypeId';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1083,7 +1085,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_reference_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestLookup__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1154,7 +1156,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_string_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestText__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1163,10 +1165,10 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('function-add field($Test)', true);
         validByDefinition.put('function-convert to(lower)', true);
         validByDefinition.put('mock type(id)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', false);
+        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', true);
         validByDefinition.put('random type(boolean)', true);
         validByDefinition.put('random type(city) group(one)', true);
         validByDefinition.put('random type(country) group(one)', true);
@@ -1192,7 +1194,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('random type(text) minLength(10) maxlength(30)', true);
         validByDefinition.put('random type(time) from(05:15:21) to(17:18:22)', true);
         validByDefinition.put('random type(url)', true);
-        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', false);
+        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', true);
         validByDefinition.put('serial type(date) from(2017-01-01) Step(2)', true);
         validByDefinition.put('serial type(datetime) from(2017-01-01 02:02:02) step(2.2)', true);
         validByDefinition.put('serial type(list) value(1, 2, 3) mode(cyclical)', true);
@@ -1205,7 +1207,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('serial type(number) from(10.2) step(1.2) scale(2)', true);
         validByDefinition.put('serial type(picklist) except(a) mode(cyclical)', false);
         validByDefinition.put('serial type(picklist) mode(cyclical)', false);
-        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', false);
+        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', true);
         validByDefinition.put('static value("")', true);
         validByDefinition.put('static value(01:01:01)', true);
         validByDefinition.put('static value(10)', true);
@@ -1225,7 +1227,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_textArea_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestTextArea__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1234,10 +1236,10 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('function-add field($Test)', true);
         validByDefinition.put('function-convert to(lower)', true);
         validByDefinition.put('mock type(id)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', false);
+        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', true);
         validByDefinition.put('random type(boolean)', true);
         validByDefinition.put('random type(city) group(one)', true);
         validByDefinition.put('random type(country) group(one)', true);
@@ -1263,7 +1265,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('random type(text) minLength(10) maxlength(30)', true);
         validByDefinition.put('random type(time) from(05:15:21) to(17:18:22)', true);
         validByDefinition.put('random type(url)', true);
-        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', false);
+        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', true);
         validByDefinition.put('serial type(date) from(2017-01-01) Step(2)', true);
         validByDefinition.put('serial type(datetime) from(2017-01-01 02:02:02) step(2.2)', true);
         validByDefinition.put('serial type(list) value(1, 2, 3) mode(cyclical)', true);
@@ -1276,7 +1278,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('serial type(number) from(10.2) step(1.2) scale(2)', true);
         validByDefinition.put('serial type(picklist) except(a) mode(cyclical)', false);
         validByDefinition.put('serial type(picklist) mode(cyclical)', false);
-        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', false);
+        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', true);
         validByDefinition.put('static value("")', true);
         validByDefinition.put('static value(01:01:01)', true);
         validByDefinition.put('static value(10)', true);
@@ -1296,7 +1298,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_textAreaLong_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestTextAreaLong__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1305,10 +1307,10 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('function-add field($Test)', true);
         validByDefinition.put('function-convert to(lower)', true);
         validByDefinition.put('mock type(id)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', false);
+        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', true);
         validByDefinition.put('random type(boolean)', true);
         validByDefinition.put('random type(city) group(one)', true);
         validByDefinition.put('random type(country) group(one)', true);
@@ -1334,7 +1336,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('random type(text) minLength(10) maxlength(30)', true);
         validByDefinition.put('random type(time) from(05:15:21) to(17:18:22)', true);
         validByDefinition.put('random type(url)', true);
-        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', false);
+        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', true);
         validByDefinition.put('serial type(date) from(2017-01-01) Step(2)', true);
         validByDefinition.put('serial type(datetime) from(2017-01-01 02:02:02) step(2.2)', true);
         validByDefinition.put('serial type(list) value(1, 2, 3) mode(cyclical)', true);
@@ -1347,7 +1349,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('serial type(number) from(10.2) step(1.2) scale(2)', true);
         validByDefinition.put('serial type(picklist) except(a) mode(cyclical)', false);
         validByDefinition.put('serial type(picklist) mode(cyclical)', false);
-        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', false);
+        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', true);
         validByDefinition.put('static value("")', true);
         validByDefinition.put('static value(01:01:01)', true);
         validByDefinition.put('static value(10)', true);
@@ -1367,7 +1369,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_textAreaRich_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestTextAreaRich__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1376,10 +1378,10 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('function-add field($Test)', true);
         validByDefinition.put('function-convert to(lower)', true);
         validByDefinition.put('mock type(id)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) source(forceea)', false);
-        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', false);
+        validByDefinition.put('random lookup(Account) field(FieldOne) except(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) field(FieldOne) value(One,Two,Three) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) source(forceea)', true);
+        validByDefinition.put('random lookup(Account) where(Rating = \'Hot\') source(salesforce)', true);
         validByDefinition.put('random type(boolean)', true);
         validByDefinition.put('random type(city) group(one)', true);
         validByDefinition.put('random type(country) group(one)', true);
@@ -1405,7 +1407,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('random type(text) minLength(10) maxlength(30)', true);
         validByDefinition.put('random type(time) from(05:15:21) to(17:18:22)', true);
         validByDefinition.put('random type(url)', true);
-        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', false);
+        validByDefinition.put('serial lookup(Account) mode(cyclical) source(forceea)', true);
         validByDefinition.put('serial type(date) from(2017-01-01) Step(2)', true);
         validByDefinition.put('serial type(datetime) from(2017-01-01 02:02:02) step(2.2)', true);
         validByDefinition.put('serial type(list) value(1, 2, 3) mode(cyclical)', true);
@@ -1418,7 +1420,7 @@ public class FObjectSetDefinitionTest {
         validByDefinition.put('serial type(number) from(10.2) step(1.2) scale(2)', true);
         validByDefinition.put('serial type(picklist) except(a) mode(cyclical)', false);
         validByDefinition.put('serial type(picklist) mode(cyclical)', false);
-        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', false);
+        validByDefinition.put('static lookup(Account) field(FieldOne) value(one) source(forceea)', true);
         validByDefinition.put('static value("")', true);
         validByDefinition.put('static value(01:01:01)', true);
         validByDefinition.put('static value(10)', true);
@@ -1439,7 +1441,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_time_expectSuccess() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestTime__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1510,7 +1512,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void isValidForFieldDataType_url_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestUrl__c';
 
         Map<String, Boolean> validByDefinition = new Map<String, Boolean>();
@@ -1581,7 +1583,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_scriptIsBlank_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1638,7 +1640,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingOpeningParenthesis1_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1653,7 +1655,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingOpeningParenthesis2_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1668,7 +1670,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingOpeningParenthesis3_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1683,7 +1685,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingOpeningParenthesis4_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1698,7 +1700,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingClosingParenthesis1_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1713,7 +1715,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingClosingParenthesis2_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1728,7 +1730,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingClosingParenthesis3_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1743,7 +1745,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingClosingParenthesis4_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1758,7 +1760,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingClosingDoubleQuotes1_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1773,7 +1775,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingClosingDoubleQuotes2_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1788,7 +1790,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_missingClosingDoubleQuotes3_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1803,7 +1805,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidComma_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1818,7 +1820,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidDoubleQuotes1_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1833,7 +1835,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidDoubleQuotes2_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1848,7 +1850,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidDoubleQuotes4_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1863,7 +1865,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidDoubleQuotes5_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1878,7 +1880,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidDoubleQuotes6_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1893,7 +1895,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_fieldIsBlank_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1908,7 +1910,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_fieldIsInvalid_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1923,7 +1925,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_fieldBelongsToAnotherSObject_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
@@ -1940,7 +1942,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidCommand_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1955,7 +1957,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidParameter1_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1970,7 +1972,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidParameter2_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -1985,7 +1987,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidParameter3_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -2000,7 +2002,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidParameter4_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -2015,7 +2017,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidParameter5_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -2030,7 +2032,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_invalidParameter6_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
@@ -2045,7 +2047,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForId_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'Id';
 
         Test.startTest();
@@ -2062,7 +2064,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForCheckbox_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
 
         String fieldApiName = 'TestCheckbox__c';
 
@@ -2098,7 +2100,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForCurrency_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestCurrency__c';
 
         Test.startTest();
@@ -2115,7 +2117,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForDate_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestDate__c';
 
         Test.startTest();
@@ -2132,7 +2134,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForDatetime_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestDatetime__c';
 
         Test.startTest();
@@ -2163,7 +2165,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForLookup_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestLookup__c';
 
         Test.startTest();
@@ -2180,7 +2182,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForMultiPicklist_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestMultiPicklistA__c';
 
         Test.startTest();
@@ -2197,7 +2199,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForNumber_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestDecimal__c';
 
         Test.startTest();
@@ -2214,7 +2216,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForPercent_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestPercent__c';
 
         Test.startTest();
@@ -2245,7 +2247,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForPicklist_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestPicklistA__c';
 
         Test.startTest();
@@ -2318,7 +2320,7 @@ public class FObjectSetDefinitionTest {
 
     @IsTest
     private static void setDefinition_multipleDefinitionsForTime_expectFailure() {
-        FObject.setExceptionHandling('continue');
+        FObject.setExceptionHandling(EXCEPTION_CONTINUE);
         String fieldApiName = 'TestTime__c';
 
         Test.startTest();

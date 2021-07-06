@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -145,14 +145,14 @@ public class FObjectDmlTest {
 
     @IsTest
     private static void deleteRecords_deleteException_expectFailure() {
-        Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType)
             .setDefinition('TestPicklistA__c', 'random type(picklist)')
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true);
 
+        Test.startTest();
         Test.setReadOnlyApplicationMode(true);
-        List<Database.DeleteResult> deleteResults = obj.deleteRecords('TestPicklistA__c = \'a1\'');
+        List<Database.DeleteResult> deleteResults = obj.deleteRecords('TestPicklistA__c = \'a1\'', false);
         Test.stopTest();
 
         Integer errors = 0;
@@ -162,6 +162,36 @@ public class FObjectDmlTest {
             }
         }
         System.assertEquals(0, errors, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void getInsertedRecord_globalGroupIndexZero_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestText__c', 'static value(test)')
+            .setDefinition('TestText__c', 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+
+        Test.startTest();
+        obj.insertRecords(true);
+        FObjectOne__c result = (FObjectOne__c) obj.getInsertedRecord();
+        Test.stopTest();
+
+        System.assertEquals('test1', result.TestText__c, 'getInsertedRecord - errors found');
+    }
+
+    @IsTest
+    private static void getInsertedRecord_groupIndexZero_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 10)
+            .setDefinition('TestText__c', 'static value(test)')
+            .setDefinition('TestText__c', 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
+
+        Test.startTest();
+        obj.insertRecords(true, 'group1');
+        FObjectOne__c result = (FObjectOne__c) obj.getInsertedGroupRecord('group1');
+        Test.stopTest();
+
+        System.assertEquals('test1', result.TestText__c, 'getInsertedRecord - errors found');
     }
 
     @IsTest

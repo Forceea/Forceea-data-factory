@@ -70,6 +70,10 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
+                <field>TestLookupOther__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
                 <field>TestExternalId__c</field>
             </layoutItems>
         </layoutColumns>

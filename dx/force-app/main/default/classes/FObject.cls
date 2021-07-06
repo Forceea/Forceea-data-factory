@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -27,6 +27,19 @@ public with sharing class FObject {
         private Error(String errorId, String errorMessage) {
             this.id = errorId;
             this.errorMessage = errorMessage;
+        }
+    }
+
+    /**
+     * @description A wrapper for definition details.
+     */
+    private class DefinitionWrapper {
+        private Integer position { get; set; }
+        private String fieldApiName { get; set; }
+
+        private DefinitionWrapper(Integer position, String fieldApiName) {
+            this.position = position;
+            this.fieldApiName = fieldApiName;
         }
     }
 
@@ -58,7 +71,7 @@ public with sharing class FObject {
     private static final String SYMBOL_SUCCESS = '-';
 
     private static final VerboseLevel VERBOSE_MODE = VerboseLevel.VERBOSE_NONE;
-    private static final String VERSION = '2.3.0-1';
+    private static final String VERSION = '2.5';
 
     private static final String MESSAGE_INVALID_PROCESS = 'Process is invalid and will terminate.';
     private static final String MESSAGE_INVALID_VALUE = 'Invalid value';
@@ -68,12 +81,15 @@ public with sharing class FObject {
     private static final String MESSAGE_VALIDATED_DEFINITIONS = 'Validated definitions of';
     private static final String MESSAGE_VALUES = 'Values of';
     private static final String MESSAGE_WILL_DELETE_ALL_FIELDS_DEFINITIONS = 'Will delete all field definitions of';
+    private static final String MESSAGE_WILL_DELETE_DEFINITION_WITH_ID = 'Will delete the definition with ID';
     private static final String MESSAGE_WILL_DELETE_FIELD_DEFINITIONS = 'Will delete all definitions of field';
     private static final String MESSAGE_WILL_DELETE_RECORDS = 'Will delete records';
     private static final String MESSAGE_WILL_DISPLAY_CREATED_FIELD_VALUES = 'Will display the created field values';
     private static final String MESSAGE_WILL_INSERT_CREATED_RECORDS = 'Will insert the created records';
     private static final String MESSAGE_WILL_NOT_DELETE_RECORDS = 'Will not delete records';
     private static final String MESSAGE_WILL_NOT_INSERT_RECORDS = 'Will not insert records';
+    private static final String MESSAGE_WILL_REPLACE_ALL_DEFINITIONS = 'Will replace all definition of';
+    private static final String MESSAGE_WILL_REPLACE_DEFINITION_WITH_ID = 'Will replace the definition with ID';
     private static final String MESSAGE_WILL_SET_DEFINITIONS_OF_REQUIRED_FIELDS =
         'Will set the definition of required fields';
     private static final String MESSAGE_WILL_STORE_CREATED_RECORDS = 'Will store the created records with mocked IDs';
@@ -146,39 +162,77 @@ public with sharing class FObject {
 
     /* INSTANCE COLLECTIONS */
 
-    // the addresses - key: address group, value: address
+    /**
+     * @description A map with the addresses - key: address group, value: address
+     */
     public Map<String, List<ForceeaAddress>> addressesByGroup = new Map<String, List<ForceeaAddress>>();
-    // the last created SObject records
+    /**
+     * @description The last created SObject records.
+     */
     private List<SObject> createdRecords = new List<SObject>();
-    // the declared field definitions
+    /**
+     * @description The declared field definitions.
+     */
     public List<ForceeaDefinition> definitions = new List<ForceeaDefinition>();
-    // the deleted records
+    /**
+     * @description The deleted records.
+     */
     private List<SObject> deletedRecords = new List<SObject>();
-    // the delete results list
+    /**
+     * @description The delete results list.
+     */
     private List<Database.DeleteResult> deleteResults = new List<Database.DeleteResult>();
-    // the definition errors
+    /**
+     * @description The definition errors.
+     */
     private List<Error> errors = new List<Error>();
-    // the fields with declared definitions
+    /**
+     * @description The fields with declared definitions.
+     */
     public List<String> fields = new List<String>();
-    // the fields to be updated
+    /**
+     * @description The fields to be updated.
+     */
     public List<String> fieldsForUpdate = new List<String>();
-    // the FVM, each List<String> contains a field's values
+    /**
+     * @description The FVM, each List<String> contains a field's values.
+     */
     public List<List<String>> fieldValuesMatrix = new List<List<String>>();
-    // the inserted records
+    /**
+     * @description The inserted records.
+     */
     private List<SObject> insertedRecords = new List<SObject>();
-    // key: <blank> or groupName (lowercase), value: list of records
+    /**
+     * @description A map with key: <blank> or groupName (lowercase), value: list of records.
+     */
     private Map<String, List<SObject>> instanceInsertedRecordsByGroup = new Map<String, List<SObject>>();
-    // the first & last names - key: name group, value: name
+    /**
+     * @description The first & last names - key: name group, value: name.
+     */
     public Map<String, List<ForceeaName>> namesByGroup = new Map<String, List<ForceeaName>>();
-    // the lists of permutations
+    /**
+     * @description A map with key: field API name, value: the next new field position.
+     */
+    private Map<String, Integer> nextNewFieldPositionByFieldName = new Map<String, Integer>();
+    /**
+     * @description The lists of permutations.
+     */
     public List<List<String>> permutationsList = new List<List<String>>();
-    // the permutation values for all records
+    /**
+     * @description The permutation values for all records.
+     */
     public List<List<String>> permutationValues = new List<List<String>>();
-    // the list of products to insert a Standard Price Book entry
+    /**
+     * @description The list of products to insert a Standard Price Book entry.
+     */
     private List<Product2> productsToInsertPricebookEntries = new List<Product2>();
-    // the records to be deleted
+    /**
+     * @description The records to be deleted.
+     */
     private List<SObject> recordsToDelete = new List<SObject>();
-    // the records to be inserted
+    /**
+     * @description The records to be inserted.
+     */
     private List<SObject> recordsToInsert = new List<SObject>();
     // the records to be updated
     public List<SObject> recordsToUpdate = new List<SObject>();
@@ -303,6 +357,14 @@ public with sharing class FObject {
     private Integer cpuTimeStartOfDataGeneration { get; set; }
     // if true, all definitions are validated
     private Boolean definitionsAreValidated { get; set; }
+    /**
+     * @description The ID of the replaced definition.
+     */
+    private String definitionIdForReplacement { get; set; }
+    /**
+     * @description The definition position for replacing the definition.
+     */
+    private Integer definitionPositionForReplacement { get; set; }
     // if true, the process deletes records
     private Boolean dmlIsDelete { get; set; }
     // if true, the process inserts records
@@ -315,8 +377,10 @@ public with sharing class FObject {
     private String groupName { get; set; }
     // if true, it has the Schema of all fields
     private Boolean hasSchemaOfAllFields { get; set; }
-    // if TRUE, the created records will have permutations
-    private Boolean processHasPermutations { get; set; }
+    /**
+     * @description If true, the SObject is excluded from the asynchronous deletion.
+     */
+    private Boolean isExcludedOnAsyncDelete { get; set; }
     // if true, the IDs are mocked
     public Boolean isMocking { get; set; }
     // if true, it's a Big Object
@@ -357,10 +421,16 @@ public with sharing class FObject {
     private Integer numValidatedDefinitions { get; set; }
     // the partition field for async processing
     private String partitionFieldName { get; set; }
+    // if TRUE, the created records will have permutations
+    private Boolean processHasPermutations { get; set; }
     // the SOQL query LIMIT
     private Integer queryLimit { get; set; }
     // the number of records to create
     private Integer records { get; set; }
+    /**
+     * @description The field API name for replacing definitions.
+     */
+    private String fieldApiNameForReplacement { get; set; }
     // if true, Forceea sets all required fields
     private Boolean requiredFieldsShouldBeAutomaticallyConfigured { get; set; }
     // the SObject API name
@@ -395,15 +465,11 @@ public with sharing class FObject {
     // FObject from existing record(s) with/without group
 
     public FObject(SObject insertedRecord) {
-        this(null, new List<SObject>{
-            insertedRecord
-        }, '');
+        this(null, new List<SObject>{ insertedRecord }, '');
     }
 
     public FObject(SObject insertedRecord, String groupName) {
-        this(null, new List<SObject>{
-            insertedRecord
-        }, groupName);
+        this(null, new List<SObject>{ insertedRecord }, groupName);
     }
 
     public FObject(List<SObject> insertedRecords) {
@@ -637,6 +703,63 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Appends new definitions after the definition with the given ID.
+     * @param definitionId The Definition ID.
+     * @return An FObject instance.
+     */
+    public FObject appendDefinitionsAfterId(String definitionId) {
+        DefinitionWrapper definitionDetails = getDefinitionDetailsFromId(definitionId);
+        Integer definitionPosition = definitionDetails.position;
+        String fieldApiName = definitionDetails.fieldApiName;
+        this.nextNewFieldPositionByFieldName.put(fieldApiName, definitionPosition + 1);
+
+        return this;
+    }
+
+    /**
+     * @description Appends new definitions after last field definition.
+     * @param fieldName The field API name.
+     * @return An FObject instance.
+     */
+    public FObject appendDefinitions(String fieldName) {
+        String fieldApiName = ForceeaService.getFieldApiName(
+            this, '', this.sObjectApiName, fieldName, null, '', 'replaceDefinitions');
+
+        if (String.isNotBlank(fieldApiName)) {
+            appendDefinitionsOfField(fieldApiName);
+        }
+
+        return this;
+    }
+
+    /**
+     * @description Appends new definitions after last field definition.
+     * @param sObjectField The SObjectField.
+     * @return An FObject instance.
+     */
+    public FObject appendDefinitions(Schema.SObjectField sObjectField) {
+        String fieldApiName = sObjectField.getDescribe().getName();
+        appendDefinitionsOfField(fieldApiName);
+
+        return this;
+    }
+
+    /**
+     * @description Appends the insertion of new definitions after the last field definition.
+     * @param fieldApiName The field API name.
+     */
+    private void appendDefinitionsOfField(String fieldApiName) {
+        if (fieldDoesNotExist(fieldApiName)) {
+            return;
+        }
+
+        List<Integer> definitionIndexes = getDefinitionIndexes(fieldApiName);
+        Integer size = definitionIndexes.size();
+        Integer lastDefinitionPosition = definitionIndexes.get(size -1);
+        this.nextNewFieldPositionByFieldName.put(fieldApiName, lastDefinitionPosition + 1);
+    }
+
+    /**
      * @description Defines if user records can be inserted when not testing.
      * @param insertUsers True, if we allow users to be inserted in non-testing mode.
      * @return An FObject instance.
@@ -644,6 +767,16 @@ public with sharing class FObject {
     public FObject canInsertUsers(Boolean insertUsers) {
         this.canInsertUsers = insertUsers;
         return this;
+    }
+
+    /**
+     * @description Clears the next position map, if this is a new field.
+     * @param fieldApiName The field API name.
+     */
+    private void clearNextNewFieldPositionsByFieldNameMap(String fieldApiName) {
+        if (!this.nextNewFieldPositionByFieldName.containsKey(fieldApiName)) {
+            this.nextNewFieldPositionByFieldName.clear();
+        }
     }
 
     /**
@@ -680,7 +813,7 @@ public with sharing class FObject {
     }
 
     /**
-     * @description Creates the field values.
+     * @description Creates and displays the field values.
      */
     private void createAndDisplayFieldValues() {
         for (String fieldName : getFieldsToProcess()) {
@@ -796,12 +929,8 @@ public with sharing class FObject {
         if (fieldPosition == -1) {
             return this;
         }
-        displayMessageWillDeleteFieldDefinitions(fieldApiName);
-
-        List<Integer> definitionIndexesToRemove = getDefinitionIndexesToRemove(fieldApiName);
-        for (Integer counter = definitionIndexesToRemove.size() - 1; counter >= 0; counter--) {
-            this.definitions.remove(definitionIndexesToRemove.get(counter));
-        }
+        displayMessageWillDeleteFieldDefinitions(this.sObjectApiName + '.' + fieldApiName);
+        removeDefinitionIndexes(fieldApiName);
 
         if (!this.isUpdate) {
             this.fields.remove(fieldPosition);
@@ -819,12 +948,6 @@ public with sharing class FObject {
         return deleteAllDefinitionsOfField(sObjectField.getDescribe().getName());
     }
 
-    public FObject deleteFieldDefinitions(Schema.SObjectField sObjectField) {
-        forceeaDebug(ForceeaService.WARN,
-            'This method is deprecated and will be removed in a future release. Please use deleteDefinitions instead');
-        return deleteAllDefinitionsOfField(sObjectField.getDescribe().getName());
-    }
-
     /**
      * @description Deletes all definitions of a field.
      * @param fieldName The field API name.
@@ -834,22 +957,24 @@ public with sharing class FObject {
         return deleteAllDefinitionsOfField(fieldName);
     }
 
-    public FObject deleteFieldDefinitions(String fieldName) {
-        forceeaDebug(ForceeaService.WARN,
-            'This method is deprecated and will be removed in a future release. Please use deleteDefinitions instead');
-        return deleteAllDefinitionsOfField(fieldName);
-    }
-
     /**
-     * @description Deletes records of the SObject, using specific criteria (WHERE clause).
-     * @param whereClause The WHERE clause of the SOQL query (e.g. MyField__c > 10).
-     * @return A list of Database.DeleteResult objects.
-     */
-    public List<Database.DeleteResult> deleteRecords(String whereClause) {
-        forceeaDebug(ForceeaService.WARN,
-            'This method is deprecated and will be removed in a future release. ' +
-                'Please use deleteRecords(whereClause, allOrNone) instead');
-        return deleteRecords(whereClause, false);
+    * @description Deletes a field definition with the given ID.
+    * @param definitionId The Definition ID.
+    * @return An FObject instance.
+    */
+    public FObject deleteDefinitionWithId(String definitionId) {
+        Integer index = 0;
+
+        for (ForceeaDefinition def: this.definitions) {
+            if (def.definitionId == definitionId) {
+                this.definitions.remove(index);
+                forceeaDebug(ForceeaService.DEBUG, MESSAGE_WILL_DELETE_DEFINITION_WITH_ID + ' [' + definitionId + ']');
+                break;
+            }
+            index++;
+        }
+
+        return this;
     }
 
     /**
@@ -925,12 +1050,12 @@ public with sharing class FObject {
         FObject.initializationMessageIsDisplayed = messageWasDisplayed;
     }
 
-    private void displayMessageWillDeleteFieldDefinitions(String fieldApiName) {
+    private void displayMessageWillDeleteFieldDefinitions(String sObjectNameFieldName) {
         if (this.isUpdate) {
             return;
         }
 
-        forceeaDebug(ForceeaService.INFO, MESSAGE_WILL_DELETE_FIELD_DEFINITIONS + ' [' + fieldApiName + ']');
+        forceeaDebug(ForceeaService.INFO, MESSAGE_WILL_DELETE_FIELD_DEFINITIONS + ' [' + sObjectNameFieldName + ']');
     }
 
     /**
@@ -973,6 +1098,16 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Excludes the inactive (IsActive=false) lookup records.
+     * @param isExcluded If true, the SObject will be excluded from the async delete process.
+     * @return An FObject instance.
+     */
+    public FObject excludeOnAsyncDelete(Boolean isExcluded) {
+        this.isExcludedOnAsyncDelete = isExcluded;
+        return this;
+    }
+
+    /**
      * @description Informs if the field has a controlling field.
      * @param field The System.LoggingLevel enum.
      * @return True, if the field has a controlling field.
@@ -997,6 +1132,23 @@ public with sharing class FObject {
         }
 
         return false;
+    }
+
+    /**
+     * @description Informs whether the field exists in the list of fields.
+     * @return True, if the field is not already defined with a definition.
+     */
+    private Boolean fieldDoesNotExist(String fieldApiName) {
+        Integer fieldPosition = getFieldsToProcess().indexOf(fieldApiName);
+        return fieldPosition > -1;
+    }
+
+    /**
+     * @description Informs whether the field is for replacement.
+     * @return True, if the field is set for replacing its definitions, set with replaceDefinitions.
+     */
+    private Boolean fieldIsNotForReplacement(String fieldApiName) {
+        return !this.fieldApiNameForReplacement.equalsIgnoreCase(fieldApiName);
     }
 
     /**
@@ -1036,7 +1188,7 @@ public with sharing class FObject {
 
     /**
      * @description Retrieves a map of all definitions of every field.
-     * @return A map of key:string, value: List of string values.
+     * @return A map of key:string, value: list of string values.
      */
     public Map<String, List<String>> getAllDefinitions() {
         Map<String, List<String>> results = new Map<String, List<String>>();
@@ -1047,9 +1199,7 @@ public with sharing class FObject {
             if (results.containsKey(field)) {
                 results.get(field).add(def.definitionString);
             } else {
-                results.put(field, new List<String>{
-                    def.definitionString
-                });
+                results.put(field, new List<String>{def.definitionString});
             }
         }
 
@@ -1104,23 +1254,32 @@ public with sharing class FObject {
     }
 
     /**
-     * @description Retrieves the default query limit.
-     * @return The default query limit.
+     * @description Retrieves the zero-based definition position or -1 if it is not found.
+     * @param definitionId The field ID.
+     * @return A DefinitionWrapper object.
      */
-    public Integer getGlobalQueryLimit() {
-        if (this.dmlIsDelete && this.isBigObject) {
-            return DEFAULT_QUERY_LIMIT_FOR_BIG_OBJECT;
-        } else {
-            return DEFAULT_QUERY_LIMIT;
+    private DefinitionWrapper getDefinitionDetailsFromId(String definitionId) {
+        DefinitionWrapper result = new DefinitionWrapper(-1, '');
+        Integer index = 0;
+
+        for (ForceeaDefinition def : this.definitions) {
+            if (def.definitionId == definitionId) {
+                result.position = index;
+                result.fieldApiName = def.fieldApiName;
+                break;
+            }
+            index++;
         }
+
+        return result;
     }
 
     /**
-     * @description Retrieves the indexes of the definitions to be removed.
+     * @description Retrieves the indexes of the definitions.
      * @param fieldApiName The field API name.
      * @return The list of definition indexes.
      */
-    private List<Integer> getDefinitionIndexesToRemove(String fieldApiName) {
+    private List<Integer> getDefinitionIndexes(String fieldApiName) {
         List<Integer> results = new List<Integer>();
         Integer index = 0;
         Boolean isSelectable = false;
@@ -1247,18 +1406,6 @@ public with sharing class FObject {
         }
 
         return results;
-    }
-
-    public List<String> getFieldDefinitions(Schema.SObjectField sObjectField) {
-        forceeaDebug(ForceeaService.WARN,
-            'This method is deprecated and will be removed in a future release. Please use getDefinitions instead');
-        return getDefinitions(sObjectField.getDescribe().getName());
-    }
-
-    public List<String> getFieldDefinitions(String fieldApiName) {
-        forceeaDebug(ForceeaService.WARN,
-            'This method is deprecated and will be removed in a future release. Please use getDefinitions instead');
-        return getDefinitions(fieldApiName);
     }
 
     /**
@@ -1408,6 +1555,18 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Retrieves the default query limit.
+     * @return The default query limit.
+     */
+    public Integer getGlobalQueryLimit() {
+        if (this.dmlIsDelete && this.isBigObject) {
+            return DEFAULT_QUERY_LIMIT_FOR_BIG_OBJECT;
+        } else {
+            return DEFAULT_QUERY_LIMIT;
+        }
+    }
+
+    /**
      * @description Retrieves the global verbose.
      * @return The global verbose (none, info, debug).
      */
@@ -1423,6 +1582,39 @@ public with sharing class FObject {
                 return 'none';
             }
         }
+    }
+
+    /**
+     * @description Retrieves the index of the next definition for replacement.
+     * @param fieldApiName The field API name.
+     * @return An integer number >= 0.
+     */
+    private Integer getIndexForReplacement(String fieldApiName) {
+        Integer result = this.definitions.size();
+
+        if (this.nextNewFieldPositionByFieldName.containsKey(fieldApiName)) {
+            result = this.nextNewFieldPositionByFieldName.get(fieldApiName);
+            this.nextNewFieldPositionByFieldName.put(fieldApiName, result + 1);
+        }
+
+        return result;
+    }
+
+    /**
+     * @description Retrieves the first inserted record of an SObject that belongs to a specific group
+     *   and is located in a specific zero-based position.
+     * @param groupName The group name of the inserted records.
+     * @return An SObject.
+     */
+    public SObject getInsertedGroupRecord(String groupName) {
+        String key = ForceeaService.getStringValueToLower(groupName);
+
+        if (this.instanceInsertedRecordsByGroup.containsKey(key) &&
+            !this.instanceInsertedRecordsByGroup.get(key).isEmpty()) {
+            return this.instanceInsertedRecordsByGroup.get(key).get(0);
+        }
+
+        return null;
     }
 
     /**
@@ -1474,6 +1666,14 @@ public with sharing class FObject {
         }
 
         return results;
+    }
+
+    /**
+     * @description Retrieves the first inserted record of an SObject.
+     * @return An SObject.
+     */
+    public SObject getInsertedRecord() {
+        return getInsertedGroupRecord('');
     }
 
     /**
@@ -1537,9 +1737,7 @@ public with sharing class FObject {
             if (fObj.containsSelfLookupDefinition() || fObj.hasMockCommand() || fObj.hasStandardPriceBookEntries()) {
                 Integer counter = countersBySObjectName.get(sObjectApiName) + 1;
                 countersBySObjectName.put(sObjectApiName, counter);
-                results.put(sObjectApiName + '.' + String.valueOf(counter), new List<FObject>{
-                    fObj
-                });
+                results.put(sObjectApiName + '.' + String.valueOf(counter), new List<FObject>{ fObj });
             } else {
                 List<FObject> fObjects =
                     results.containsKey(sObjectApiName) ? results.get(sObjectApiName) : new List<FObject>();
@@ -1774,7 +1972,7 @@ public with sharing class FObject {
         }
 
         List<ForceeaVariable> variables = new List<ForceeaVariable>(FObject.globalVariables);
-        variables.addAll(this.variables); // TODO create a new property with lazy loading
+        variables.addAll(this.variables);
 
         for (ForceeaVariable var : variables) {
             result = result.replace('{@' + var.name + '}', getVariableStringValue(var));
@@ -2103,6 +2301,45 @@ public with sharing class FObject {
         }
 
         setRecordsToUpdateWithNewFieldValues();
+    }
+
+    /**
+     * @description Removes all existing field definitions and sets the position of the next definition.
+     * @param fieldApiName The field API name.
+     */
+    private void handleReplacementOfFieldDefinitions(String fieldApiName) {
+        if (fieldIsNotForReplacement(fieldApiName)) {
+            return;
+        }
+        this.fieldApiNameForReplacement = '';
+
+        clearNextNewFieldPositionsByFieldNameMap(fieldApiName);
+
+        List<Integer> definitionIndexesToRemove = getDefinitionIndexes(fieldApiName);
+        definitionIndexesToRemove.sort();
+        removeDefinitionIndexes(fieldApiName);
+
+        Integer firstDefinitionPosition = definitionIndexesToRemove.get(0);
+        this.nextNewFieldPositionByFieldName.put(fieldApiName, firstDefinitionPosition);
+        forceeaDebug(ForceeaService.DEBUG, MESSAGE_WILL_REPLACE_ALL_DEFINITIONS + ' [' + fieldApiName + ']');
+    }
+
+    /**
+     * @description Removes existing field definitions and sets the position of the next definition.
+     */
+    private void handleReplacementOfDefinitionId(String fieldApiName) {
+        if (this.definitionPositionForReplacement == -1) {
+            return;
+        }
+
+        clearNextNewFieldPositionsByFieldNameMap(fieldApiName);
+
+        Integer definitionIndexToRemove = this.definitionPositionForReplacement;
+        this.definitions.remove(definitionIndexToRemove);
+        forceeaDebug(ForceeaService.DEBUG, MESSAGE_WILL_REPLACE_DEFINITION_WITH_ID + ' [' + this.definitionIdForReplacement + ']');
+
+        this.nextNewFieldPositionByFieldName.put(fieldApiName, definitionIndexToRemove);
+        this.definitionPositionForReplacement = -1;
     }
 
     /**
@@ -2453,6 +2690,10 @@ public with sharing class FObject {
             'Inserted ' + ForceeaService.getCountable('standard pricebook entry', standardPricebookEntriesToInsert.size()) + '.');
     }
 
+    public Boolean isExcludedOnAsyncDelete() {
+        return this.isExcludedOnAsyncDelete;
+    }
+
     private Boolean keyDoesNotBelongToThisSObject(String sObjectApiName) {
         return !sObjectApiName.equalsIgnoreCase(this.sObjectApiName);
     }
@@ -2516,6 +2757,7 @@ public with sharing class FObject {
     }
 
     private static void onAfterInsertRecordsFromListWithOptimizer(String sObjectApiName) {
+
         FObject.addRecordsToMapsOnInsertWithOptimizer(sObjectApiName);
     }
 
@@ -2864,6 +3106,14 @@ public with sharing class FObject {
         return true;
     }
 
+    private void removeDefinitionIndexes(String fieldApiName) {
+        List<Integer> definitionIndexesToRemove = getDefinitionIndexes(fieldApiName);
+
+        for (Integer counter = definitionIndexesToRemove.size() - 1; counter >= 0; counter--) {
+            this.definitions.remove(definitionIndexesToRemove.get(counter));
+        }
+    }
+
     /**
      * @description Removes the deleted records from the related maps of inserted records.
      */
@@ -2903,6 +3153,63 @@ public with sharing class FObject {
             FObject.globalInsertedRecordsByGroup.put(key, insertedGlobalRecordsById.values());
             this.instanceInsertedRecordsByGroup.put(localGroupName, insertedInstanceRecordsById.values());
         }
+    }
+
+    /**
+     * @description Removes all existing field definitions
+     *   and inserts any new definition(s) in the same position of the 1st existing definition.
+     * @param fieldName The field API name.
+     * @return An FObject instance.
+     */
+    public FObject replaceDefinitions(String fieldName) {
+        String fieldApiName = ForceeaService.getFieldApiName(
+            this, '', this.sObjectApiName, fieldName, null, '', 'replaceDefinitions');
+
+        if (String.isNotBlank(fieldApiName)) {
+            replaceDefinitionsOfField(fieldApiName);
+        }
+
+        return this;
+    }
+
+    /**
+     * @description Removes all existing field definitions
+     *   and inserts any new definition(s) in the same position of the 1st existing definition.
+     * @param sObjectField The SObjectField.
+     * @return An FObject instance.
+     */
+    public FObject replaceDefinitions(Schema.SObjectField sObjectField) {
+        String fieldApiName = sObjectField.getDescribe().getName();
+        replaceDefinitionsOfField(fieldApiName);
+
+        return this;
+    }
+
+    /**
+     * @description Removes all existing field definitions
+     *   and activates the insertion of new definitions in the same position.
+     * @param fieldApiName The field API name.
+     */
+    private void replaceDefinitionsOfField(String fieldApiName) {
+        Integer fieldPosition = getFieldsToProcess().indexOf(fieldApiName);
+        if (fieldPosition == -1) {
+            return;
+        }
+
+        this.fieldApiNameForReplacement = fieldApiName;
+    }
+
+    /**
+     * @description Replaces a field definition with the given ID.
+     * @param definitionId The Definition ID.
+     * @return An FObject instance.
+     */
+    public FObject replaceDefinitionWithId(String definitionId) {
+        //this.fieldApiNameForReplacement = getDefinitionDetailsFromId(definitionId).fieldApiName;
+        this.definitionPositionForReplacement = getDefinitionDetailsFromId(definitionId).position;
+        this.definitionIdForReplacement = definitionId;
+
+        return this;
     }
 
     /**
@@ -2970,8 +3277,12 @@ public with sharing class FObject {
      * @param isForUpdate If true, the definition is for update.
      * @param definitionString The field definition.
      */
-    public void setDefinition(String fieldName, Schema.SObjectField sObjField,
-        Boolean isSystemDeclared, Boolean isForUpdate, String definitionString) {
+    private void setDefinition(
+        String fieldName,
+        Schema.SObjectField sObjField,
+        Boolean isSystemDeclared,
+        Boolean isForUpdate,
+        String definitionString) {
         this.definitionsAreValidated = false;
         definitionString = getStringWithVariablesReplaced(definitionString);
 
@@ -2981,9 +3292,10 @@ public with sharing class FObject {
             return;
         }
 
-        this.definitions.add(new ForceeaDefinition(
-            this, this.sObjectApiName, fieldName, fieldApiName, isSystemDeclared, isForUpdate, definitionString)
-        );
+        handleReplacementOfFieldDefinitions(fieldApiName);
+        handleReplacementOfDefinitionId(fieldApiName);
+        clearNextNewFieldPositionsByFieldNameMap(fieldApiName);
+        setDefinitionInCorrectPosition(fieldApiName, fieldName, isSystemDeclared, isForUpdate, definitionString);
 
         if (!fieldIsDefined(fieldApiName, isForUpdate)) {
             if (isForUpdate) {
@@ -2994,6 +3306,23 @@ public with sharing class FObject {
         }
 
         this.mustCreateNewRecords = (isForUpdate) ? false : true;
+    }
+
+    private void setDefinitionInCorrectPosition(
+        String fieldApiName,
+        String fieldName,
+        Boolean isSystemDeclared,
+        Boolean isForUpdate,
+        String definitionString) {
+        ForceeaDefinition newDefinition = new ForceeaDefinition(
+            this, this.sObjectApiName, fieldName, fieldApiName, isSystemDeclared, isForUpdate, definitionString);
+
+        Integer index = getIndexForReplacement(fieldApiName);
+        if (index == this.definitions.size()) { // end of list
+            this.definitions.add(newDefinition);
+        } else {
+            this.definitions.add(index, newDefinition);
+        }
     }
 
     /**
@@ -3298,6 +3627,27 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Populates the globalFieldsMapBySObject map.
+     */
+    private void setFields() {
+        if (this.hasSchemaOfAllFields) {
+            return;
+        }
+
+        Map<String, ForceeaFieldInfo> fieldInfosByName = new Map<String, ForceeaFieldInfo>();
+        for (Schema.SObjectField sof : ForceeaService.getSObjectFieldsByName(this.sObjectApiName).values()) {
+            ForceeaFieldInfo ForceeaFieldInfo = FObject.getFieldInfoFromSObjectField(sof);
+            String key = ForceeaFieldInfo.fieldApiName.toLowerCase();
+            if (!fieldInfosByName.containsKey(key)) {
+                fieldInfosByName.put(key, ForceeaFieldInfo);
+            }
+        }
+
+        FObject.globalFieldsMapBySObject.put(this.sObjectApiName.toLowerCase(), fieldInfosByName);
+        this.hasSchemaOfAllFields = true;
+    }
+
+    /**
      * @description Sets Forceea settings based on default settings.
      */
     private static void setForceeaSettings() {
@@ -3497,12 +3847,15 @@ public with sharing class FObject {
         this.cpuTimeOfDataGeneration = 0;
         this.cpuTimeStartOfDataGeneration = 0;
         this.definitionsAreValidated = false;
+        this.definitionPositionForReplacement = -1;
         this.dmlIsDelete = false;
         this.dmlIsInsert = false;
         this.dmlIsUpdate = false;
         this.excludeInactiveLookupRecords = true;
+        this.fieldApiNameForReplacement = '';
         this.groupName = ForceeaService.getStringValue(this.groupName);
         this.hasSchemaOfAllFields = false;
+        this.isExcludedOnAsyncDelete = false;
         this.isMocking = false;
         this.isUpdate = false;
         this.mustCreateNewRecords = true;
@@ -3516,7 +3869,7 @@ public with sharing class FObject {
 
     /**
      * @description Sets the number of the first record to be created for serial values.
-     * @param numberOfNextRecord The number of of the next record.
+     * @param numberOfNextRecord The number of the next record.
      * @return An FObject instance.
      */
     public FObject setNumberOfNextRecord(Integer numberOfNextRecord) {
@@ -3569,7 +3922,7 @@ public with sharing class FObject {
     /**
      * @description Sets the lists for calculating permutations.
      */
-    private void setPermutationValues() { // TODO set for update?
+    private void setPermutationValues() { // TODO set for update
         for (ForceeaDefinition def : this.definitions) {
             def.setPermutations();
         }
@@ -3582,7 +3935,7 @@ public with sharing class FObject {
         ForceeaService.getPermutations(this.permutationsList, permutationValues, 0, '');
 
         List<List<String>> values = new List<List<String>>();
-        for (Integer counter = 0; counter < permutationValues.size(); counter++) { // TODO Improve handling
+        for (Integer counter = 0; counter < permutationValues.size(); counter++) {
             values.add(permutationValues.get(counter).split('@@@'));
             values.get(counter).remove(0);
         }
@@ -3666,27 +4019,6 @@ public with sharing class FObject {
     }
 
     /**
-     * @description Populates the globalFieldsMapBySObject map for  fields info.
-     */
-    private void setFields() {
-        if (this.hasSchemaOfAllFields) {
-            return;
-        }
-
-        Map<String, ForceeaFieldInfo> fieldInfosByName = new Map<String, ForceeaFieldInfo>();
-        for (Schema.SObjectField sof : ForceeaService.getSObjectFieldsByName(this.sObjectApiName).values()) {
-            ForceeaFieldInfo ForceeaFieldInfo = FObject.getFieldInfoFromSObjectField(sof);
-            String key = ForceeaFieldInfo.fieldApiName.toLowerCase();
-            if (!fieldInfosByName.containsKey(key)) {
-                fieldInfosByName.put(key, ForceeaFieldInfo);
-            }
-        }
-
-        FObject.globalFieldsMapBySObject.put(this.sObjectApiName.toLowerCase(), fieldInfosByName);
-        this.hasSchemaOfAllFields = true;
-    }
-
-    /**
      * @description Sets if Forceea should define the required fields.
      * @param fieldsAreRequired If true, Forceea automatically defines the required fields.
      * @return An FObject instance.
@@ -3754,6 +4086,39 @@ public with sharing class FObject {
                 result.put(fieldName, fieldValue);
             }
         }
+    }
+
+    /**
+     * @description Sets the source parameter for all related definitions.
+     * @param source The new source (forceea or salesforce).
+     * @return An FObject instance.
+     */
+    public FObject setSource(String source) {
+        String sourceToValidate = source.toLowerCase().trim();
+
+        if (ForceeaService.sourceIsValid(sourceToValidate)) {
+            for (ForceeaDefinition def : this.definitions) {
+                def.setNewSource(sourceToValidate);
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * @description Sets the source parameter for all related definitions.
+     * @param sObjField The SObjectField.
+     * @param source The new source (forceea or salesforce).
+     * @return An FObject instance.
+     */
+    public FObject setSource(Schema.SObjectField sObjField, String source) {
+        String fieldApiName = ForceeaService.getFieldApiName(
+            this, '', this.sObjectApiName, '', sObjField, '', 'standard');
+        for (ForceeaDefinition def : this.definitions) {
+            def.setNewSource(fieldApiName, source);
+        }
+
+        return this;
     }
 
     /**
@@ -3932,7 +4297,7 @@ public with sharing class FObject {
 
             if (def.isValid()) {
                 forceeaDebug(ForceeaService.DEBUG, SYMBOL_SUCCESS + ' Definition [' + def.definitionString +
-                    '] of [' + def.fieldApiName + '] is valid');
+                    '] of [' + def.fieldApiName + '] is valid with ID [' + def.definitionId + ']');
             }
         }
 

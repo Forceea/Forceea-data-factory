@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -223,7 +223,7 @@ public class FObjectAsyncTest {
         Integer maxIterationsPerBatch = 0;
         Integer numIterations = 10;
         Integer numJobs = 2;
-        FObject.setGlobalVerbose('none');
+        FObject.setGlobalVerbose('none'); // DO NOT REMOVE
         Map<String, FObject> template = template3();
 
         Test.startTest();
@@ -247,7 +247,7 @@ public class FObjectAsyncTest {
         Integer maxIterationsPerBatch = 0;
         Integer numIterations = 10;
         Integer numJobs = 2;
-        FObject.setGlobalVerbose('info');
+        FObject.setGlobalVerbose('info'); // DO NOT REMOVE
         Map<String, FObject> template = template3();
 
         Test.startTest();
@@ -270,8 +270,8 @@ public class FObjectAsyncTest {
     private static void insertRecords_verboseDebug_expectSuccess() {
         Integer maxIterationsPerBatch = 0;
         Integer numIterations = 10;
-        Integer numJobs = 2;
-        FObject.setGlobalVerbose('debug');
+        Integer numJobs = 1;
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
         Map<String, FObject> template = template3();
 
         Test.startTest();
@@ -282,12 +282,14 @@ public class FObjectAsyncTest {
         Integer errors = 0;
         List<String> debugLogs = FObject.getGlobalDebugLogs();
 
-        if (!debugLogs.contains('- Definition [static value(test)] of [TestText__c] is valid.') ||
-            !debugLogs.contains('Will insert the created records of [FObjectOne__c].')) {
-            errors++;
+        if (!debugLogs.contains('- Definition [static value(test)] of [TestText__c] is valid with ID [wiaeQ1].')) {
+            errors += 1;
+        }
+        if (!debugLogs.contains('Will insert the created records of [FObjectOne__c].')) {
+            errors += 2;
         }
 
-        System.assert(errors == 0, 'insertRecords - errors found');
+        System.assertEquals(0, errors, 'insertRecords - errors found');
     }
 
     @IsTest
@@ -318,7 +320,7 @@ public class FObjectAsyncTest {
             .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
             .insertRecords(true);
         template.get('FObjectTwos')
-            .setNumberOfRecords(201)
+            .setNumberOfRecords(101)
             .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
             .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '2)')
             .insertRecords(true);
@@ -373,7 +375,7 @@ public class FObjectAsyncTest {
             .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
             .insertRecords(true);
         template.get('FObjectTwos')
-            .setNumberOfRecords(201)
+            .setNumberOfRecords(101)
             .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
             .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(2)')
             .insertRecords(true);
@@ -399,7 +401,7 @@ public class FObjectAsyncTest {
             .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
             .insertRecords(true);
         template.get('FObjectTwos')
-            .setNumberOfRecords(201)
+            .setNumberOfRecords(101)
             .insertRecords(true);
 
         Test.startTest();
@@ -433,7 +435,48 @@ public class FObjectAsyncTest {
         Test.stopTest();
 
         List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        System.assert(records.size() == 101, 'deleteRecords - errors found');
+        System.assert(records.size() == 201, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void excludeOnAsyncDelete_excludeChild_expectSuccess() {
+        Integer numJobs = 2;
+
+        Map<String, FObject> template = template1();
+        template.get('FObjectOnes').excludeOnAsyncDelete(true);
+        FObject.insertRecordsFromTemplate(template, true);
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .deleteRecords();
+        Test.stopTest();
+
+        Integer numRecords1 = [SELECT Id FROM FObjectOne__c].size();
+        Integer numRecords2 = [SELECT Id FROM FObjectTwo__c].size();
+        System.assertEquals(template.get('FObjectOnes').getNumberOfRecords(),
+            numRecords1, 'excludeOnAsyncDelete - errors found');
+        System.assertEquals(template.get('FObjectTwos').getNumberOfRecords(),
+            numRecords2, 'excludeOnAsyncDelete - errors found');
+    }
+
+    @IsTest
+    private static void excludeOnAsyncDelete_excludeParent_expectSuccess() {
+        Integer numJobs = 2;
+
+        Map<String, FObject> template = template1();
+        template.get('FObjectTwos').excludeOnAsyncDelete(true);
+        FObject.insertRecordsFromTemplate(template, true);
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .deleteRecords();
+        Test.stopTest();
+
+        Integer numRecords1 = [SELECT Id FROM FObjectOne__c].size();
+        Integer numRecords2 = [SELECT Id FROM FObjectTwo__c].size();
+        System.assertEquals(0, numRecords1, 'excludeOnAsyncDelete - errors found');
+        System.assertEquals(template.get('FObjectTwos').getNumberOfRecords(),
+            numRecords2, 'excludeOnAsyncDelete - errors found');
     }
 
     @IsTest
@@ -529,7 +572,7 @@ public class FObjectAsyncTest {
         template.put('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
             .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
             .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FobjectTwo__c) source(forceea)')
+            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
             .setDefinition(FObjectOne__c.TestText__c,
                 'random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)')
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')

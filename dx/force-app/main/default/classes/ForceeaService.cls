@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -25,6 +25,7 @@ public with sharing class ForceeaService {
     public class FObjectAsync {
         public List<FieldDefinition> definitions = new List<FieldDefinition>();
         public String bigObjectIndexFieldsString = '';
+        public Boolean isExcludedOnAsyncDelete = false;
         public Integer numOfRecords = 0;
         public String partitionFieldName = '';
         public Boolean setRequiredFields = false;
@@ -268,7 +269,7 @@ public with sharing class ForceeaService {
      * @description Retrieves the FObject.Field object from global fields map.
      * @param sObjectApiName The SObject API Name.
      * @param fieldApiName The field API name.
-     * @return An FObject.Field.
+     * @return An FObject.Field object.
      */
     public static ForceeaFieldInfo getField(String sObjectApiName, String fieldApiName) {
         return FObject.globalFieldsMapBySObject.get(sObjectApiName.toLowerCase()).get(fieldApiName.toLowerCase());
@@ -283,11 +284,10 @@ public with sharing class ForceeaService {
      * @param sObjectField The Schema SObject field.
      * @param relatedFieldApiName The API name of the field that lookup field is related to.
      * @param category The field category for fields (standard/lookup) or methods (e.g.deleteDefinitions).
-     * @return A string value.
+     * @return A string of the field API name.
      */
     public static String getFieldApiName(FObject fObj, String definitionString, String sObjectApiName,
         String fieldName, Schema.SObjectField sObjectField, String relatedFieldApiName, String category) {
-
         String result = getFieldApiNameFromKey(sObjectApiName, fieldName, sObjectField);
 
         if (sObjectField != null) {
@@ -328,36 +328,31 @@ public with sharing class ForceeaService {
         return result;
     }
 
+    /**
+     * @description Retrieves the field API name or a blank string if the field name is invalid.
+     * @param sObjectApiName The SObject API Name.
+     * @param fieldApiName The field API name.
+     * @param sObjectField The Schema SObject field.
+     * @return A string of the field API name.
+     */
     public static String getFieldApiNameFromKey(
         String sObjectApiName, String fieldApiName, Schema.SObjectField sObjectField) {
+        String result = '';
         if (ForceeaService.fieldIsVirtual(fieldApiName)) {
             return fieldApiName;
         }
 
-        String sObjectApiNameToLower = sObjectApiName.toLowerCase();
-
         if (sObjectField == null) {
-            Map<String, Schema.SObjectField> sObjectFieldsByName = ForceeaService.getSObjectFieldsByName(sObjectApiName);
-            if (!sObjectFieldsByName.containsKey(fieldApiName)) {
-                return '';
-            }
-            sObjectField = sObjectFieldsByName.get(fieldApiName);
+            sObjectField = getSObjectFieldFromString(sObjectApiName, fieldApiName);
         }
 
-        ForceeaFieldInfo field = FObject.getFieldInfoFromSObjectField(sObjectField);
-        String fieldApiNameToLower = field.fieldApiName.toLowerCase();
-
-        if (!globalFieldsMapContains(sObjectApiNameToLower, fieldApiNameToLower)) {
-            if (!FObject.globalFieldsMapBySObject.containsKey(sObjectApiNameToLower)) {
-                FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, new Map<String, ForceeaFieldInfo>());
-            }
-
-            Map<String, ForceeaFieldInfo> fieldsByName = FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower);
-            fieldsByName.put(fieldApiNameToLower, field);
-            FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, fieldsByName);
+        if (sObjectField != null) {
+            ForceeaFieldInfo field = FObject.getFieldInfoFromSObjectField(sObjectField);
+            setFieldInGlobalFieldsMap(field, sObjectApiName);
+            result = field.fieldApiName;
         }
 
-        return field.fieldApiName;
+        return result;
     }
 
     /**
@@ -410,8 +405,24 @@ public with sharing class ForceeaService {
         return new ForceeaSelector().selectAsyncJobsByStatus(statuses);
     }
 
+    /**
+     * @description Generates a lowercase 2-part key "majorValue.minorValue".
+     * @param majorValue The first part of the key, e.g. the SObject API name.
+     * @param minorValue The second part of the key, e.g. the group name.
+     * @return A string of the generated key.
+     */
     public static String getKey(String majorValue, String minorValue) {
         return getStringValueToLower(majorValue) + '.' + getStringValueToLower(minorValue);
+    }
+
+    /**
+     * @description Retrieves the number reduced by a percent.
+     * @param value The FObject.
+     * @param percent The definition string.
+     * @return The reduced integer number.
+     */
+    public static Integer getNumberReducedByPercent(Decimal value, Decimal percent) {
+        return Integer.valueOf((1 - percent / 100) * value);
     }
 
     /**
@@ -502,6 +513,23 @@ public with sharing class ForceeaService {
     }
 
     /**
+     * @description Retrieves the Schema.SObjectField map for an SObject.
+     * @param sObjectApiName The SObject API name.
+     * @param fieldApiName The field API name.
+     * @return The Schema.SObjectField object or null if the field doesn't exist in cache.
+     */
+    private static Schema.SObjectField getSObjectFieldFromString(String sObjectApiName, String fieldApiName) {
+        Schema.SObjectField result;
+
+        Map<String, Schema.SObjectField> sObjectFieldsByName = ForceeaService.getSObjectFieldsByName(sObjectApiName);
+        if (sObjectFieldsByName.containsKey(fieldApiName)) {
+            result = sObjectFieldsByName.get(fieldApiName);
+        }
+
+        return result;
+    }
+
+    /**
      * @description Retrieves the SObjectInfo object related to an SObject name.
      * @param sObjectName The SObject name.
      * @return An SObjectInfo object.
@@ -563,16 +591,6 @@ public with sharing class ForceeaService {
         }
 
         return result;
-    }
-
-    /**
-     * @description Retrieves a string with joined List items (integers) using a separator.
-     * @param values The List integer values.
-     * @param separator The separator, e.g. ",".
-     * @return The joined integer values.
-     */
-    public static String getStringFromList(List<Integer> values, String separator) {
-        return String.join(values, separator);
     }
 
     /**
@@ -741,36 +759,6 @@ public with sharing class ForceeaService {
     }
 
     /**
-     * @description Puts a string value into a map.
-     * @param mapToProcess The map.
-     * @param key The map key.
-     * @param value The string value.
-     */
-    public static void putStringIntoMap(Map<String, List<String>> mapToProcess, String key, String value) {
-        if (mapToProcess.containsKey(key)) {
-            mapToProcess.get(key).add(value);
-        }
-    }
-
-    /**
-     * @description Puts the string values into a map.
-     * @param mapToProcess The map.
-     * @param key The map key.
-     * @param values The string values.
-     */
-    public static void putStringsIntoMap(Map<String, List<String>> mapToProcess, String key, List<String> values) {
-        if (mapToProcess == null || values == null || values.isEmpty()) {
-            return;
-        }
-
-        if (mapToProcess.containsKey(key)) {
-            mapToProcess.get(key).addAll(values);
-        } else {
-            mapToProcess.put(key, new List<String>(values));
-        }
-    }
-
-    /**
      * @description Checks if the environment is Production org.
      * @return True, if the org is Production.
      */
@@ -816,6 +804,26 @@ public with sharing class ForceeaService {
     }
 
     /**
+     * @description Retrieves the field API name or a blank string if the field name is invalid.
+     * @param field The field info object.
+     * @param sObjectApiName The SObject API name.
+     */
+    private static void setFieldInGlobalFieldsMap(ForceeaFieldInfo field, String sObjectApiName) {
+        String fieldApiNameToLower = field.fieldApiName.toLowerCase();
+        String sObjectApiNameToLower = sObjectApiName.toLowerCase();
+
+        if (!globalFieldsMapContains(sObjectApiNameToLower, fieldApiNameToLower)) {
+            if (!FObject.globalFieldsMapBySObject.containsKey(sObjectApiNameToLower)) {
+                FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, new Map<String, ForceeaFieldInfo>());
+            }
+
+            Map<String, ForceeaFieldInfo> fieldsByName = FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower);
+            fieldsByName.put(fieldApiNameToLower, field);
+            FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, fieldsByName);
+        }
+    }
+
+    /**
      * @description Updates the Forceea Process custom setting field value IsTerminated.
      * @param isTerminated The new value of field IsTerminated.
      */
@@ -830,14 +838,14 @@ public with sharing class ForceeaService {
         }
     }
 
-    public static Boolean templateContainsMocking(Map<String, FObject> template) {
-        for (String key : template.keySet()) {
-            if (template.get(key).isMocking) {
-                return true;
-            }
-        }
-
-        return false;
+    /**
+     * @description Informs for the validity of the source.
+     * @param source The source (forceea or salesforce).
+     * @return True, if the source is valid.
+     */
+    public static Boolean sourceIsValid(String source) {
+        return source.equalsIgnoreCase(ForceeaService.SOURCE_FORCEEA) ||
+            source.equalsIgnoreCase(ForceeaService.SOURCE_SALESFORCE);
     }
 
     /**

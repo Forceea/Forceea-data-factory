@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -23,6 +23,7 @@ public with sharing class ForceeaAsyncTransaction {
     public Integer batchId = 1;
     public Boolean hasPartitioning = true;
     public Boolean isBenchmark = false;
+    public Boolean isExcludedOnAsyncDelete = false;
     public Integer jobId = 0;
 
     public String locality = '';

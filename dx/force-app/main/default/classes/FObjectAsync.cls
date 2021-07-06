@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -146,6 +146,7 @@ public with sharing class FObjectAsync {
      * @description Enqueues jobs when inserting records asynchronously.
      */
     private void enqueueJobsOnInsert() {
+        // initialize map
         Map<String, Integer> numOfFirstRecordsBySObject = new Map<String, Integer>();
         for (FObject sObj : this.template.values()) {
             numOfFirstRecordsBySObject.put(sObj.getSObjectName(), 1);
@@ -186,6 +187,7 @@ public with sharing class FObjectAsync {
             fObjAsync.sObjectApiName = fObj.getSObjectName();
             fObjAsync.setRequiredFields = fObj.requiredFieldsShouldBeAutomaticallyConfigured();
             fObjAsync.bigObjectIndexFieldsString = fObj.bigObjectIndexFieldsString;
+            fObjAsync.isExcludedOnAsyncDelete = fObj.isExcludedOnAsyncDelete();
 
             fObjAsync.definitions = new List<ForceeaService.FieldDefinition>();
             for (ForceeaDefinition def : fObj.definitions) {
@@ -210,6 +212,7 @@ public with sharing class FObjectAsync {
         for (ForceeaService.FObjectAsync obj : this.asyncTemplate.values()) {
             ForceeaService.FObjectAsync newObj = new ForceeaService.FObjectAsync();
             newObj.definitions = obj.definitions;
+            newObj.isExcludedOnAsyncDelete = obj.isExcludedOnAsyncDelete;
             newObj.partitionFieldName = obj.partitionFieldName;
             newObj.sObjectApiName = obj.sObjectApiName;
             newObj.bigObjectIndexFieldsString = obj.bigObjectIndexFieldsString;
@@ -245,8 +248,10 @@ public with sharing class FObjectAsync {
 
         for (FObject obj : fObjects) {
             String sObjectApiName = obj.getSObjectName();
+
             Integer previousFirstRecord = results.get(sObjectApiName);
             Integer newFirstRecord = previousFirstRecord + obj.getNumberOfRecords() * this.asyncTrans.numJobUnitsToExecute;
+
             results.put(sObjectApiName, newFirstRecord);
         }
 
@@ -347,8 +352,7 @@ public with sharing class FObjectAsync {
 
         for (ForceeaService.FObjectAsync asyncFObject : asyncFObjects) {
             if (String.isBlank(asyncFObject.partitionFieldName)) {
-                result = true;
-                break;
+                return true;
             }
         }
 
@@ -395,7 +399,8 @@ public with sharing class FObjectAsync {
      * @description Determines if the async process is terminated.
      * @return True, if the async process is terminated.
      */
-    public static Boolean processIsTerminated() {
+    @TestVisible
+    private static Boolean processIsTerminated() {
         return FObjectAsync.processIsTerminated;
     }
 
@@ -403,8 +408,7 @@ public with sharing class FObjectAsync {
      * @description Determines if the async process is valid.
      * @return True, if the async process is valid.
      */
-    @TestVisible
-    private static Boolean processIsValid() {
+    public static Boolean processIsValid() {
         return FObjectAsync.processIsValid;
     }
 

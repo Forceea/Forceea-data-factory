@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -15,18 +15,52 @@
 */
 public with sharing class ForceeaDefinition {
 
+    /* CONSTANTS */
+
+    private static final Integer DEFINITION_ID_LENGTH = 5;
+
     /* COLLECTIONS */
 
-    public List<ForceeaCluster> clusters = new List<ForceeaCluster>(); // the definition clusters
-    private List<String> permutationValues = new List<String>(); // the values for permutations
+    /**
+     * @description The set of checksum strings of field definitions. A checksum is calculated
+     *   using random letters with a seed number from the hashCod of the lowercase definition string.
+     */
+    private static Set<String> checksums = new Set<String>();
+    /**
+     * @description The definition clusters.
+     */
+    public List<ForceeaCluster> clusters = new List<ForceeaCluster>();
+    /**
+     * @description The the values for permutations.
+     */
+    private List<String> permutationValues = new List<String>();
 
     /* VARIABLES & PROPERTIES */
 
+    /**
+     * @description The definition command, e.g. "random".
+     */
     public String command { get; set; }
-    public String definitionString { get; set; } // the user-defined field definition, e.g. serial type(number)..
-    private String fieldName { get; set; } // the user-defined field name, e.g. myField__c
-    public String fieldApiName { get; set; } // the user-defined field name, e.g. MyField__c
-    public FObject fObj { get; set; } // the FObject
+    /**
+     * @description The definition ID, e.g. "hSdFy1".
+     */
+    public String definitionId { get; set; }
+    /**
+     * @description The definition string, e.g. "random type(number) from(1) to(100) scale(0)".
+     */
+    public String definitionString { get; set; }
+    /**
+     * @description The user-defined field name, e.g. MyField__c.
+     */
+    private String fieldName { get; set; }
+    /**
+     * @description The field API name.
+     */
+    public String fieldApiName { get; set; }
+    /**
+     * @description The FObject.
+     */
+    public FObject fObj { get; set; }
     public Boolean hasPermutation { get; set; } // if true, the definition has permutations
     private Boolean hasRestrictedPicklistValues { get; set; } // the definition restricts the created picklist values to existing values
     private Boolean hasValidFieldDataType { get; set; } // the definition field data type is valid
@@ -36,10 +70,44 @@ public with sharing class ForceeaDefinition {
     private Boolean isValid { get; set; } // the definition is valid
     public Boolean isValidated { get; set; } // the definition has been validated
     public Boolean isVirtualField { get; set; } // the field is virtual
-    public Integer positionForPermutations { get; set; } // the definition position in permutations
-    public String sObjectApiName { get; set; } // the SObject API name of definition
+    /**
+     * @description The map of maximum definition ID suffix numbers by key,
+     *   where key: SObjectAPiNAme+FieldApiName+DefinitionString(lowercase) and value: maximum definition ID suffix number.
+     */
+    private static Map<String, Integer> maxSuffixNumbersByKey = new Map<String, Integer>();
+    /**
+     * @description The definition position in permutations.
+     */
+    public Integer positionForPermutations { get; set; }
+    /**
+     * @description The pseudo-random number.
+     */
+    private static Double random {
+        get {
+            Integer bits = 32;
+            seed = (seed * 25214903917L + 11L) & ((1L << 48) - 1L);
+            Long uInt = (Long) (seed >>> (48 - bits));
+            return (Double) (((Double) uInt + 1.0) * 0.0000000002328306435454494);
+        }
+    }
     private String script { get; set; } // the definition script, e.g. random(type) from(1) to(10) scale(0)
-    public ForceeaDefinitionType type { get; set; } // the type of the definition
+    /**
+     * @description The seed of pseudo-random number generator.
+     */
+    private static Long seed {
+        get;
+        set {
+            seed = (value ^ 25214903917L) & ((1L << 48) - 1L);
+        }
+    }
+    /**
+     * @description The SObject API name of definition.
+     */
+    public String sObjectApiName { get; set; }
+    /**
+     * @description The type of definition.
+     */
+    public ForceeaDefinitionType type { get; set; }
 
     /* CLASSES */
 
@@ -52,6 +120,7 @@ public with sharing class ForceeaDefinition {
 
     public ForceeaDefinition(FObject fObj, String sObjectApiName, String fieldName, String fieldApiName, Boolean isSystemDeclared,
         Boolean isForUpdate, String definitionString) {
+
         this.command = '';
         this.definitionString = definitionString.trim();
         this.fieldName = fieldName.trim();
@@ -69,6 +138,7 @@ public with sharing class ForceeaDefinition {
         this.script = '';
         this.sObjectApiName = sObjectApiName.trim();
         this.type = new ForceeaDefinitionType();
+        this.definitionId = getDefinitionId();
     }
 
     /* METHODS */
@@ -80,6 +150,7 @@ public with sharing class ForceeaDefinition {
         ForceeaService.ValueType argumentValueType;
         for (String argument : arguments) {
             argumentValueType = getArgumentValueType(argument);
+
             if (argumentValueType == clusterValueType) {
                 continue;
             }
@@ -162,6 +233,13 @@ public with sharing class ForceeaDefinition {
     }
 
     /**
+     * @description Clear the maxSuffixNumbersByKey map.
+     */
+    public static void clearMapMaxSuffixNumbersByKey() {
+        maxSuffixNumbersByKey.clear();
+    }
+
+    /**
      * @description Checks that a cluster type exists in a definition.
      * @param clusterType The cluster type.
      * @return A boolean value.
@@ -234,7 +312,22 @@ public with sharing class ForceeaDefinition {
         return ForceeaService.ValueType.TYPE_STRING;
     }
 
-    // find how many times the Parameter exists and its position (index)
+    /**
+     * @description Generates a ckecksum.
+     * @return The ckecksum string.
+     */
+    private String getChecksum() {
+        String result = getRandomString();
+        checksums.add(result);
+
+        return result;
+    }
+
+    /**
+     * @description Finds how many times the Parameter exists and its position (index).
+     * @param clusterType An ForceeaClusterType object.
+     * @return An object of ClusterTypeValidationResult.
+     */
     private ClusterTypeValidationResult getClusterTypeValidationResult(ForceeaClusterType clusterType) {
         Integer countOfParameter = 0; // counts how many times a cluster parameter is found
         Integer counter = 0;
@@ -255,6 +348,85 @@ public with sharing class ForceeaDefinition {
         ClusterTypeValidationResult result = new ClusterTypeValidationResult();
         result.countOfParameter = countOfParameter;
         result.index = index;
+
+        return result;
+    }
+
+    /**
+     * @description Generates the Definition ID, which equals: Checksum + Suffix Number.
+     * @return The Definition ID string.
+     */
+    private String getDefinitionId() {
+        if (String.isNotBlank(this.definitionId)) {
+            return this.definitionId;
+        }
+
+        String definitionIdKey = getDefinitionIdKey();
+        String checksum = getChecksum();
+        Integer suffixNumber = getNextSuffixNumber(definitionIdKey);
+
+        String result = checksum + String.valueOf(suffixNumber);
+        maxSuffixNumbersByKey.put(definitionIdKey, suffixNumber);
+
+        return result;
+    }
+
+    /**
+     * @description Generates the Definition ID key,
+     *   which is the lowercase concatenation of sObjectApiName, fieldApiName and definitionString.
+     * @return The Definition ID string.
+     */
+    private String getDefinitionIdKey() {
+        String result = this.sObjectApiName + this.fieldApiName + this.definitionString;
+        return result.toLowerCase();
+    }
+
+    /**
+     * @description Retrieves the definition string with the new source argument.
+     * @param newSource The new source.
+     * @param cluster The cluster.
+     * @return The updated definition string with the new source.
+     */
+    private String getDefinitionStringWithNewSource(String newSource, ForceeaCluster cluster) {
+        String previousSource = cluster.arguments.get(0);
+        return this.definitionString.replace(previousSource, newSource);
+    }
+
+    private Integer getHashCodeFromDefinitionDetails() {
+        String hashString = (this.fieldApiName + this.definitionString).toLowerCase().trim();
+        return hashString.hashCode();
+    }
+
+    /**
+     * @description Retrieves the next suffix number related to a Definition ID key.
+     * @param definitionIdKey The Definition ID key.
+     * @return The maximum suffix number.
+     */
+    private Integer getNextSuffixNumber(String definitionIdKey) {
+        Integer result = 0;
+
+        if (maxSuffixNumbersByKey.containsKey(definitionIdKey)) {
+            result = maxSuffixNumbersByKey.get(definitionIdKey);
+        }
+
+        return result + 1;
+    }
+
+    /**
+     * @description Creates a random string of lowercase/uppercase characters (letters).
+     * @return A list of string values.
+     */
+    private String getRandomString() {
+        String result = '';
+        final String charsToSelect = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSUVWXYZ';
+        final Integer size = charsToSelect.length();
+
+        seed = getHashCodeFromDefinitionDetails();
+
+        for (Integer counter = 1; counter <= DEFINITION_ID_LENGTH; counter++) {
+            Integer rnd = (ForceeaDefinition.random * size).intValue();
+            result += charsToSelect.substring(rnd, rnd + 1);
+        }
 
         return result;
     }
@@ -314,13 +486,9 @@ public with sharing class ForceeaDefinition {
             when STRING, TEXTAREA {
                 result = true;
                 if (typeId == ForceeaService.DefinitionTypeId.MOCK_ID ||
-                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP ||
-                    typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
                     typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST ||
                     typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
-                    typeId == ForceeaService.DefinitionTypeId.SERIAL_LOOKUP ||
-                    typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST ||
-                    typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST
                     ) {
                     result = false;
                 }
@@ -533,14 +701,60 @@ public with sharing class ForceeaDefinition {
         return result;
     }
 
+    /**
+     * @description Informs whether the parameter is not found or is found more than once.
+     * @return True, if the parameter is not found once.
+     */
     private Boolean parameterIsNotFoundOrIsFoundMoreThanOnce(Integer countOfParameter) {
         return countOfParameter != 1;
     }
 
+    /**
+     * @description Informs whether the parameter is valid.
+     * @param clusterType The cluster type.
+     * @param cluster The cluster.
+     * @return True, if the parameter is valid.
+     */
     private Boolean parameterIsValid(ForceeaClusterType clusterType, ForceeaCluster cluster) {
         return clusterType.parameter == cluster.parameter;
     }
 
+    /**
+     * @description Informs whether the parameter is "source".
+     * @param cluster The cluster.
+     * @return True, if the parameter is source.
+     */
+    private Boolean parameterIsSource(ForceeaCluster cluster) {
+        return cluster.parameter.equalsIgnoreCase(ForceeaGenerator.PARAMETER_SOURCE);
+    }
+
+    /**
+     * @description Sets a new source.
+     * @param newSource The new source (forceea or salesforce).
+     */
+    public void setNewSource(String newSource) {
+        for (ForceeaCluster cluster : this.clusters) {
+            if (parameterIsSource(cluster)) {
+                this.definitionString = getDefinitionStringWithNewSource(newSource, cluster);
+                cluster.setSourceParameter(newSource);
+            }
+        }
+    }
+
+    /**
+     * @description Sets a new source for a specific field.
+     * @param fieldApiName The field API name.
+     * @param newSource The new source (forceea or salesforce).
+     */
+    public void setNewSource(String fieldApiName, String newSource) {
+        if (fieldApiName == this.fieldApiName) {
+            setNewSource(newSource);
+        }
+    }
+
+    /**
+     * @description Sets the permutations for this definition.
+     */
     public void setPermutations() {
         if (!modeIsPermutation()) {
             return;

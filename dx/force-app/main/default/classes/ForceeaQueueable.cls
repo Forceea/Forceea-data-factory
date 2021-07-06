@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.3.0)
-  Copyright (C) 2020 Nikos Mitrakis
+  Forceea data factory (v2.5)
+  Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -15,69 +15,17 @@
 */
 public with sharing class ForceeaQueueable implements Queueable {
 
-    /* CONSTRUCTORS */
-
-    public ForceeaQueueable(ForceeaAsyncTransaction asyncTransaction) {
-        this.batchId = asyncTransaction.batchId;
-        this.errorMessage = '';
-        this.numFirstRecordsBySObject = asyncTransaction.numFirstRecordsBySObject;
-        this.hasFailed = false;
-        this.hasMoreRecordsToDelete = false;
-        this.hasPartitioning = asyncTransaction.hasPartitioning;
-        this.isBenchmark = asyncTransaction.isBenchmark;
-        this.isTerminated = false;
-        this.isTheLastSObject = false;
-        this.jobId = asyncTransaction.jobId;
-        this.jobIsCompleted = false;
-        this.language = asyncTransaction.language;
-        this.limitDataGenerationCpuTime = 0;
-        this.limitDmlRows = 0;
-        this.limitFObjectSetupCpuTime = 0;
-        this.limitGlobalSetupCpuTime = 0;
-        this.locality = asyncTransaction.locality;
-        this.numBatchUnitsExecuted = 0;
-        this.numBatchUnitsToExecute = 0;
-        this.numErrors = asyncTransaction.numErrors;
-        this.numJobs = asyncTransaction.numJobs;
-        this.numJobUnitsExecuted = asyncTransaction.numJobUnitsExecuted;
-        this.numJobUnitsToExecute = asyncTransaction.numJobUnitsToExecute;
-        this.numMaxUnitsPerBatch = asyncTransaction.numMaxUnitsPerBatch;
-        this.numProcessUnitsToExecute = asyncTransaction.numProcessUnitsToExecute;
-        this.numRecordsFoundForDeletion = 0;
-        this.numTotalJobUnits = asyncTransaction.numTotalJobUnits;
-        this.operationIsSuccessful = true;
-        this.operationType = asyncTransaction.operationType;
-        if (this.operationType == ForceeaService.OperationType.ASYNC_DELETE) {
-            this.definitionsOnDelete =
-                asyncTransaction.sObjectsToDelete.get(asyncTransaction.sObjectToDeleteIndex).definitions;
-        }
-        this.partitionFieldValue = asyncTransaction.partitionFieldValue;
-        this.processId = asyncTransaction.processId;
-        this.queryLimit = LIMIT_ON_BENCHMARK;
-        this.sector = asyncTransaction.sector;
-        this.seed = asyncTransaction.seed;
-        this.shouldCheckNextSector = false;
-        this.shouldCheckSameSector = false;
-        this.shouldCreateNewBatch = false;
-        this.shouldMoveToNextSObject = false;
-        this.shouldTryAgainAfterError = false;
-        this.sObjectApiName = asyncTransaction.sObjectApiName;
-        this.sObjectApiNames = new Map<String, Integer>();
-        this.sObjectToDeleteIndex = asyncTransaction.sObjectToDeleteIndex;
-        this.sObjectsToDelete = asyncTransaction.sObjectsToDelete;
-        this.template = asyncTransaction.template;
-        this.verbose = asyncTransaction.verbose;
-    }
-
     /* CONSTANTS */
 
+    @TestVisible
+    private static final Integer BENCHMARK_QUERY_LIMIT = 100;
+    private static final Integer BIG_OBJECT_QUERY_LIMIT = 49999;
+    private static final String ERROR_MESSAGE_DELETE_OPERATION_TOO_LARGE = 'DELETE_OPERATION_TOO_LARGE';
     private static final List<String> ERROR_CODES_TO_RETRY = new List<String>{
-        'UNABLE_TO_LOCK_ROW'
+        'UNABLE_TO_LOCK_ROW', ERROR_MESSAGE_DELETE_OPERATION_TOO_LARGE
     };
     @TestVisible
     private static final Decimal LIMITS_THRESHOLD = 0.95;
-    @TestVisible
-    private static final Integer LIMIT_ON_BENCHMARK = 200;
     private static final Integer NUMBER_OF_SECTORS = 50;
     private static final Integer MAX_ERRORS = 5;
 
@@ -102,6 +50,7 @@ public with sharing class ForceeaQueueable implements Queueable {
     private Boolean hasPartitioning { get; set; }
     private Boolean isBenchmark { get; set; }
     private Boolean isBigObject { get; set; }
+    private Boolean isExcludedOnAsyncDelete { get; set; }
     @TestVisible
     private Boolean isTerminated { get; set; }
     private Boolean isTheLastSObject { get; set; }
@@ -147,6 +96,61 @@ public with sharing class ForceeaQueueable implements Queueable {
     private String sObjectApiName { get; set; }
     private Integer sObjectToDeleteIndex { get; set; }
     private String verbose { get; set; }
+
+    /* CONSTRUCTORS */
+
+    public ForceeaQueueable(ForceeaAsyncTransaction asyncTransaction) {
+        this.batchId = asyncTransaction.batchId;
+        this.errorMessage = '';
+        this.numFirstRecordsBySObject = asyncTransaction.numFirstRecordsBySObject;
+        this.hasFailed = false;
+        this.hasMoreRecordsToDelete = false;
+        this.hasPartitioning = asyncTransaction.hasPartitioning;
+        this.isBenchmark = asyncTransaction.isBenchmark;
+        this.isExcludedOnAsyncDelete = asyncTransaction.isExcludedOnAsyncDelete;
+        this.isTerminated = false;
+        this.isTheLastSObject = false;
+        this.jobId = asyncTransaction.jobId;
+        this.jobIsCompleted = false;
+        this.language = asyncTransaction.language;
+        this.limitDataGenerationCpuTime = 0;
+        this.limitDmlRows = 0;
+        this.limitFObjectSetupCpuTime = 0;
+        this.limitGlobalSetupCpuTime = 0;
+        this.locality = asyncTransaction.locality;
+        this.numBatchUnitsExecuted = 0;
+        this.numBatchUnitsToExecute = 0;
+        this.numErrors = asyncTransaction.numErrors;
+        this.numJobs = asyncTransaction.numJobs;
+        this.numJobUnitsExecuted = asyncTransaction.numJobUnitsExecuted;
+        this.numJobUnitsToExecute = asyncTransaction.numJobUnitsToExecute;
+        this.numMaxUnitsPerBatch = asyncTransaction.numMaxUnitsPerBatch;
+        this.numProcessUnitsToExecute = asyncTransaction.numProcessUnitsToExecute;
+        this.numRecordsFoundForDeletion = 0;
+        this.numTotalJobUnits = asyncTransaction.numTotalJobUnits;
+        this.operationIsSuccessful = true;
+        this.operationType = asyncTransaction.operationType;
+        if (this.operationType == ForceeaService.OperationType.ASYNC_DELETE) {
+            this.definitionsOnDelete =
+                asyncTransaction.sObjectsToDelete.get(asyncTransaction.sObjectToDeleteIndex).definitions;
+        }
+        this.partitionFieldValue = asyncTransaction.partitionFieldValue;
+        this.processId = asyncTransaction.processId;
+        this.queryLimit = BENCHMARK_QUERY_LIMIT;
+        this.sector = asyncTransaction.sector;
+        this.seed = asyncTransaction.seed;
+        this.shouldCheckNextSector = false;
+        this.shouldCheckSameSector = false;
+        this.shouldCreateNewBatch = false;
+        this.shouldMoveToNextSObject = false;
+        this.shouldTryAgainAfterError = false;
+        this.sObjectApiName = asyncTransaction.sObjectApiName;
+        this.sObjectApiNames = new Map<String, Integer>();
+        this.sObjectToDeleteIndex = asyncTransaction.sObjectToDeleteIndex;
+        this.sObjectsToDelete = asyncTransaction.sObjectsToDelete;
+        this.template = asyncTransaction.template;
+        this.verbose = asyncTransaction.verbose;
+    }
 
     /* METHODS */
 
@@ -230,7 +234,9 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private void decideWhatHappensNextOnDelete() {
         if (this.shouldCreateNewBatch) {
-            publishLogMessageOnSuccess();
+            if (this.operationIsSuccessful) {
+                publishLogMessageOnSuccess();
+            }
 
             if (this.shouldMoveToNextSObject && !this.isTheLastSObject) {
                 this.isBenchmark = true;
@@ -242,10 +248,10 @@ public with sharing class ForceeaQueueable implements Queueable {
             return;
         }
 
-        if (this.shouldMoveToNextSObject && this.isTheLastSObject) { // job is completed
+        if (jobIsCompleted()) {
             publishLogMessageOnSuccess();
             this.jobIsCompleted = true;
-            publishLogMessageOnSuccess(); // TODO delete?
+            publishLogMessageOnSuccess();
         }
     }
 
@@ -408,7 +414,12 @@ public with sharing class ForceeaQueueable implements Queueable {
                 message += 'inserting records of [' + this.sObjectApiName + ']: ' + this.errorMessage;
             }
             when ASYNC_DELETE {
-                message += 'deleting records of [' + this.sObjectApiName + ']: ' + this.errorMessage;
+                message += 'deleting records of [' + this.sObjectApiName + ']: ';
+                if (isDeleteOperationTooLarge()) {
+                    message += ERROR_MESSAGE_DELETE_OPERATION_TOO_LARGE + '. Will try again with reduced number of records.';
+                } else {
+                    message += this.errorMessage;
+                }
             }
         }
         this.numErrors++;
@@ -487,6 +498,18 @@ public with sharing class ForceeaQueueable implements Queueable {
         return maxIterations.get(0);
     }
 
+    private Integer getMaxNumOfRecordsFromMultipliers(ForceeaQueueable queueable, List<Decimal> multipliers) {
+        multipliers.sort();
+
+        List<Integer> results = new List<Integer>{
+            Integer.valueOf(multipliers.get(0) * queueable.numBatchUnitsExecuted * ForceeaQueueable.LIMITS_THRESHOLD),
+            Integer.valueOf(Limits.getLimitDmlRows() * ForceeaQueueable.LIMITS_THRESHOLD)
+        };
+
+        results.sort();
+        return results.get(0);
+    }
+
     /**
      * @description Calculates the max number of records than can be deleted per batch.
      * @return The max number of records.
@@ -497,7 +520,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             return this.numMaxUnitsPerBatch;
         }
 
-        return ForceeaQueueable.getMaxRecordsToDeletePerBatch(this);
+        return getMaxNumOfRecordsToDeletePerBatchFromQueueable(this);
     }
 
     /**
@@ -506,7 +529,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @return The max number of records.
      */
     @TestVisible
-    private static Integer getMaxRecordsToDeletePerBatch(ForceeaQueueable queueable) {
+    private Integer getMaxNumOfRecordsToDeletePerBatchFromQueueable(ForceeaQueueable queueable) {
         Decimal multiplierForCpuTime = 1;
         if (queueable.limitGlobalSetupCpuTime > 0) {
             multiplierForCpuTime = (Integer) queueable.getMaxCpuTime() / queueable.limitGlobalSetupCpuTime;
@@ -521,12 +544,8 @@ public with sharing class ForceeaQueueable implements Queueable {
             multiplierForCpuTime,
             multiplierForDmlRows
         };
-        multipliers.sort();
 
-        Integer result = Integer.valueOf(
-            multipliers.get(0) * queueable.numBatchUnitsExecuted * ForceeaQueueable.LIMITS_THRESHOLD);
-
-        return (result > Limits.getLimitDmlRows()) ? Limits.getLimitDmlRows() : result;
+        return getMaxNumOfRecordsFromMultipliers(queueable, multipliers);
     }
 
     /**
@@ -536,7 +555,6 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private FObject getNewFObject(ForceeaService.FObjectAsync async) {
         Integer numRecords = async.numOfRecords * this.numBatchUnitsToExecute;
-
         FObject newFObject = new FObject(async.sObjectApiName, numRecords)
             .setRequiredFields(async.setRequiredFields);
 
@@ -558,14 +576,24 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
+      * @description Returns the maximum number of records that can be deleted in each batch
+      *   when the delete operation raises the DELETE_OPERATION_TOO_LARGE error.
+      * @return An integer number.
+      */
+    private Integer getNumMaxUnitsPerBatchOnDeleteOperationTooLarge() {
+        return ForceeaService.getNumberReducedByPercent(this.numMaxUnitsPerBatch, 20);
+    }
+
+    /**
      * @description Calculates the SOQL query LIMIT.
      * @return The SOQL query LIMIT.
      */
     private Integer getQueryLimit() {
         if (this.isBigObject) {
-            this.numMaxUnitsPerBatch = 49999;
+            this.numMaxUnitsPerBatch = BIG_OBJECT_QUERY_LIMIT;
         }
-        return (this.isBenchmark) ? LIMIT_ON_BENCHMARK : this.numMaxUnitsPerBatch;
+
+        return (this.isBenchmark) ? BENCHMARK_QUERY_LIMIT : this.numMaxUnitsPerBatch;
     }
 
     /**
@@ -633,19 +661,22 @@ public with sharing class ForceeaQueueable implements Queueable {
     * @return A list of SObjects.
     */
     private List<SObject> getRecordsToDelete() {
-        List<SObject> results = new List<SObject>();
         ForceeaService.FObjectAsync obj = this.sObjectsToDelete.get(this.sObjectToDeleteIndex);
         this.bigObjectIndexFieldsString = obj.bigObjectIndexFieldsString;
         this.sObjectApiName = obj.sObjectApiName;
+        this.isExcludedOnAsyncDelete = obj.isExcludedOnAsyncDelete;
 
         this.isBigObject = ForceeaService.isBigObject(this.sObjectApiName);
         if (this.isBigObject) {
             deactivateBenchmarking();
         }
 
+        List<SObject> results = new List<SObject>();
         try {
-            String soqlQuery = getQueryString(obj.partitionFieldName, this.partitionFieldValue);
-            results = Database.query(soqlQuery);
+            if (!this.isExcludedOnAsyncDelete) {
+                String soqlQuery = getQueryString(obj.partitionFieldName, this.partitionFieldValue);
+                results = Database.query(soqlQuery);
+            }
         } catch (Exception ex) {
             this.operationIsSuccessful = false;
             this.errorMessage = ex.getMessage();
@@ -757,6 +788,7 @@ public with sharing class ForceeaQueueable implements Queueable {
     private void insertRecords() {
         setNumOfBatchUnitsToExecute();
         FObject.setAsync(true);
+        ForceeaDefinition.clearMapMaxSuffixNumbersByKey();
 
         for (ForceeaService.FObjectAsync fObjAsync : this.template.values()) {
             FObject newFObject = getNewFObject(fObjAsync);
@@ -798,6 +830,14 @@ public with sharing class ForceeaQueueable implements Queueable {
         }
     }
 
+    private Boolean isDeleteOperationTooLarge() {
+        return this.errorMessage.contains(ERROR_MESSAGE_DELETE_OPERATION_TOO_LARGE);
+    }
+
+    private Boolean jobIsCompleted() {
+        return this.shouldMoveToNextSObject && this.isTheLastSObject;
+    }
+
     /**
      * @description Handles the process after deletion.
      */
@@ -837,6 +877,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private void onBeforeInsert() {
         FObject.numFirstRecordsBySObject = this.numFirstRecordsBySObject;
+
         if (this.isBenchmark && this.numMaxUnitsPerBatch == 1) {
             this.isBenchmark = false;
         }
@@ -893,7 +934,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         this.operationIsSuccessful = false;
         this.numErrors++;
         this.shouldTryAgainAfterError = shouldTryAgainAfterErrorOnDelete();
-        this.hasFailed = true;
+
         return publishLogMessage();
     }
 
@@ -969,14 +1010,21 @@ public with sharing class ForceeaQueueable implements Queueable {
         }
 
         Boolean shouldTryMultipleTimes = false;
+
         for (String errorCode : ERROR_CODES_TO_RETRY) {
             if (this.errorMessage.contains(errorCode)) {
                 shouldTryMultipleTimes = true;
+                if (isDeleteOperationTooLarge()) {
+                    this.numMaxUnitsPerBatch = getNumMaxUnitsPerBatchOnDeleteOperationTooLarge();
+                }
                 break;
             }
         }
 
-        return (shouldTryMultipleTimes && this.numErrors <= MAX_ERRORS) ? true : false;
+        Boolean shouldTryAgain = shouldTryMultipleTimes && this.numErrors <= MAX_ERRORS ? true : false;
+        this.hasFailed = true;
+
+        return shouldTryAgain;
     }
 
 }
