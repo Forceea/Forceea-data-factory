@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.5.1)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -207,25 +207,41 @@ public class FObjectFieldsTest {
 
         Test.startTest();
         template.get('FObjectOnes')
-            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test1)')
 
-            .replaceDefinitions(FObjectOne__c.TestText__c)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)')
-
             .appendDefinitions(FObjectOne__c.TestText__c)
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(test3)')
-            .setDefinition(FObjectOne__c.TestText__c, 'static value(test4)');
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
         Test.stopTest();
 
         List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
-        initialDefs.set(2, '2 TestText__c static value(test1)');
-        initialDefs.set(3, '3 TestText__c static value(test2)');
-        initialDefs.add('4 TestText__c static value(test3)');
-        initialDefs.add('5 TestText__c static value(test4)');
-        initialDefs.add('6 TestTextRequired__c static value(test)');
-        initialDefs.add('7 TestTextRequired__c static value(test1)');
+        initialDefs.set(2, '2 TestText__c random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)');
+        initialDefs.set(3, '3 TestText__c static value(test1)');
+        initialDefs.add('4 TestText__c static value(test2)');
+        initialDefs.add('5 TestTextRequired__c static value(test)');
+        initialDefs.add('6 TestTextRequired__c static value(test1)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'appendDefinitions - errors found');
+    }
+
+    @IsTest
+    private static void appendDefinitions_simple_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .appendDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)');
+        initialDefs.set(3, '3 TestText__c static value(test1)');
+        initialDefs.add('4 TestText__c static value(test2)');
+        initialDefs.add('5 TestTextRequired__c static value(test)');
 
         Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
         System.assert(conditionsAreValid, 'appendDefinitions - errors found');
@@ -750,6 +766,27 @@ public class FObjectFieldsTest {
     }
 
     @IsTest
+    private static void replaceDefinitions_simple_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitions - errors found');
+    }
+
+    @IsTest
     private static void replaceDefinitions_virtualField_expectSuccess() {
         Map<String, FObject> template = template1();
         List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
@@ -953,6 +990,30 @@ public class FObjectFieldsTest {
         }
 
         System.assertEquals(6, counter, 'replaceDefinitionWithId - errors found');
+    }
+
+    @IsTest
+    private static void replaceDefinitionWithId_simple_expectSuccess() {
+        Map<String, FObject> template = template1();
+        List<String> initialDefs = getDefinitionPositions('FObjectOnes', template);
+
+        Test.startTest();
+        template.get('FObjectOnes')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test3)')
+
+            .replaceDefinitionWithId('nRNOG1')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test1)')
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(test2)');
+        Test.stopTest();
+
+        List<String> finalDefs = getDefinitionPositions('FObjectOnes', template);
+        initialDefs.set(2, '2 TestText__c static value(test1)');
+        initialDefs.set(3, '3 TestText__c static value(test2)');
+        initialDefs.add('4 TestTextRequired__c static value(test)');
+        initialDefs.add('5 TestText__c static value(test3)');
+
+        Boolean conditionsAreValid = initialDefs.hashCode() == finalDefs.hashCode();
+        System.assert(conditionsAreValid, 'replaceDefinitionWithId - errors found');
     }
 
     @IsTest

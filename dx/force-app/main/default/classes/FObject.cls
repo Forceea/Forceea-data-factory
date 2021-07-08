@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.5.1)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -1140,7 +1140,7 @@ public with sharing class FObject {
      */
     private Boolean fieldDoesNotExist(String fieldApiName) {
         Integer fieldPosition = getFieldsToProcess().indexOf(fieldApiName);
-        return fieldPosition > -1;
+        return fieldPosition == -1;
     }
 
     /**
