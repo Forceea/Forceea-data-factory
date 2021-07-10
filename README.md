@@ -11,6 +11,18 @@ Forceea (forsi:a) is a powerful data factory for Salesforce, it's based on [Dade
 * allows developers to easily create SObject records for test methods.
 * facilitates administrators or business users to populate any org with SObject or Big Object records for testing or demonstration purposes.
 
+### Forceea Sponsors
+<a href="http://www.acmantics.gr">
+       <img src="https://drive.google.com/uc?export=view&id=1MfhGuNh6Dr5emTjREZl0o_F8aUQr4JA3" style="width: auto; height: auto"/>
+<a href="http://cloudjedi.com">
+       <img src="https://drive.google.com/uc?export=view&id=1N5ZHASB4Yu4fqIjulXnrWaCG4vF_SUmn" style="width: auto; height: auto"/>
+<a href="https://www.netugroup.com/our-services/business-solutions/salesforce">
+       <img src="https://drive.google.com/uc?export=view&id=1N21fjGxnDhwgcTG7hlPGbwyGJE8nnW6K" style="width: auto; height: auto"/>
+<a href="https://organizer.solutions/gopro.html">
+       <img src="https://drive.google.com/uc?export=view&id=1MqiScMbxT85xBMQ1xrTTAt5KT2maDYDy" style="width: auto; height: auto"/>
+<a href="https://robinconsulting.gr">
+       <img src="https://drive.google.com/uc?export=view&id=1N1gdPSeNe9QIS-g-uH3LiN92G8MGiQov" style="width: auto; height: auto"/>
+       
 ### How can you deploy it?
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
 
