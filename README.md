@@ -22,8 +22,6 @@ Forceea (forsi:a) is a powerful data factory for Salesforce, it's based on [Dade
 <a href="https://robinconsulting.gr">
        <img src="https://drive.google.com/uc?export=view&id=1N1gdPSeNe9QIS-g-uH3LiN92G8MGiQov" style="width: auto; height: auto"/>
        
-       https://drive.google.com/file/d//view?usp=sharing
-       
 ### How can you deploy it?
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
 
