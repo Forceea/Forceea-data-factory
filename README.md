@@ -1,7 +1,7 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
-# Forceea 2.5.1
+# Forceea 2.5.2
 
 ### What is Forceea?
 Forceea (forsi:a) is a powerful data factory for Salesforce, it's based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
