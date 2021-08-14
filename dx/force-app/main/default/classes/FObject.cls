@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5.1)
+  Forceea data factory (v2.5.2)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -138,7 +138,9 @@ public with sharing class FObject {
     private static Map<String, List<SObject>> insertedRecordsByTemplateKeyWithOptimizer = new Map<String, List<SObject>>();
     // the libraries for last names - key: gender, value: last names
     public static Map<String, List<String>> lastNamesLibraryByGender = new Map<String, List<String>>();
-    // the serializations map with key: SObject API name, value: next serialized record number
+    /**
+     * @description Τhe serializations map with key: SObject API name, value: next serialized record number.
+     */
     public static Map<String, Integer> numFirstRecordsBySObject = new Map<String, Integer>();
     // the valid script parameters
     private static Set<String> parametersSet = new Set<String>{
@@ -415,6 +417,10 @@ public with sharing class FObject {
     private Integer numDeletedRecords { get; set; }
     // the number of inserted records
     private Integer numInsertedRecords { get; set; }
+    /**
+     * @description The number of the next record, used by the method setNumberOfNextRecord
+     */
+    private Integer numNextRecord { get; set; }
     // the number of updated records
     private Integer numUpdatedRecords { get; set; }
     // the number of validated definitions
@@ -2454,6 +2460,9 @@ public with sharing class FObject {
         FObject.onBeforeInsertRecordsFromListWithOptimizer();
 
         for (FObject fObj : fObjectsToInsert) {
+            if (fObj.numNextRecord != null) {
+                fObj.setNumberOfNextRecord(fObj.numNextRecord);
+            }
             fObj.mustCreateNewRecords = true;
             fObj.createNewRecords();
             FObject.fObjectsToInsertByTemplateKey.put(fObj.templateKey, fObj);
@@ -2517,8 +2526,7 @@ public with sharing class FObject {
         Map<String, FObject> template, Boolean allOrNone, List<String> keys) {
         Map<String, List<Database.SaveResult>> results = new Map<String, List<Database.SaveResult>>();
 
-        if (template == null || template.isEmpty() || allOrNone == null ||
-            keys == null || keys.isEmpty()) {
+        if (template == null || template.isEmpty() || allOrNone == null ||keys == null || keys.isEmpty()) {
             return results;
         }
 
@@ -2596,7 +2604,11 @@ public with sharing class FObject {
         Map<String, List<Database.SaveResult>> results = new Map<String, List<Database.SaveResult>>();
 
         for (String key : template.keySet()) {
-            results.put(key, template.get(key).insertRecords(FObject.allOrNone, template.get(key).groupName));
+            FObject fObj = template.get(key);
+            if (fObj.numNextRecord != null) {
+                fObj.setNumberOfNextRecord(fObj.numNextRecord);
+            }
+            results.put(key, fObj.insertRecords(FObject.allOrNone, fObj.groupName));
         }
 
         return results;
@@ -3873,8 +3885,8 @@ public with sharing class FObject {
      * @return An FObject instance.
      */
     public FObject setNumberOfNextRecord(Integer numberOfNextRecord) {
-        Integer numFirstRecord = (numberOfNextRecord <= 0) ? 1 : numberOfNextRecord;
-        FObject.numFirstRecordsBySObject.put(this.sObjectApiName, numFirstRecord);
+        this.numNextRecord = (numberOfNextRecord <= 0) ? 1 : numberOfNextRecord;
+        FObject.numFirstRecordsBySObject.put(this.sObjectApiName, this.numNextRecord);
 
         return this;
     }

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.5.2)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -314,6 +314,68 @@ public class FObjectDmlTest {
             'getInsertedGroupRecords - errors found');
     }
 
+@IsTest
+    private static void getInsertedGroupRecords_differentInstancesWithTemplateNotOptimized_expectSuccess() {
+        String group1 = 'GroupA';
+        String group2 = 'GroupB';
+
+        Map<String, FObject> template = new Map<String, FObject>();
+        template.put('one1', new FObject(FObjectOne__c.SObjectType, 10)
+            .setGroupName(group1)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(Test-)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+        );
+        template.put('one2', new FObject(FObjectOne__c.SObjectType, 10)
+            .setNumberOfNextRecord(1)
+            .setGroupName(group2)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(Test-)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+        );
+
+        Test.startTest();
+        FObject.insertRecordsFromTemplate(template, true);
+        Test.stopTest();
+
+        FObject obj1 = template.get('one1');
+        FObject obj2 = template.get('one2');
+        System.assert(ForceeaUtilityTest.insertedGroupRecordsAreValidForDifferentInstances(obj1, obj2, group1, group2),
+            'getInsertedGroupRecords - errors found');
+    }
+
+    @IsTest
+    private static void getInsertedGroupRecords_differentInstancesWithTemplateOptimized_expectSuccess() {
+        String group1 = 'GroupA';
+        String group2 = 'GroupB';
+
+        FObject.setDmlOptimizer(true);
+
+        Map<String, FObject> template = new Map<String, FObject>();
+        template.put('one1', new FObject(FObjectOne__c.SObjectType, 10)
+            .setGroupName(group1)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(Test-)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+        );
+        template.put('one2', new FObject(FObjectOne__c.SObjectType, 10)
+            .setNumberOfNextRecord(1)
+            .setGroupName(group2)
+            .setDefinition(FObjectOne__c.TestText__c, 'static value(Test-)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
+            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+        );
+
+        Test.startTest();
+        FObject.insertRecordsFromTemplate(template, true);
+        Test.stopTest();
+
+        FObject obj1 = template.get('one1');
+        FObject obj2 = template.get('one2');
+        System.assert(ForceeaUtilityTest.insertedGroupRecordsAreValidForDifferentInstances(obj1, obj2, group1, group2),
+            'getInsertedGroupRecords - errors found');
+    }
+    
     @IsTest
     private static void getInsertedRecordsStatic_invalidObject_expectFailure() {
         Test.startTest();
