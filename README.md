@@ -50,7 +50,7 @@ where ID is the package ID you can find in the above installation links (startin
 
 You can't wait until next release? Try now Forceea 2.6.0 BETA.
        
-Use this link for **Production/Developer** orgs:
+Use this link for **Developer** orgs:
 
 <a href="https://rebrand.ly/InstallProduction_Forceea260">
   <img alt="Deploy to Salesforce"
