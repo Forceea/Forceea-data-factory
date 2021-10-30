@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -2356,7 +2356,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Account');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2374,7 +2374,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Contact');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2392,7 +2392,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Contact');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2409,7 +2409,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Contact');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2426,7 +2426,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Lead');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2444,7 +2444,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Lead');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2461,7 +2461,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Lead');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2478,7 +2478,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Opportunity');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         obj.setDefinitionFromField(field);
@@ -2496,7 +2496,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.BOOLEAN;
@@ -2514,7 +2514,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject('Event');
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Combobox;
@@ -2532,7 +2532,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Currency;
@@ -2550,7 +2550,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Date;
@@ -2572,7 +2572,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Datetime;
@@ -2594,7 +2594,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Time;
@@ -2612,7 +2612,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Double;
@@ -2630,7 +2630,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.EMAIL;
@@ -2648,7 +2648,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Integer;
@@ -2666,7 +2666,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.MultiPicklist;
@@ -2684,7 +2684,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Percent;
@@ -2702,7 +2702,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.MultiPicklist;
@@ -2720,7 +2720,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Phone;
@@ -2742,7 +2742,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.Reference;
@@ -2761,7 +2761,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.length = 20;
@@ -2780,7 +2780,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.TextArea;
@@ -2798,7 +2798,7 @@ public class FObjectSetDefinitionTest {
 
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        ForceeaFieldInfo field = new ForceeaFieldInfo();
+        Forceea.FieldInfo field = new Forceea.FieldInfo();
         field.fieldName = fieldApiName;
         field.fieldApiName = fieldApiName;
         field.dataType = Schema.DisplayType.URL;
@@ -2868,7 +2868,7 @@ public class FObjectSetDefinitionTest {
         for (Integer counter = 0; counter < fields.size(); counter++) {
             obj.setDefinition(fields.get(counter), expectedDefinitions.get(counter));
         }
-        obj.insertRecords(true);
+        obj.getRecords();
         Test.stopTest();
 
         Integer errors = 0;

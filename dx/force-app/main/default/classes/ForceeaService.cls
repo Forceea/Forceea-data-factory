@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -14,28 +14,6 @@
   https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class ForceeaService {
-
-    /* CLASSES */
-
-    public class FieldDefinition {
-        public String definitionString = '';
-        public String fieldApiName = '';
-    }
-
-    public class FObjectAsync {
-        public List<FieldDefinition> definitions = new List<FieldDefinition>();
-        public String bigObjectIndexFieldsString = '';
-        public Boolean isExcludedOnAsyncDelete = false;
-        public Integer numOfRecords = 0;
-        public String partitionFieldName = '';
-        public Boolean setRequiredFields = false;
-        public String sObjectApiName = '';
-    }
-
-    private class SObjectInfo {
-        private String sObjectApiName { get; set; }
-        private Schema.SObjectType sObjType { get; set; }
-    }
 
     /* ENUMS */
 
@@ -102,15 +80,15 @@ public with sharing class ForceeaService {
         MESSAGE_TYPE_ERROR, MESSAGE_TYPE_INFO, MESSAGE_TYPE_WARN, MESSAGE_TYPE_SUCCESS
     }
     public enum OperationType {
-        ASYNC_INSERT, ASYNC_DELETE
+        ASYNC_INSERT, ASYNC_DELETE, ASYNC_UPDATE
     }
 
     /* STATIC COLLECTIONS */
 
     // the map of defined SObject names (keys) to SObject Infos (values)
-    private static Map<String, SObjectInfo> sObjectInfosBySObjectName = new Map<String, SObjectInfo>();
+    private static Map<String, Forceea.SObjectInfo> sObjectInfosBySObjectName = new Map<String, Forceea.SObjectInfo>();
     //  the map of defined SObject types (keys) to SObject Infos (values)
-    private static Map<Schema.SObjectType, SObjectInfo> sObjectInfosBySObjectType = new Map<Schema.SObjectType, SObjectInfo>();
+    private static Map<Schema.SObjectType, Forceea.SObjectInfo> sObjectInfosBySObjectType = new Map<Schema.SObjectType, Forceea.SObjectInfo>();
     // the map of defined SObject names (keys) to map [SObject fields by Field name] (values)
     private static Map<String, Map<String, Schema.SObjectField>> sObjectFieldsMapBySObjectName =
         new Map<String, Map<String, Schema.SObjectField>>();
@@ -225,7 +203,7 @@ public with sharing class ForceeaService {
      * @description Enqueues a transaction for asynchronous processing.
      * @param fObjectTransaction An instance of AsyncTransaction.
      */
-    public static void enqueueJob(ForceeaAsyncTransaction fObjectTransaction) {
+    public static void enqueueJob(Forceea.AsyncTransaction fObjectTransaction) {
         System.enqueueJob(new ForceeaQueueable(fObjectTransaction));
     }
 
@@ -271,7 +249,7 @@ public with sharing class ForceeaService {
      * @param fieldApiName The field API name.
      * @return An FObject.Field object.
      */
-    public static ForceeaFieldInfo getField(String sObjectApiName, String fieldApiName) {
+    public static Forceea.FieldInfo getField(String sObjectApiName, String fieldApiName) {
         return FObject.globalFieldsMapBySObject.get(sObjectApiName.toLowerCase()).get(fieldApiName.toLowerCase());
     }
 
@@ -283,7 +261,7 @@ public with sharing class ForceeaService {
      * @param fieldName The field name.
      * @param sObjectField The Schema SObject field.
      * @param relatedFieldApiName The API name of the field that lookup field is related to.
-     * @param category The field category for fields (standard/lookup) or methods (e.g.deleteDefinitions).
+     * @param category The field category for fields (standard/lookup) or methods (e.g.removeDefinitions).
      * @return A string of the field API name.
      */
     public static String getFieldApiName(FObject fObj, String definitionString, String sObjectApiName,
@@ -317,7 +295,7 @@ public with sharing class ForceeaService {
                     'Invalid lookup field [' + sObjectApiName + '.' + fieldName + '] ' +
                         MESSAGE_IN_DEFINITION + ' [' + definitionString + ']');
             }
-            when 'deletedefinitions' {
+            when 'removedefinitions' {
                 if (!fObj.isUpdate) {
                     fObj.addErrorInvalidFieldInMethod(fObj.getSObjectName(), fieldName, category);
                     return result;
@@ -347,7 +325,7 @@ public with sharing class ForceeaService {
         }
 
         if (sObjectField != null) {
-            ForceeaFieldInfo field = FObject.getFieldInfoFromSObjectField(sObjectField);
+            Forceea.FieldInfo field = FObject.getFieldInfoFromSObjectField(sObjectField);
             setFieldInGlobalFieldsMap(field, sObjectApiName);
             result = field.fieldApiName;
         }
@@ -487,7 +465,7 @@ public with sharing class ForceeaService {
      * @return The string of SObject API name.
      */
     public static String getSObjectApiName(String sObjectName) {
-        SObjectInfo info = ForceeaService.getSObjectInfo(sObjectName);
+        Forceea.SObjectInfo info = ForceeaService.getSObjectInfo(sObjectName);
         if (info == null) {
             return '';
         }
@@ -534,8 +512,8 @@ public with sharing class ForceeaService {
      * @param sObjectName The SObject name.
      * @return An SObjectInfo object.
      */
-    public static SObjectInfo getSObjectInfo(String sObjectName) {
-        SObjectInfo result;
+    public static Forceea.SObjectInfo getSObjectInfo(String sObjectName) {
+        Forceea.SObjectInfo result;
         String sObjectApiNameToLower = sObjectName.toLowerCase();
         if (sObjectInfosBySObjectName.containsKey(sObjectApiNameToLower)) {
             return sObjectInfosBySObjectName.get(sObjectApiNameToLower);
@@ -549,7 +527,7 @@ public with sharing class ForceeaService {
         } catch (Exception exp) {
         } finally {
             if (!describeResults.isEmpty()) {
-                result = new SObjectInfo();
+                result = new Forceea.SObjectInfo();
                 result.sObjectApiName = describeResults.get(0).getName();
                 result.sObjType = describeResults.get(0).getSObjectType();
 
@@ -583,7 +561,7 @@ public with sharing class ForceeaService {
                 result = describeResults.get(0).getSObjectType();
                 String name = describeResults.get(0).getName();
 
-                SObjectInfo info = new SObjectInfo();
+                Forceea.SObjectInfo info = new Forceea.SObjectInfo();
                 info.sObjectApiName = name;
                 info.sObjType = result;
                 sObjectInfosBySObjectName.put(name.toLowerCase(), info);
@@ -664,7 +642,7 @@ public with sharing class ForceeaService {
      */
     public static List<String> keepValuesInList(List<String> listToProcess, List<String> valuesToKeep) {
         List<String> results = new List<String>();
-        List<String> valuesToKeepToLowercase = ForceeaService.convertListToLowercase(valuesToKeep);
+        List<String> valuesToKeepToLowercase = convertListToLowercase(valuesToKeep);
         String valueLowercase = '';
         Boolean mustInclude = false;
 
@@ -683,6 +661,10 @@ public with sharing class ForceeaService {
         }
 
         return results;
+    }
+
+    public static void methodIsDeprecated(String methodIdentifier) {
+        System.debug('The Forceea method [' + methodIdentifier + '] is DEPRECATED.');
     }
 
     /**
@@ -775,7 +757,7 @@ public with sharing class ForceeaService {
     }
 
     /**
-     * @description Removes some case-insensitive values in a list.
+     * @description Removes some case-insensitive values from a list.
      * @param listToProcess The list from which the values will be processed.
      * @param valuesToRemove The values to remove from the list.
      * @return A list of string values.
@@ -808,16 +790,16 @@ public with sharing class ForceeaService {
      * @param field The field info object.
      * @param sObjectApiName The SObject API name.
      */
-    private static void setFieldInGlobalFieldsMap(ForceeaFieldInfo field, String sObjectApiName) {
+    private static void setFieldInGlobalFieldsMap(Forceea.FieldInfo field, String sObjectApiName) {
         String fieldApiNameToLower = field.fieldApiName.toLowerCase();
         String sObjectApiNameToLower = sObjectApiName.toLowerCase();
 
         if (!globalFieldsMapContains(sObjectApiNameToLower, fieldApiNameToLower)) {
             if (!FObject.globalFieldsMapBySObject.containsKey(sObjectApiNameToLower)) {
-                FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, new Map<String, ForceeaFieldInfo>());
+                FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, new Map<String, Forceea.FieldInfo>());
             }
 
-            Map<String, ForceeaFieldInfo> fieldsByName = FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower);
+            Map<String, Forceea.FieldInfo> fieldsByName = FObject.globalFieldsMapBySObject.get(sObjectApiNameToLower);
             fieldsByName.put(fieldApiNameToLower, field);
             FObject.globalFieldsMapBySObject.put(sObjectApiNameToLower, fieldsByName);
         }

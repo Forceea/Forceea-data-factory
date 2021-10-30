@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -21,36 +21,39 @@ public with sharing class ForceeaQueueable implements Queueable {
     private static final Integer BENCHMARK_QUERY_LIMIT = 100;
     private static final Integer BIG_OBJECT_QUERY_LIMIT = 49999;
     private static final String ERROR_MESSAGE_DELETE_OPERATION_TOO_LARGE = 'DELETE_OPERATION_TOO_LARGE';
-    private static final List<String> ERROR_CODES_TO_RETRY = new List<String>{
+    private static final List<String> ERROR_CODES_TO_RETRY_ON_UPDATE_OR_DELETE = new List<String>{
         'UNABLE_TO_LOCK_ROW', ERROR_MESSAGE_DELETE_OPERATION_TOO_LARGE
     };
     @TestVisible
     private static final Decimal LIMITS_THRESHOLD = 0.95;
     private static final Integer NUMBER_OF_SECTORS = 50;
     private static final Integer MAX_ERRORS = 5;
+    private static final String WHERE_KEYWORD = ' WHERE ';
+    private static final String WHERE_AND = ' AND ';
 
     /* INSTANCE COLLECTIONS */
 
-    private List<ForceeaService.FieldDefinition> definitionsOnDelete { get; set; }
+    private List<Forceea.FieldDefinition> definitionsOnUpdateOrDelete { get; set; }
     private Map<String, Integer> numFirstRecordsBySObject { get; set; }
     private Map<String, Integer> tempNumFirstRecordsBySObject { get; set; }
     private Map<String, Integer> sObjectApiNames { get; set; }
-    private List<ForceeaService.FObjectAsync> sObjectsToDelete { get; set; }
-    private Map<String, ForceeaService.FObjectAsync> template { get; set; }
+    private List<Forceea.FObjectAsynchronous> sObjectsToUpdateOrDelete { get; set; }
+    private Map<String, Forceea.FObjectAsynchronous> template { get; set; }
 
     /* INSTANCE VARIABLES & PROPERTIES */
 
     @TestVisible
     private Integer batchId { get; set; }
     private String bigObjectIndexFieldsString { get; set; }
+    private Datetime dateTimeNow { get; set; }
     @TestVisible
     private String errorMessage { get; set; }
     private Boolean hasFailed { get; set; }
-    private Boolean hasMoreRecordsToDelete { get; set; }
+    private Boolean hasMoreRecordsToUpdateOrDelete { get; set; }
     private Boolean hasPartitioning { get; set; }
     private Boolean isBenchmark { get; set; }
     private Boolean isBigObject { get; set; }
-    private Boolean isExcludedOnAsyncDelete { get; set; }
+    private Boolean isExcludedOnAsyncUpdateOrDelete { get; set; }
     @TestVisible
     private Boolean isTerminated { get; set; }
     private Boolean isTheLastSObject { get; set; }
@@ -73,10 +76,12 @@ public with sharing class ForceeaQueueable implements Queueable {
     private Integer numJobs { get; set; }
     private Integer numJobUnitsExecuted { get; set; }
     private Integer numJobUnitsToExecute { get; set; }
+    private Integer numMaxRecordOnAsyncDelete { get; set; }
+    private Integer numMaxRecordOnAsyncUpdate { get; set; }
     @TestVisible
     private Integer numMaxUnitsPerBatch { get; set; }
     private Integer numProcessUnitsToExecute { get; set; }
-    private Integer numRecordsFoundForDeletion { get; set; }
+    private Integer numRecordsFoundToUpdateOrDelete { get; set; }
     private Integer numTotalJobUnits { get; set; }
     private Boolean operationIsSuccessful { get; set; }
     @TestVisible
@@ -94,20 +99,22 @@ public with sharing class ForceeaQueueable implements Queueable {
     private Boolean shouldTryAgainAfterError { get; set; }
     @TestVisible
     private String sObjectApiName { get; set; }
-    private Integer sObjectToDeleteIndex { get; set; }
+    private Integer sObjectToUpdateOrDeleteIndex { get; set; }
+    private Integer timeFrameForUpdateInMinutes { get; set; }
     private String verbose { get; set; }
 
     /* CONSTRUCTORS */
 
-    public ForceeaQueueable(ForceeaAsyncTransaction asyncTransaction) {
+    public ForceeaQueueable(Forceea.AsyncTransaction asyncTransaction) {
         this.batchId = asyncTransaction.batchId;
+        this.dateTimeNow = asyncTransaction.dateTimeNow;
         this.errorMessage = '';
         this.numFirstRecordsBySObject = asyncTransaction.numFirstRecordsBySObject;
         this.hasFailed = false;
-        this.hasMoreRecordsToDelete = false;
+        this.hasMoreRecordsToUpdateOrDelete = false;
         this.hasPartitioning = asyncTransaction.hasPartitioning;
         this.isBenchmark = asyncTransaction.isBenchmark;
-        this.isExcludedOnAsyncDelete = asyncTransaction.isExcludedOnAsyncDelete;
+        this.isExcludedOnAsyncUpdateOrDelete = asyncTransaction.isExcludedOnAsyncUpdateOrDelete;
         this.isTerminated = false;
         this.isTheLastSObject = false;
         this.jobId = asyncTransaction.jobId;
@@ -124,15 +131,19 @@ public with sharing class ForceeaQueueable implements Queueable {
         this.numJobs = asyncTransaction.numJobs;
         this.numJobUnitsExecuted = asyncTransaction.numJobUnitsExecuted;
         this.numJobUnitsToExecute = asyncTransaction.numJobUnitsToExecute;
+        this.numMaxRecordOnAsyncDelete = asyncTransaction.numMaxRecordOnAsyncDelete;
+        this.numMaxRecordOnAsyncUpdate = asyncTransaction.numMaxRecordOnAsyncUpdate;
         this.numMaxUnitsPerBatch = asyncTransaction.numMaxUnitsPerBatch;
         this.numProcessUnitsToExecute = asyncTransaction.numProcessUnitsToExecute;
-        this.numRecordsFoundForDeletion = 0;
+        this.numRecordsFoundToUpdateOrDelete = 0;
         this.numTotalJobUnits = asyncTransaction.numTotalJobUnits;
         this.operationIsSuccessful = true;
         this.operationType = asyncTransaction.operationType;
-        if (this.operationType == ForceeaService.OperationType.ASYNC_DELETE) {
-            this.definitionsOnDelete =
-                asyncTransaction.sObjectsToDelete.get(asyncTransaction.sObjectToDeleteIndex).definitions;
+        if (this.operationType != ForceeaService.OperationType.ASYNC_INSERT) {
+            Integer index = asyncTransaction.sObjectToUpdateOrDeleteIndex;
+            if (!asyncTransaction.sObjectsToUpdateOrDelete.isEmpty()) {
+                this.definitionsOnUpdateOrDelete = asyncTransaction.sObjectsToUpdateOrDelete.get(index).definitions;
+            }
         }
         this.partitionFieldValue = asyncTransaction.partitionFieldValue;
         this.processId = asyncTransaction.processId;
@@ -146,9 +157,10 @@ public with sharing class ForceeaQueueable implements Queueable {
         this.shouldTryAgainAfterError = false;
         this.sObjectApiName = asyncTransaction.sObjectApiName;
         this.sObjectApiNames = new Map<String, Integer>();
-        this.sObjectToDeleteIndex = asyncTransaction.sObjectToDeleteIndex;
-        this.sObjectsToDelete = asyncTransaction.sObjectsToDelete;
+        this.sObjectToUpdateOrDeleteIndex = asyncTransaction.sObjectToUpdateOrDeleteIndex;
+        this.sObjectsToUpdateOrDelete = asyncTransaction.sObjectsToUpdateOrDelete;
         this.template = asyncTransaction.template;
+        this.timeFrameForUpdateInMinutes = asyncTransaction.timeFrameForUpdateInMinutes;
         this.verbose = asyncTransaction.verbose;
     }
 
@@ -160,7 +172,7 @@ public with sharing class ForceeaQueueable implements Queueable {
     private void createNewBatch() {
         try {
             this.batchId++;
-            ForceeaAsyncTransaction asyncTrans = this.getAsyncTransaction();
+            Forceea.AsyncTransaction asyncTrans = this.getAsyncTransaction();
             if (Test.isRunningTest()) {
                 return;
             }
@@ -184,30 +196,30 @@ public with sharing class ForceeaQueueable implements Queueable {
     /**
      * @description Decides if the next sector should be checked when deleting.
      */
-    private void decideIfShouldCheckNextSectorOnDelete() {
+    private void decideIfShouldCheckNextSectorOnUpdateOrDelete() {
         Integer nextSector = this.sector + this.numJobs;
-        this.shouldCheckNextSector = shouldContinueToNextSectorOnDelete(nextSector);
+        this.shouldCheckNextSector = shouldContinueToNextSectorOnUpdateOrDelete(nextSector);
     }
 
     /**
      * @description Decides if the same sector should be checked when deleting.
      */
-    private void decideIfShouldCheckSameSectorOnDelete() {
+    private void decideIfShouldCheckSameSectorOnUpdateOrDelete() {
         Boolean shouldTryAgain = !this.operationIsSuccessful && this.shouldTryAgainAfterError;
-        this.hasMoreRecordsToDelete = this.numRecordsFoundForDeletion == this.queryLimit;
-        this.shouldCheckSameSector = (shouldTryAgain || this.hasMoreRecordsToDelete) ? true : false;
+        this.hasMoreRecordsToUpdateOrDelete = this.numRecordsFoundToUpdateOrDelete == this.queryLimit;
+        this.shouldCheckSameSector = (shouldTryAgain || this.hasMoreRecordsToUpdateOrDelete) ? true : false;
     }
 
     /**
      * @description Decides if a new batch should be created when deleting.
      */
-    private void decideIfShouldCreateNewBatchOnDelete() {
+    private void decideIfShouldCreateNewBatchOnUpdateOrDelete() {
         this.shouldCreateNewBatch = false;
 
         Boolean conditionOnSuccess = this.operationIsSuccessful && (
             (this.shouldMoveToNextSObject && !this.isTheLastSObject) ||
                 this.shouldCheckSameSector ||
-                (this.shouldCheckNextSector && this.numRecordsFoundForDeletion > 0)
+                (this.shouldCheckNextSector && this.numRecordsFoundToUpdateOrDelete > 0)
         );
         Boolean conditionOnFailure = !this.operationIsSuccessful && this.shouldTryAgainAfterError;
         if (conditionOnSuccess || conditionOnFailure) {
@@ -217,7 +229,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         if (this.isBenchmark) {
             setNumOfMaxUnitsOnBenchmark();
         }
-        if (this.operationIsSuccessful && this.numRecordsFoundForDeletion > 0) { // benchmarking has finished
+        if (this.operationIsSuccessful && this.numRecordsFoundToUpdateOrDelete > 0) { // benchmarking has finished
             deactivateBenchmarking();
         }
     }
@@ -225,14 +237,14 @@ public with sharing class ForceeaQueueable implements Queueable {
     /**
      * @description Decides if this is the last SObject when deleting.
      */
-    private void decideIfThisIsTheLastSObjectOnDelete() {
-        this.isTheLastSObject = this.sObjectToDeleteIndex == this.sObjectsToDelete.size() - 1;
+    private void decideIfThisIsTheLastSObjectOnUpdateOrDelete() {
+        this.isTheLastSObject = this.sObjectToUpdateOrDeleteIndex == this.sObjectsToUpdateOrDelete.size() - 1;
     }
 
     /**
      * @description Decides what happens as a next step when deleting.
      */
-    private void decideWhatHappensNextOnDelete() {
+    private void decideWhatHappensNextOnUpdateOrDelete() {
         if (this.shouldCreateNewBatch) {
             if (this.operationIsSuccessful) {
                 publishLogMessageOnSuccess();
@@ -241,7 +253,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             if (this.shouldMoveToNextSObject && !this.isTheLastSObject) {
                 this.isBenchmark = true;
                 this.sector = this.jobId;
-                this.sObjectToDeleteIndex++;
+                this.sObjectToUpdateOrDeleteIndex++;
             }
 
             createNewBatch();
@@ -258,12 +270,12 @@ public with sharing class ForceeaQueueable implements Queueable {
     /**
      * @description Decides for the next batch when deleting.
      */
-    private void decideForNextBatchOnDelete() {
-        decideIfShouldCheckSameSectorOnDelete();
-        decideIfShouldCheckNextSectorOnDelete();
-        decideIfThisIsTheLastSObjectOnDelete();
-        decideIfShouldCreateNewBatchOnDelete();
-        decideWhatHappensNextOnDelete();
+    private void decideForNextBatchOnUpdateOrDelete() {
+        decideIfShouldCheckSameSectorOnUpdateOrDelete();
+        decideIfShouldCheckNextSectorOnUpdateOrDelete();
+        decideIfThisIsTheLastSObjectOnUpdateOrDelete();
+        decideIfShouldCreateNewBatchOnUpdateOrDelete();
+        decideWhatHappensNextOnUpdateOrDelete();
     }
 
     /**
@@ -291,29 +303,6 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-     * @description Deletes records.
-     * @param recordsToDelete The list of records to delete.
-     */
-    private void deleteRecords(List<SObject> recordsToDelete) {
-        try {
-            if (this.isBigObject) {
-                Database.deleteImmediate(recordsToDelete);
-            } else {
-                Database.delete(recordsToDelete, true);
-            }
-        } catch (Exception ex) {
-            this.operationIsSuccessful = false;
-            this.errorMessage = ex.getMessage();
-            publishLogMessageOnFailure();
-            return;
-        }
-
-        this.numBatchUnitsExecuted = recordsToDelete.size();
-        this.numJobUnitsExecuted += this.numBatchUnitsExecuted;
-        this.numBatchUnitsToExecute = this.numBatchUnitsExecuted;
-    }
-
-    /**
      * @description The main execution method.
      * @param context The queueable context.
      */
@@ -328,20 +317,43 @@ public with sharing class ForceeaQueueable implements Queueable {
             when ASYNC_INSERT {
                 handleOnInsert();
             }
-            when ASYNC_DELETE {
-                handleOnDelete();
+            when ASYNC_UPDATE, ASYNC_DELETE {
+                handleOnUpdateOrDelete();
             }
         }
+    }
+
+    /**
+     * @description Generates the WHERE clause when the async update operation is executed.
+     * @return A string of the WHERE clause.
+     */
+    private String getAdditionalWhereClause() {
+        String result = '';
+        Integer counter = 0;
+        final Map<String, String> valuesByField = getValuesByField();
+
+        if (!valuesByField.isEmpty()) {
+            for (String fieldName : valuesByField.keySet()) {
+                if (counter > 1) {
+                    result += WHERE_AND;
+                }
+                result += fieldName + ' = \'' + valuesByField.get(fieldName) + '\'';
+                counter++;
+            }
+        }
+
+        return result;
     }
 
     /**
      * @description Creates an async transaction.
      * @return An instance of ForceeaAsynTransaction.
      */
-    private ForceeaAsyncTransaction getAsyncTransaction() {
-        ForceeaAsyncTransaction result = new ForceeaAsyncTransaction();
+    private Forceea.AsyncTransaction getAsyncTransaction() {
+        Forceea.AsyncTransaction result = new Forceea.AsyncTransaction();
 
         result.batchId = this.batchId;
+        result.dateTimeNow = this.dateTimeNow;
         result.isBenchmark = this.isBenchmark;
         result.hasPartitioning = this.hasPartitioning;
         result.jobId = this.jobId;
@@ -360,11 +372,30 @@ public with sharing class ForceeaQueueable implements Queueable {
         result.sector = this.sector;
         result.seed = this.seed;
         result.sObjectApiName = this.sObjectApiName;
-        result.sObjectToDeleteIndex = this.sObjectToDeleteIndex;
-        result.sObjectsToDelete = this.sObjectsToDelete;
+        result.sObjectToUpdateOrDeleteIndex = this.sObjectToUpdateOrDeleteIndex;
+        result.sObjectsToUpdateOrDelete = this.sObjectsToUpdateOrDelete;
         result.template = this.template;
+        result.timeFrameForUpdateInMinutes = this.timeFrameForUpdateInMinutes;
 
         return result;
+    }
+
+    /**
+      * @description Retrieves the global limits.
+      * @return The query LIMIT when benchmarking on update or delete.
+      */
+    private Integer getBenchmarkQueryLimitOnUpdateOrDelete() {
+        Integer userMaxLimit = 0;
+        if (isUpdate()) {
+            userMaxLimit = this.numMaxRecordOnAsyncUpdate;
+        } else {
+            userMaxLimit = this.numMaxRecordOnAsyncDelete;
+        }
+
+        if (userMaxLimit == 0) {
+            return BENCHMARK_QUERY_LIMIT;
+        }
+        return (userMaxLimit < BENCHMARK_QUERY_LIMIT) ? userMaxLimit : BENCHMARK_QUERY_LIMIT;
     }
 
     /**
@@ -421,6 +452,9 @@ public with sharing class ForceeaQueueable implements Queueable {
                     message += this.errorMessage;
                 }
             }
+            when ASYNC_UPDATE {
+                message += 'updating records of [' + this.sObjectApiName + ']: ' + this.errorMessage;
+            }
         }
         this.numErrors++;
 
@@ -446,6 +480,11 @@ public with sharing class ForceeaQueueable implements Queueable {
             }
             when ASYNC_DELETE {
                 message += ' deleted ' +
+                    ForceeaService.getCountable('record', this.numBatchUnitsToExecute) +
+                    ' of [' + this.sObjectApiName + '].';
+            }
+            when ASYNC_UPDATE {
+                message += ' updated ' +
                     ForceeaService.getCountable('record', this.numBatchUnitsToExecute) +
                     ' of [' + this.sObjectApiName + '].';
             }
@@ -510,26 +549,34 @@ public with sharing class ForceeaQueueable implements Queueable {
         return results.get(0);
     }
 
+
     /**
-     * @description Calculates the max number of records than can be deleted per batch.
+     * @description Calculates the max number of records than can be updated or deleted per batch.
      * @return The max number of records.
      */
     @TestVisible
-    private Integer getMaxNumOfRecordsToDeletePerBatch() {
+    private Integer getMaxNumOfRecordsToUpdatedOrDeletePerBatch() {
         if (this.numMaxUnitsPerBatch > 1) {
             return this.numMaxUnitsPerBatch;
         }
 
-        return getMaxNumOfRecordsToDeletePerBatchFromQueueable(this);
+        Integer userMaxLimit = 0;
+        if (isUpdate()) {
+            userMaxLimit = this.numMaxRecordOnAsyncUpdate;
+        } else {
+            userMaxLimit = this.numMaxRecordOnAsyncDelete;
+        }
+
+        return (userMaxLimit > 0) ? userMaxLimit : getMaxNumOfRecordsToUpdateOrDeletePerBatchFromQueueable(this);
     }
 
     /**
-     * @description Calculates the max number of records than can be deleted per batch.
+     * @description Calculates the max number of records than can be updated or deleted per batch.
      * @param queueable A ForceeaQueueable instance.
      * @return The max number of records.
      */
     @TestVisible
-    private Integer getMaxNumOfRecordsToDeletePerBatchFromQueueable(ForceeaQueueable queueable) {
+    private Integer getMaxNumOfRecordsToUpdateOrDeletePerBatchFromQueueable(ForceeaQueueable queueable) {
         Decimal multiplierForCpuTime = 1;
         if (queueable.limitGlobalSetupCpuTime > 0) {
             multiplierForCpuTime = (Integer) queueable.getMaxCpuTime() / queueable.limitGlobalSetupCpuTime;
@@ -549,11 +596,11 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-     * @description Returns a new FObject from an instance of ForceeaService.FObjectAsync.
-     * @param async An instance of ForceeaService.FObjectAsync.
+     * @description Returns a new FObject from an instance of Forceea.FObjectAsync.
+     * @param async An instance of Forceea.FObjectAsync.
      * @return An FObject instance.
      */
-    private FObject getNewFObject(ForceeaService.FObjectAsync async) {
+    private FObject getNewFObject(Forceea.FObjectAsynchronous async) {
         Integer numRecords = async.numOfRecords * this.numBatchUnitsToExecute;
         FObject newFObject = new FObject(async.sObjectApiName, numRecords)
             .setRequiredFields(async.setRequiredFields);
@@ -563,7 +610,7 @@ public with sharing class ForceeaQueueable implements Queueable {
         FObject.setGlobalLanguage(this.language);
         FObject.setGlobalLocality(this.locality);
 
-        for (ForceeaService.FieldDefinition def : async.definitions) {
+        for (Forceea.FieldDefinition def : async.definitions) {
             newFObject.setDefinition(def.fieldApiName, def.definitionString);
         }
 
@@ -585,86 +632,91 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-     * @description Calculates the SOQL query LIMIT.
-     * @return The SOQL query LIMIT.
+     * @description Generates the query FROM clause.
+     * @return The query FROM clause string.
      */
-    private Integer getQueryLimit() {
+    private String getQueryFromClause() {
+        return ' FROM ' + this.sObjectApiName;
+    }
+
+    /**
+     * @description Generates the query LIMIT clause.
+     * @return The query LIMIT clause string.
+     */
+    private String getQueryLimitClause() {
         if (this.isBigObject) {
             this.numMaxUnitsPerBatch = BIG_OBJECT_QUERY_LIMIT;
         }
+        this.queryLimit = (this.isBenchmark)
+            ? getBenchmarkQueryLimitOnUpdateOrDelete()
+            : this.numMaxUnitsPerBatch;
 
-        return (this.isBenchmark) ? BENCHMARK_QUERY_LIMIT : this.numMaxUnitsPerBatch;
+        return ' LIMIT ' + this.queryLimit;
+    }
+
+    /**
+     * @description Generates the query SELECT clause.
+     * @return The query SELECT clause string.
+     */
+    private String getQuerySelectClause() {
+        String selectString = (this.isBigObject) ? this.bigObjectIndexFieldsString : 'Id';
+        return 'SELECT ' + selectString;
     }
 
     /**
      * @description Creates a SOQL query.
      * @param partitionFieldName The Partition field API name.
-     * @param partitionFieldValue The Partition field vale.
      * @return The SOQL query string.
      */
-    private String getQueryString(String partitionFieldName, String partitionFieldValue) {
-        this.queryLimit = getQueryLimit();
-
-        List<String> fieldNames = new List<String>{
-            'RecordTypeId'
-        };
-        final Map<String, String> valuesByField = getValuesByField(fieldNames);
-
-        String result = 'SELECT ';
-        result += (this.isBigObject) ? this.bigObjectIndexFieldsString : 'Id';
-        result += ' FROM ' + this.sObjectApiName;
-        result += getQueryWhereClauseOnDelete(valuesByField, partitionFieldName, partitionFieldValue);
-        result += ' LIMIT ' + this.queryLimit;
+    private String getQueryString(String partitionFieldName) {
+        String result = getQuerySelectClause() + getQueryFromClause() +
+            getQueryWhereClause(partitionFieldName) + getQueryLimitClause();
 
         return result;
     }
 
     /**
      * @description Generates the SOQL WHERE clause.
-     * @param valuesByField The map of values by field.
      * @param partitionFieldName The Partition field name.
-     * @param partitionFieldValue The Partition field vale.
      * @return The SOQL WHERE clause.
      */
-    private String getQueryWhereClauseOnDelete(Map<String, String> valuesByField,
-        String partitionFieldName, String partitionFieldValue) {
-        String additionalClause = '';
-        Integer counter = 0;
-
-        if (!valuesByField.isEmpty()) {
-            for (String fieldName : valuesByField.keySet()) {
-                if (counter > 1) {
-                    additionalClause += ' AND ';
-                }
-                additionalClause += fieldName + ' = \'' + valuesByField.get(fieldName) + '\'';
-                counter++;
-            }
-        }
-
+    private String getQueryWhereClause(String partitionFieldName) {
         String result = '';
+        String additionalWhereClause = getAdditionalWhereClause();
 
         if (this.hasPartitioning) {
-            result = ' WHERE ' + partitionFieldName + ' = \'' +
-                String.escapeSingleQuotes(partitionFieldValue + String.valueOf(this.sector)) + '\'';
-            if (String.isNotBlank(additionalClause)) {
-                result += ' AND ' + additionalClause;
-            }
-        } else if (String.isNotBlank(additionalClause)) {
-            result = ' WHERE ' + additionalClause;
+            result = WHERE_KEYWORD + partitionFieldName + ' = \'';
+            result += String.escapeSingleQuotes(this.partitionFieldValue + String.valueOf(this.sector)) + '\'';
+            result += String.isBlank(additionalWhereClause) ? '' : WHERE_AND + additionalWhereClause;
+            result += isUpdate() ? WHERE_AND + getWhereClauseOnUpdate() : '';
+            return result;
+        }
+
+        if (String.isNotBlank(additionalWhereClause)) {
+            result = WHERE_KEYWORD + additionalWhereClause;
+            result += isUpdate() ? WHERE_AND + getWhereClauseOnUpdate() : '';
+            return result;
+        }
+
+        if (isUpdate()) {
+            result = WHERE_KEYWORD + getWhereClauseOnUpdate();
         }
 
         return result;
     }
 
     /**
-    * @description Retrieves the records for deletion.
-    * @return A list of SObjects.
-    */
-    private List<SObject> getRecordsToDelete() {
-        ForceeaService.FObjectAsync obj = this.sObjectsToDelete.get(this.sObjectToDeleteIndex);
+     * @description Retrieves the records for deletion.
+     * @return A list of SObjects.
+     */
+    private List<SObject> getRecordsToUpdateOrDelete() {
+        Forceea.FObjectAsynchronous obj = this.sObjectsToUpdateOrDelete.get(this.sObjectToUpdateOrDeleteIndex);
         this.bigObjectIndexFieldsString = obj.bigObjectIndexFieldsString;
+        this.isExcludedOnAsyncUpdateOrDelete = obj.isExcludedOnAsyncUpdateOrDelete;
+        this.numMaxRecordOnAsyncDelete = obj.numMaxRecordOnAsyncDelete;
+        this.numMaxRecordOnAsyncUpdate = obj.numMaxRecordOnAsyncUpdate;
         this.sObjectApiName = obj.sObjectApiName;
-        this.isExcludedOnAsyncDelete = obj.isExcludedOnAsyncDelete;
+        this.timeFrameForUpdateInMinutes = obj.timeFrameForUpdateInMinutes;
 
         this.isBigObject = ForceeaService.isBigObject(this.sObjectApiName);
         if (this.isBigObject) {
@@ -673,8 +725,8 @@ public with sharing class ForceeaQueueable implements Queueable {
 
         List<SObject> results = new List<SObject>();
         try {
-            if (!this.isExcludedOnAsyncDelete) {
-                String soqlQuery = getQueryString(obj.partitionFieldName, this.partitionFieldValue);
+            if (!this.isExcludedOnAsyncUpdateOrDelete) {
+                String soqlQuery = getQueryString(obj.partitionFieldName);
                 results = Database.query(soqlQuery);
             }
         } catch (Exception ex) {
@@ -683,7 +735,7 @@ public with sharing class ForceeaQueueable implements Queueable {
             publishLogMessageOnFailure();
         }
 
-        this.numRecordsFoundForDeletion = results.size();
+        this.numRecordsFoundToUpdateOrDelete = results.size();
         return results;
     }
 
@@ -692,7 +744,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @param definition The field definition.
      * @return The static value.
      */
-    private String getStaticValueFromDefinition(ForceeaService.FieldDefinition definition) {
+    private String getStaticValueFromDefinition(Forceea.FieldDefinition definition) {
         String result = '';
 
         if (definition.definitionString.toLowerCase().startsWith('static')) {
@@ -706,14 +758,33 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
+     * @description Generates the WHERE clause when the async update operation is executed.
+     * @return A string of the WHERE clause.
+     */
+    private String getWhereClauseOnUpdate() {
+        if (this.operationType != ForceeaService.OperationType.ASYNC_UPDATE) {
+            return '';
+        }
+
+        Datetime dt = this.dateTimeNow.addMinutes(-this.timeFrameForUpdateInMinutes);
+        String timeString = String.valueOfGmt(dt);
+        timeString = timeString.substringBefore(' ') + 'T' + timeString.substringAfter(' ') + 'Z';
+
+        return 'LastModifiedDate <= ' + timeString;
+    }
+
+    /**
      * @description Generates the valuesByField map.
-     * @param fieldNames The list of field names to retrieve.
      * @return A map with key: fieldName, value: field value, used in SOQL WHERE field = value.
      */
-    private Map<String, String> getValuesByField(List<String> fieldNames) {
+    private Map<String, String> getValuesByField() {
+        List<String> fieldNames = new List<String>{
+            'RecordTypeId'
+        };
+
         Map<String, String> results = new Map<String, String>();
 
-        for (ForceeaService.FieldDefinition def : this.definitionsOnDelete) {
+        for (Forceea.FieldDefinition def : this.definitionsOnUpdateOrDelete) {
             if (fieldNames.contains(def.fieldApiName)) {
                 String value = getStaticValueFromDefinition(def);
                 if (String.isNotBlank(value)) {
@@ -743,23 +814,23 @@ public with sharing class ForceeaQueueable implements Queueable {
     /**
      * @description Handles the deletion process.
      */
-    private void handleOnDelete() {
-        List<SObject> recordsToDelete = new List<SObject>();
+    private void handleOnUpdateOrDelete() {
+        List<SObject> recordsToUpdateOrDelete = new List<SObject>();
 
         this.shouldCheckNextSector = true;
         while (this.shouldCheckNextSector) {
-            recordsToDelete = getRecordsToDelete();
+            recordsToUpdateOrDelete = getRecordsToUpdateOrDelete();
             if (!this.operationIsSuccessful) {
                 return;
             }
 
-            if (recordsToDelete.isEmpty()) { // go to next sector
-                decideForNextBatchOnDelete();
+            if (recordsToUpdateOrDelete.isEmpty()) { // go to next sector
+                decideForNextBatchOnUpdateOrDelete();
             } else {
-                onBeforeDelete();
-                deleteRecords(recordsToDelete);
-                onAfterDelete();
-                decideForNextBatchOnDelete();
+                onBeforeUpdateOrDelete();
+                updateOrDeleteRecords(recordsToUpdateOrDelete);
+                onAfterUpdateOrDelete();
+                decideForNextBatchOnUpdateOrDelete();
                 if (!this.operationIsSuccessful) {
                     return;
                 }
@@ -790,12 +861,16 @@ public with sharing class ForceeaQueueable implements Queueable {
         FObject.setAsync(true);
         ForceeaDefinition.clearMapMaxSuffixNumbersByKey();
 
-        for (ForceeaService.FObjectAsync fObjAsync : this.template.values()) {
+        for (Forceea.FObjectAsynchronous fObjAsync : this.template.values()) {
             FObject newFObject = getNewFObject(fObjAsync);
 
             this.sObjectApiName = newFObject.getSObjectName();
             if (this.isBenchmark) {
                 newFObject.setNumberOfRecords(fObjAsync.numOfRecords);
+            }
+            if (fObjAsync.numOfRecordsIsAuto) {
+                newFObject.setNumberOfRecords(0);
+                newFObject.setNumberOfRecords('auto');
             }
 
             try {
@@ -834,6 +909,10 @@ public with sharing class ForceeaQueueable implements Queueable {
         return this.errorMessage.contains(ERROR_MESSAGE_DELETE_OPERATION_TOO_LARGE);
     }
 
+    private Boolean isUpdate() {
+        return this.operationType == ForceeaService.OperationType.ASYNC_UPDATE;
+    }
+
     private Boolean jobIsCompleted() {
         return this.shouldMoveToNextSObject && this.isTheLastSObject;
     }
@@ -841,25 +920,13 @@ public with sharing class ForceeaQueueable implements Queueable {
     /**
      * @description Handles the process after deletion.
      */
-    private void onAfterDelete() {
+    private void onAfterUpdateOrDelete() {
         if (!this.operationIsSuccessful || !this.isBenchmark) {
             return;
         }
 
         this.limitGlobalSetupCpuTime = Limits.getCpuTime() - this.limitGlobalSetupCpuTime;
         this.limitDmlRows = Limits.getDmlRows() - this.limitDmlRows;
-    }
-
-    /**
-     * @description Handles the process before deletion.
-    */
-    private void onBeforeDelete() {
-        if (!this.isBenchmark) {
-            return;
-        }
-
-        this.limitGlobalSetupCpuTime = Limits.getCpuTime();
-        this.limitDmlRows = Limits.getDmlRows();
     }
 
     /**
@@ -870,6 +937,18 @@ public with sharing class ForceeaQueueable implements Queueable {
             Database.rollback(this.savePoint);
             this.numFirstRecordsBySObject = this.tempNumFirstRecordsBySObject;
         }
+    }
+
+    /**
+     * @description Handles the process before deletion.
+     */
+    private void onBeforeUpdateOrDelete() {
+        if (!this.isBenchmark) {
+            return;
+        }
+
+        this.limitGlobalSetupCpuTime = Limits.getCpuTime();
+        this.limitDmlRows = Limits.getDmlRows();
     }
 
     /**
@@ -901,6 +980,9 @@ public with sharing class ForceeaQueueable implements Queueable {
             when ASYNC_DELETE {
                 operationType = 'delete';
             }
+            when ASYNC_UPDATE {
+                operationType = 'update';
+            }
         }
 
         ForceeaAsyncNotification__e platformEvent = new ForceeaAsyncNotification__e();
@@ -931,10 +1013,10 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     @TestVisible
     private String publishLogMessageOnFailure() {
+
         this.operationIsSuccessful = false;
         this.numErrors++;
-        this.shouldTryAgainAfterError = shouldTryAgainAfterErrorOnDelete();
-
+        this.shouldTryAgainAfterError = shouldTryAgainAfterErrorOnUpdateOrDelete();
         return publishLogMessage();
     }
 
@@ -970,25 +1052,23 @@ public with sharing class ForceeaQueueable implements Queueable {
             when ASYNC_INSERT {
                 this.numMaxUnitsPerBatch = getMaxNumOfIterationsPerBatch();
             }
-            when ASYNC_DELETE {
-                this.numMaxUnitsPerBatch = getMaxNumOfRecordsToDeletePerBatch();
+            when ASYNC_DELETE, ASYNC_UPDATE {
+                this.numMaxUnitsPerBatch = getMaxNumOfRecordsToUpdatedOrDeletePerBatch();
             }
         }
     }
 
     /**
-     * @description Decides if must continue to the next sector when deleting.
+     * @description Decides if must continue to the next sector when updating or deleting.
      * @return True, if should continue to the next sector.
      */
-    private Boolean shouldContinueToNextSectorOnDelete(Integer newSector) {
+    private Boolean shouldContinueToNextSectorOnUpdateOrDelete(Integer newSector) {
         Boolean result = true;
 
-        // always: numRecordsFoundForDeletion <= queryLimit
-        if (this.numRecordsFoundForDeletion == this.queryLimit) {
+        if (this.numRecordsFoundToUpdateOrDelete == this.queryLimit) {
             return false;
         }
 
-        // is numRecordsFoundForDeletion < queryLimit
         if (newSector > NUMBER_OF_SECTORS || !this.hasPartitioning) {
             this.shouldMoveToNextSObject = true;
             result = false;
@@ -1000,18 +1080,18 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-     * @description Decides if must try again after an error on Delete.
+     * @description Decides if must try again after an error on Update or Delete.
      * @return True, if should try again.
      */
     @TestVisible
-    private Boolean shouldTryAgainAfterErrorOnDelete() {
+    private Boolean shouldTryAgainAfterErrorOnUpdateOrDelete() {
         if (this.operationType == ForceeaService.OperationType.ASYNC_INSERT) {
             return false;
         }
 
         Boolean shouldTryMultipleTimes = false;
 
-        for (String errorCode : ERROR_CODES_TO_RETRY) {
+        for (String errorCode : ERROR_CODES_TO_RETRY_ON_UPDATE_OR_DELETE) {
             if (this.errorMessage.contains(errorCode)) {
                 shouldTryMultipleTimes = true;
                 if (isDeleteOperationTooLarge()) {
@@ -1025,6 +1105,51 @@ public with sharing class ForceeaQueueable implements Queueable {
         this.hasFailed = true;
 
         return shouldTryAgain;
+    }
+
+    /**
+     * @description Updates or deletes records.
+     * @param recordsToUpdateOrDelete The list of records to update or delete.
+     */
+    private void updateOrDeleteRecords(List<SObject> recordsToUpdateOrDelete) {
+        try {
+            if (this.operationType == ForceeaService.OperationType.ASYNC_UPDATE) {
+                Database.update(recordsToUpdateOrDelete, true);
+            } else {
+                if (this.isBigObject) {
+                    Database.deleteImmediate(recordsToUpdateOrDelete);
+                } else {
+                    Database.delete(recordsToUpdateOrDelete, true);
+                }
+            }
+        } catch (Exception ex) {
+            this.operationIsSuccessful = false;
+            this.errorMessage = ex.getMessage();
+            publishLogMessageOnFailure();
+            return;
+        }
+
+        this.numBatchUnitsExecuted = recordsToUpdateOrDelete.size();
+        this.numJobUnitsExecuted += this.numBatchUnitsExecuted;
+        this.numBatchUnitsToExecute = this.numBatchUnitsExecuted;
+    }
+
+    /**
+     * @description Updates records.
+     */
+    private void updateRecords(List<SObject> recordsToUpdate) {
+        try {
+            Database.update(recordsToUpdate, true);
+        } catch (Exception ex) {
+            this.operationIsSuccessful = false;
+            this.errorMessage = ex.getMessage();
+            publishLogMessageOnFailure();
+            return;
+        }
+
+        this.numBatchUnitsExecuted = recordsToUpdate.size();
+        this.numJobUnitsExecuted += this.numBatchUnitsExecuted;
+        this.numBatchUnitsToExecute = this.numBatchUnitsExecuted;
     }
 
 }

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -174,17 +174,17 @@ public with sharing class ForceeaGenerator {
      * @return A Boolean value.
      */
     private Boolean fieldIsCheckbox(String fieldApiName) {
-        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        Forceea.FieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         return (field != null && field.dataType == Schema.DisplayType.BOOLEAN);
     }
 
     private Boolean fieldIsDatetime(String fieldApiName) {
-        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        Forceea.FieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         return (field != null && field.dataType == Schema.DisplayType.DATETIME);
     }
 
     private Boolean fieldIsLookup(String fieldApiName) {
-        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        Forceea.FieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         return (field != null && field.dataType == Schema.DisplayType.REFERENCE);
     }
 
@@ -220,7 +220,7 @@ public with sharing class ForceeaGenerator {
         String result = '';
         String par = parameter.toLowerCase();
 
-        for (ForceeaCluster cluster : this.def.clusters) {
+        for (Forceea.Cluster cluster : this.def.clusters) {
             if (par == cluster.parameter) { // parameter is found
                 result = cluster.arguments[0];
                 if (result.startsWith('"')) {
@@ -242,7 +242,7 @@ public with sharing class ForceeaGenerator {
         List<String> results = new List<String>();
         String par = parameter.toLowerCase();
 
-        for (ForceeaCluster cluster : this.def.clusters) {
+        for (Forceea.Cluster cluster : this.def.clusters) {
             if (par == cluster.parameter) { // parameter is found
                 for (String arg : cluster.arguments) {
                     String result = arg;
@@ -516,7 +516,7 @@ public with sharing class ForceeaGenerator {
             return Schema.DisplayType.ANYTYPE;
         }
 
-        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), this.def.fieldApiName);
+        Forceea.FieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), this.def.fieldApiName);
         return field.dataType;
     }
 
@@ -599,7 +599,7 @@ public with sharing class ForceeaGenerator {
         List<String> picklistValues = new List<String>();
         String fieldApiName = this.def.fieldApiName.toLowerCase();
 
-        ForceeaFieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        Forceea.FieldInfo field = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         for (Schema.PicklistEntry picklistEntry : field.picklistValues) {
             picklistValues.add(picklistEntry.getValue());
         }
@@ -731,7 +731,6 @@ public with sharing class ForceeaGenerator {
      */
     private List<SObject> getLookupRecordsFromSalesforce(
         String lookupSObjectApiName, String lookupFieldApiName, String whereClause) {
-
         List<SObject> results = new List<SObject>();
         try {
             Boolean isActiveFieldExists = existsIsActiveStandardField(lookupSObjectApiName);
@@ -1254,7 +1253,7 @@ public with sharing class ForceeaGenerator {
         // get all picklist values
         List<String> picklistValues = new List<String>();
 
-        ForceeaFieldInfo depField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        Forceea.FieldInfo depField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         for (Schema.PicklistEntry picklistEntry : depField.picklistValues) {
             picklistValues.add(picklistEntry.getValue());
         }
@@ -1414,7 +1413,7 @@ public with sharing class ForceeaGenerator {
         }
 
         // get dependent and controlling fields
-        ForceeaFieldInfo dependentField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        Forceea.FieldInfo dependentField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         String controllingFieldApiName = dependentField.controllingFieldApiName;
 
         List<String> results = new List<String>();
@@ -2282,7 +2281,7 @@ public with sharing class ForceeaGenerator {
             return getStaticValuesFromValue(recordTypeIds.get(0));
         }
 
-        ForceeaFieldInfo depField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
+        Forceea.FieldInfo depField = ForceeaService.getField(this.fObj.getSObjectName(), fieldApiName);
         Set<Schema.DisplayType> types = new Set<DisplayType>{
             Schema.DisplayType.PICKLIST, Schema.DisplayType.MULTIPICKLIST
         };

@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -20,11 +20,262 @@ public class FObjectAsyncTest {
     private static final String PARTITION_FIELD_VALUE = 'df';
 
     @IsTest
+    private static void deleteRecords_hasNoRecordsToDelete_expectSuccess() {
+        Integer numJobs = 1;
+        Forceea.Template template = template1();
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .deleteRecords();
+        Test.stopTest();
+
+        List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
+        Boolean result = FObjectAsync.processIsValid() && records.size() == 0;
+        System.assert(result == true, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void deleteRecords_hasRecordsToDeleteWithPartitioning_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records with 2 partitions
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(100)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '1)')
+            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(101)
+            .removeDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '2)')
+            .insertRecords(true);
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .deleteRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
+        Boolean result = records.size() == 1;
+        System.assert(result == true, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void deleteRecords_hasRecordsToDeleteWithMixedPartitioning1_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records with 1 partition
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(10)
+            .setVariable('partition', PARTITION_FIELD_VALUE + '1')
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value({@partition})')
+            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(1)
+            .removeDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+
+        Test.startTest();
+        // delete records with partition field value
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .deleteRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
+        System.assert(records.size() == 1, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void deleteRecords_hasRecordsToDeleteWithMixedPartitioning2_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records with 2 partitions
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(10)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(1)')
+            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(101)
+            .removeDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(2)')
+            .insertRecords(true);
+
+        Test.startTest();
+        // delete records without partition field value
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .deleteRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
+        System.assert(records.size() == 1, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void deleteRecords_hasRecordsToDeleteWithMixedPartitioning3_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records without partitions
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(100)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(101)
+            .insertRecords(true);
+
+        Test.startTest();
+        // delete records with partition field value
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .deleteRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
+        System.assert(records.size() == 101, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void deleteRecords_hasRecordsToDeleteWithoutPartitioning_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records without partitions
+        Forceea.Template template = new Forceea.Template(template2());
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(100)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setMaxNumberOfRecordOnAsyncDelete(10)
+            .setMaxNumberOfRecordOnAsyncUpdate(20)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(201)
+            .insertRecords(true);
+
+        Test.startTest();
+        // delete records without partition field value
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .deleteRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
+        System.assertEquals(10, template.getFObject('FObjectTwos').getMaxNumberOfRecordOnAsyncDelete(),
+            'deleteRecords - errors found');
+        System.assert(records.size() == 291, 'deleteRecords - errors found');
+    }
+
+    @IsTest
+    private static void excludeOnAsyncDelete_excludeChild_expectSuccess() {
+        Integer numJobs = 2;
+
+        Forceea.Template template = template1();
+        template.getFObject('FObjectOnes').excludeOnAsyncDelete(true);
+        template.insertRecords(true);
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .deleteRecords();
+        Test.stopTest();
+
+        Integer numRecords1 = [SELECT Id FROM FObjectOne__c].size();
+        Integer numRecords2 = [SELECT Id FROM FObjectTwo__c].size();
+        System.assertEquals(template.getFObject('FObjectOnes').getNumberOfRecords(),
+            numRecords1, 'excludeOnAsyncDelete - errors found');
+        System.assertEquals(template.getFObject('FObjectTwos').getNumberOfRecords(),
+            numRecords2, 'excludeOnAsyncDelete - errors found');
+    }
+
+    @IsTest
+    private static void excludeOnAsyncDelete_excludeParent_expectSuccess() {
+        Integer numJobs = 2;
+
+        Forceea.Template template = template1();
+        template.getFObject('FObjectTwos').excludeOnAsyncDelete(true);
+        template.insertRecords(true);
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .deleteRecords();
+        Test.stopTest();
+
+        Integer numRecords1 = [SELECT Id FROM FObjectOne__c].size();
+        Integer numRecords2 = [SELECT Id FROM FObjectTwo__c].size();
+        System.assertEquals(0, numRecords1, 'excludeOnAsyncDelete - errors found');
+        System.assertEquals(template.getFObject('FObjectTwos').getNumberOfRecords(),
+            numRecords2, 'excludeOnAsyncDelete - errors found');
+    }
+
+    @IsTest
+    private static void excludeOnAsyncUpdate_excludeChild_expectSuccess() {
+        Integer numJobs = 2;
+
+        Forceea.Template template = new Forceea.Template(template1());
+        template.getFObject('FObjectOnes').excludeOnAsyncUpdate(true);
+        template.insertRecords(true);
+
+        Datetime createdDatetime = Datetime.now();
+        setDelay();
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .updateRecords();
+        Test.stopTest();
+
+        Integer numRecords1 = [SELECT Id FROM FObjectOne__c WHERE LastModifiedDate > :createdDatetime].size();
+        Integer numRecords2 = [SELECT Id FROM FObjectTwo__c WHERE LastModifiedDate > :createdDatetime].size();
+        System.assertEquals(0, numRecords1, 'excludeOnAsyncUpdate - errors found');
+        System.assertEquals(template.getFObject('FObjectTwos').getNumberOfRecords(),
+            numRecords2, 'excludeOnAsyncUpdate - errors found');
+    }
+
+    @IsTest
+    private static void getGroupName_invalidDefinitionWithValidationAndBenchmark_expectSuccess() {
+        Integer numIterations = 10;
+        Integer maxIterationsPerBatch = 10;
+
+        Test.startTest();
+        new FObjectAsync(template3())
+            .setNumberOfIterations(numIterations)
+            .setNumberOfJobs(1)
+            .setMaxNumberOfIterationsPerBatch(maxIterationsPerBatch)
+            .setPartitionFieldValue('df')
+            .insertRecords();
+        Test.stopTest();
+
+        List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
+        System.assert(records.isEmpty(), 'getGroupName - errors found');
+    }
+
+    @IsTest
+    private static void getPartitionFieldValue_valid_expectSuccess() {
+        Integer numIterations = 10;
+        Integer maxIterationsPerBatch = 10;
+        String partitionFieldValue = 'df';
+
+        Test.startTest();
+        FObjectAsync async = new FObjectAsync(template3())
+            .setNumberOfIterations(numIterations)
+            .setNumberOfJobs(1)
+            .setMaxNumberOfIterationsPerBatch(maxIterationsPerBatch)
+            .setPartitionFieldValue(partitionFieldValue);
+        Test.stopTest();
+
+        Boolean result = async.getPartitionFieldValue() == partitionFieldValue;
+        System.assert(result == true, 'getPartitionFieldValue - errors found');
+    }
+
+    @IsTest
     private static void insertRecords_maxIterationsPerBatchDefault_expectSuccess() {
         Integer maxIterationsPerBatch = 0;
         Integer numIterations = 10;
         Integer numJobs = 2;
-        Map<String, FObject> template = template1();
+        Forceea.Template template = template1();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -42,7 +293,7 @@ public class FObjectAsyncTest {
         Integer maxIterationsPerBatch = 1;
         Integer numIterations = 10;
         Integer numJobs = 2;
-        Map<String, FObject> template = template1();
+        Forceea.Template template = template1();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -60,7 +311,7 @@ public class FObjectAsyncTest {
         Integer maxIterationsPerBatch = 5;
         Integer numIterations = 100;
         Integer numJobs = 2;
-        Map<String, FObject> template = template1();
+        Forceea.Template template = template1();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -95,7 +346,7 @@ public class FObjectAsyncTest {
         Integer maxIterationsPerBatch = 5;
         Integer numIterations = 100;
         Integer numJobs = 2;
-        Map<String, FObject> template = template1Invalid();
+        Forceea.Template template = template1Invalid();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -106,19 +357,39 @@ public class FObjectAsyncTest {
     }
 
     @IsTest
-    private static void insertRecords_invalidDefinitionWithoutBenchmark_expectFailure() {
-        Integer maxIterationsPerBatch = 5;
-        Integer numIterations = 100;
+    private static void insertRecords_permutations_expectSuccess() {
+        Integer maxIterationsPerBatch = 1;
+        Integer numIterations = 10;
         Integer numJobs = 2;
-        Map<String, FObject> template = template1Invalid();
+        Forceea.Template template = template1();
+
+        template.getFObject('FObjectOnes')
+            .setNumberOfRecords('auto')
+            .replaceDefinitions(FObjectOne__c.TestText__c)
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(A,B,C) mode(permutation)')
+            .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(1,2,3) mode(permutation)');
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
-            .shouldBenchmark(false)
             .insertRecords();
         Test.stopTest();
 
-        System.assert(!FObject.processIsValid(), 'insertRecords - errors found');
+        Integer errors = 0;
+        Set<String> series1 = new Set<String> {
+            'A', 'B', 'C'
+        };
+        Set<String> series2 = new Set<String> {
+            '1', '2', '3'
+        };
+        for (FObjectOne__c record : [SELECT TestText__c FROM FObjectOne__c]) {
+            if (!series1.contains(record.TestText__c.left(1)) || !series2.contains(record.TestText__c.right(1))) {
+                errors++;
+            }
+        }
+        Boolean condition1 = errors == 0;
+        Boolean condition2 = FObject.getInsertedRecords(FObjectOne__c.SObjectType).size() == 9 * numJobs;
+        Boolean condition3 = FObject.processIsValid();
+        System.assert(condition1 && condition2 && condition3, 'insertRecords - errors found');
     }
 
     @IsTest
@@ -127,13 +398,13 @@ public class FObjectAsyncTest {
         Integer numIterations = 10;
         Integer numJobs = 2;
 
-        Map<String, FObject> template = new Map<String, FObject>{
-            'FObjectTwos' => new FObject('FObjectTwo__c')
+        Forceea.Template template = new Forceea.Template()
+            .add('FObjectTwos', new FObject('FObjectTwo__c')
                 .setNumberOfRecords(FOBJECT2_NUM_RECORDS)
                 .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
                 .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
                 .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
-        };
+            );
         FObject.setSeed(0);
 
         Test.startTest();
@@ -199,7 +470,7 @@ public class FObjectAsyncTest {
         Integer numIterations = 10;
         Integer numJobs = 2;
         FObject.setGlobalVariable('globalVar', 'global');
-        Map<String, FObject> template = templateVariables();
+        Forceea.Template template = templateVariables();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -224,7 +495,7 @@ public class FObjectAsyncTest {
         Integer numIterations = 10;
         Integer numJobs = 2;
         FObject.setGlobalVerbose('none'); // DO NOT REMOVE
-        Map<String, FObject> template = template3();
+        Forceea.Template template = template3();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -248,7 +519,7 @@ public class FObjectAsyncTest {
         Integer numIterations = 10;
         Integer numJobs = 2;
         FObject.setGlobalVerbose('info'); // DO NOT REMOVE
-        Map<String, FObject> template = template3();
+        Forceea.Template template = template3();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -272,7 +543,7 @@ public class FObjectAsyncTest {
         Integer numIterations = 10;
         Integer numJobs = 1;
         FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
-        Map<String, FObject> template = template3();
+        Forceea.Template template = template3();
 
         Test.startTest();
         getFObjectAsync(template, maxIterationsPerBatch, numIterations, numJobs, PARTITION_FIELD_VALUE)
@@ -293,232 +564,9 @@ public class FObjectAsyncTest {
     }
 
     @IsTest
-    private static void deleteRecords_hasNoRecordsToDelete_expectSuccess() {
-        Integer numJobs = 1;
-        Map<String, FObject> template = template1();
-
-        Test.startTest();
-        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
-            .deleteRecords();
-        Test.stopTest();
-
-        List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        Boolean result = FObjectAsync.processIsValid() && records.size() == 0;
-        System.assert(result == true, 'deleteRecords - errors found');
-    }
-
-    @IsTest
-    private static void deleteRecords_hasRecordsToDeleteWithPartitioning_expectSuccess() {
-        Integer numJobs = 2;
-
-        // insert records with 2 partitions
-        Map<String, FObject> template = template2();
-        template.get('FObjectTwos')
-            .setNumberOfRecords(100)
-            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
-            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '1)')
-            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
-            .insertRecords(true);
-        template.get('FObjectTwos')
-            .setNumberOfRecords(101)
-            .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
-            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '2)')
-            .insertRecords(true);
-
-        Test.startTest();
-        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
-            .deleteRecords();
-        Test.stopTest();
-
-        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        Boolean result = records.size() == 1;
-        System.assert(result == true, 'deleteRecords - errors found');
-    }
-
-    @IsTest
-    private static void deleteRecords_hasRecordsToDeleteWithMixedPartitioning1_expectSuccess() {
-        Integer numJobs = 2;
-
-        // insert records with 1 partition
-        Map<String, FObject> template = template2();
-        template.get('FObjectTwos')
-            .setNumberOfRecords(10)
-            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
-            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '1)')
-            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
-            .insertRecords(true);
-        template.get('FObjectTwos')
-            .setNumberOfRecords(1)
-            .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
-            .insertRecords(true);
-
-        Test.startTest();
-        // delete records with partition field value
-        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
-            .deleteRecords();
-        Test.stopTest();
-
-        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        System.assert(records.size() == 1, 'deleteRecords - errors found');
-    }
-
-    @IsTest
-    private static void deleteRecords_hasRecordsToDeleteWithMixedPartitioning2_expectSuccess() {
-        Integer numJobs = 2;
-
-        // insert records with 2 partitions
-        Map<String, FObject> template = template2();
-        template.get('FObjectTwos')
-            .setNumberOfRecords(10)
-            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
-            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(1)')
-            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
-            .insertRecords(true);
-        template.get('FObjectTwos')
-            .setNumberOfRecords(101)
-            .deleteDefinitions(FObjectTwo__c.ForceeaPartition__c)
-            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(2)')
-            .insertRecords(true);
-
-        Test.startTest();
-        // delete records without partition field value
-        getFObjectAsync(template, 0, 0, numJobs, '')
-            .deleteRecords();
-        Test.stopTest();
-
-        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        System.assert(records.size() == 1, 'deleteRecords - errors found');
-    }
-
-    @IsTest
-    private static void deleteRecords_hasRecordsToDeleteWithMixedPartitioning3_expectSuccess() {
-        Integer numJobs = 2;
-
-        // insert records without partitions
-        Map<String, FObject> template = template2();
-        template.get('FObjectTwos')
-            .setNumberOfRecords(100)
-            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
-            .insertRecords(true);
-        template.get('FObjectTwos')
-            .setNumberOfRecords(101)
-            .insertRecords(true);
-
-        Test.startTest();
-        // delete records with partition field value
-        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
-            .deleteRecords();
-        Test.stopTest();
-
-        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        System.assert(records.size() == 101, 'deleteRecords - errors found');
-    }
-
-    @IsTest
-    private static void deleteRecords_hasRecordsToDeleteWithoutPartitioning_expectSuccess() {
-        Integer numJobs = 2;
-
-        // insert records without partitions
-        Map<String, FObject> template = template2();
-        template.get('FObjectTwos')
-            .setNumberOfRecords(100)
-            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
-            .insertRecords(true);
-        template.get('FObjectTwos')
-            .setNumberOfRecords(201)
-            .insertRecords(true);
-
-        Test.startTest();
-        // delete records without partition field value
-        getFObjectAsync(template, 0, 0, numJobs, '')
-            .deleteRecords();
-        Test.stopTest();
-
-        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c];
-        System.assert(records.size() == 201, 'deleteRecords - errors found');
-    }
-
-    @IsTest
-    private static void excludeOnAsyncDelete_excludeChild_expectSuccess() {
-        Integer numJobs = 2;
-
-        Map<String, FObject> template = template1();
-        template.get('FObjectOnes').excludeOnAsyncDelete(true);
-        FObject.insertRecordsFromTemplate(template, true);
-
-        Test.startTest();
-        getFObjectAsync(template, 0, 0, numJobs, '')
-            .deleteRecords();
-        Test.stopTest();
-
-        Integer numRecords1 = [SELECT Id FROM FObjectOne__c].size();
-        Integer numRecords2 = [SELECT Id FROM FObjectTwo__c].size();
-        System.assertEquals(template.get('FObjectOnes').getNumberOfRecords(),
-            numRecords1, 'excludeOnAsyncDelete - errors found');
-        System.assertEquals(template.get('FObjectTwos').getNumberOfRecords(),
-            numRecords2, 'excludeOnAsyncDelete - errors found');
-    }
-
-    @IsTest
-    private static void excludeOnAsyncDelete_excludeParent_expectSuccess() {
-        Integer numJobs = 2;
-
-        Map<String, FObject> template = template1();
-        template.get('FObjectTwos').excludeOnAsyncDelete(true);
-        FObject.insertRecordsFromTemplate(template, true);
-
-        Test.startTest();
-        getFObjectAsync(template, 0, 0, numJobs, '')
-            .deleteRecords();
-        Test.stopTest();
-
-        Integer numRecords1 = [SELECT Id FROM FObjectOne__c].size();
-        Integer numRecords2 = [SELECT Id FROM FObjectTwo__c].size();
-        System.assertEquals(0, numRecords1, 'excludeOnAsyncDelete - errors found');
-        System.assertEquals(template.get('FObjectTwos').getNumberOfRecords(),
-            numRecords2, 'excludeOnAsyncDelete - errors found');
-    }
-
-    @IsTest
-    private static void getGroupName_invalidDefinitionWithValidationAndBenchmark_expectSuccess() {
-        Integer numIterations = 10;
-        Integer maxIterationsPerBatch = 10;
-
-        Test.startTest();
-        new FObjectAsync(template3())
-            .setNumberOfIterations(numIterations)
-            .setNumberOfJobs(1)
-            .setMaxNumberOfIterationsPerBatch(maxIterationsPerBatch)
-            .setPartitionFieldValue('df')
-            .insertRecords();
-        Test.stopTest();
-
-        List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
-        System.assert(records.isEmpty(), 'getGroupName - errors found');
-    }
-
-    @IsTest
-    private static void getPartitionFieldValue_valid_expectSuccess() {
-        Integer numIterations = 10;
-        Integer maxIterationsPerBatch = 10;
-        String partitionFieldValue = 'df';
-
-        Test.startTest();
-        FObjectAsync async = new FObjectAsync(template3())
-            .setNumberOfIterations(numIterations)
-            .setNumberOfJobs(1)
-            .setMaxNumberOfIterationsPerBatch(maxIterationsPerBatch)
-            .setPartitionFieldValue(partitionFieldValue);
-        Test.stopTest();
-
-        Boolean result = async.getPartitionFieldValue() == partitionFieldValue;
-        System.assert(result == true, 'getPartitionFieldValue - errors found');
-    }
-
-    @IsTest
     private static void setProcessIsValid_isInvalid_expectSuccess() {
         Test.startTest();
-        FObjectAsync async = new FObjectAsync(template3());
+        new FObjectAsync(template3());
         FObjectAsync.setProcessIsValid(false);
         Test.stopTest();
 
@@ -528,7 +576,7 @@ public class FObjectAsyncTest {
     @IsTest
     private static void setProcessIsValid_isValid_expectSuccess() {
         Test.startTest();
-        FObjectAsync async = new FObjectAsync(template3());
+        new FObjectAsync(template3());
         Test.stopTest();
 
         System.assert(FObjectAsync.processIsValid() == true, 'setProcessIsValid - errors found');
@@ -537,16 +585,178 @@ public class FObjectAsyncTest {
     @IsTest
     private static void terminateAsyncProcess_valid_expectSuccess() {
         Test.startTest();
-        FObjectAsync async = new FObjectAsync(template3());
+        new FObjectAsync(template3());
         FObjectAsync.terminate();
         Test.stopTest();
 
         System.assert(FObjectAsync.processIsTerminated(), 'terminateAsyncProcess - errors found');
     }
 
+    @IsTest
+    private static void updateRecords_hasNoRecordsToUpdate_expectSuccess() {
+        Integer numJobs = 1;
+        Forceea.Template template = template1();
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .updateRecords();
+        Test.stopTest();
+
+        List<FObjectOne__c> records = [SELECT Id FROM FObjectOne__c];
+        Boolean result = FObjectAsync.processIsValid() && records.size() == 0;
+        System.assert(result == true, 'updateRecords - errors found');
+    }
+
+    @IsTest
+    private static void updateRecords_hasRecordsToUpdateWithPartitioning_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records with 2 partitions
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(10)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '1)')
+            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(11)
+            .removeDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(' + PARTITION_FIELD_VALUE + '2)')
+            .insertRecords(true);
+
+        Datetime createdDatetime = Datetime.now();
+        setDelay();
+
+        Test.startTest();
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .updateRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c WHERE LastModifiedDate > :createdDatetime];
+        System.assertEquals(21, records.size(), 'updateRecords - errors found');
+    }
+
+    @IsTest
+    private static void updateRecords_hasRecordsToUpdateWithMixedPartitioning1_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records with 1 partition
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(10)
+            .setVariable('partition', PARTITION_FIELD_VALUE + '1')
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value({@partition})')
+            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(1)
+            .removeDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+
+        Datetime createdDatetime = Datetime.now();
+        setDelay();
+
+        Test.startTest();
+        // update records with partition field value
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .updateRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c WHERE LastModifiedDate > :createdDatetime];
+        System.assertEquals(10, records.size(), 'updateRecords - errors found');
+    }
+
+    @IsTest
+    private static void updateRecords_hasRecordsToUpdateWithMixedPartitioning2_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records with 2 partitions
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(10)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(1)')
+            .setPartitionFieldName(FObjectTwo__c.ForceeaPartition__c)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(11)
+            .removeDefinitions(FObjectTwo__c.ForceeaPartition__c)
+            .setDefinition(FObjectTwo__c.ForceeaPartition__c, 'static value(2)')
+            .insertRecords(true);
+
+        Datetime createdDatetime = Datetime.now();
+        setDelay();
+
+        Test.startTest();
+        // update records without partition field value
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .updateRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c WHERE LastModifiedDate > :createdDatetime];
+        System.assertEquals(21, records.size(), 'updateRecords - errors found');
+    }
+
+    @IsTest
+    private static void updateRecords_hasRecordsToUpdateWithMixedPartitioning3_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records without partitions
+        Forceea.Template template = template2();
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(10)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(11)
+            .insertRecords(true);
+
+        Datetime createdDatetime = Datetime.now();
+        setDelay();
+
+        Test.startTest();
+        // update records with partition field value
+        getFObjectAsync(template, 0, 0, numJobs, PARTITION_FIELD_VALUE)
+            .updateRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c WHERE LastModifiedDate > :createdDatetime];
+        System.assertEquals(21, records.size(), 'updateRecords - errors found');
+    }
+
+    @IsTest
+    private static void updateRecords_hasRecordsToUpdateWithoutPartitioning_expectSuccess() {
+        Integer numJobs = 2;
+
+        // insert records without partitions
+        Forceea.Template template = new Forceea.Template(template2());
+        template.getFObject('FObjectTwos')
+            .setNumberOfRecords(100)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value(RecordTypeA)')
+            .setMaxNumberOfRecordOnAsyncDelete(20)
+            .setMaxNumberOfRecordOnAsyncUpdate(30)
+            .insertRecords(true);
+        template.getFObject('FObjectTwos')
+            .insertRecords(true);
+
+        Datetime createdDatetime = Datetime.now();
+        setDelay();
+
+        Test.startTest();
+        // delete records without partition field value
+        getFObjectAsync(template, 0, 0, numJobs, '')
+            .updateRecords();
+        Test.stopTest();
+
+        List<FObjectTwo__c> records = [SELECT Id FROM FObjectTwo__c WHERE LastModifiedDate > :createdDatetime];
+        System.assertEquals(30, records.size(), 'updateRecords - errors found');
+    }
+
     /* METHODS */
 
-    private static FObjectAsync getFObjectAsync(Map<String, FObject> template, Integer maxIterationsPerBatch,
+    private static FObjectAsync getFObjectAsync(Forceea.Template template, Integer maxIterationsPerBatch,
         Integer numIterations, Integer numJobs, String partitionFieldValue
     ) {
         if (maxIterationsPerBatch == -999) {
@@ -563,83 +773,89 @@ public class FObjectAsyncTest {
         }
     }
 
+    private static void setDelay() {
+        Integer initial = Limits.getCpuTime();
+        Integer cpu = 0;
+        do {
+            cpu = Limits.getCpuTime() - initial;
+        } while (cpu <= 1000);
+    }
+
     /* TEMPLATES */
 
-    private static Map<String, FObject> template1() {
-        Map<String, FObject> template = new Map<String, FObject>();
-
-        template.putAll(template2());
-        template.put('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
-            .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
-            .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
-            .setDefinition(FObjectOne__c.TestText__c,
-                'random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)')
-            .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
-            .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
-            .setGroupName('Group1')
-        );
+    private static Forceea.Template template1() {
+        Forceea.Template template = new Forceea.Template()
+            .add(template2())
+            .add('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
+                .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
+                .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)')
+                .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
+                .setDefinition(FObjectOne__c.TestText__c,
+                    'random type(string) minLength(10) maxLength(30) startWith(lower) include(lower,upper,digit)')
+                .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
+                .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
+                .setGroupName('Group1')
+            );
 
         return template;
     }
 
-    private static Map<String, FObject> template1Invalid() {
-        return new Map<String, FObject>{
-            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+    private static Forceea.Template template1Invalid() {
+        return new Forceea.Template()
+            .add('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
                 .setDefinition(FObjectOne__c.TestText__c, 'staticx value(test)')
-        };
+            );
     }
 
-    private static Map<String, FObject> template2() {
-        Map<String, FObject> template = new Map<String, FObject>();
-
-        template.put('FObjectTwos', new FObject(FObjectTwo__c.SObjectType)
-            .setNumberOfRecords(FOBJECT2_NUM_RECORDS)
-            .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
-            .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
-            .setGroupName('Group2')
-        );
+    private static Forceea.Template template2() {
+        Forceea.Template template = new Forceea.Template()
+            .add('FObjectTwos', new FObject(FObjectTwo__c.SObjectType)
+                .setNumberOfRecords(FOBJECT2_NUM_RECORDS)
+                .setDefinition(FObjectTwo__c.TestText__c, 'random type(number) from(10) to(100) scale(0)')
+                .setDefinition(FObjectTwo__c.TestTextUnique__c, 'serial type(number) from(1) step(1) scale(0)')
+                .setDefinition(FObjectTwo__c.TestPicklistDRequired__c, 'random type(picklist)')
+                .setGroupName('Group2')
+            );
 
         return template;
     }
 
-    private static Map<String, FObject> template3() {
-        return new Map<String, FObject>{
-            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+    private static Forceea.Template template3() {
+        return new Forceea.Template()
+            .add('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
                 .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
                 .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
                 .setDefinition(FObjectOne__c.TestText__c, 'static value(test)')
                 .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
-        };
+            );
     }
 
-    private static Map<String, FObject> templateVariables() {
-        return new Map<String, FObject>{
-            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+    private static Forceea.Template templateVariables() {
+        return new Forceea.Template()
+            .add('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
                 .setVariable('localVar', 'local')
                 .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
                 .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
                 .setDefinition(FObjectOne__c.TestText__c, 'static value({@localVar} - {@globalVar})')
                 .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
-        };
+            );
     }
 
-    private static Map<String, FObject> templateWithoutRequiredFields() {
-        return new Map<String, FObject>{
-            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+    private static Forceea.Template templateWithoutRequiredFields() {
+        return new Forceea.Template()
+            .add('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
                 .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
                 .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
-        };
+            );
     }
 
-    private static Map<String, FObject> templateSetRequiredFields() {
-        return new Map<String, FObject>{
-            'FObjectOnes' => new FObject(FObjectOne__c.SObjectType)
+    private static Forceea.Template templateSetRequiredFields() {
+        return new Forceea.Template()
+            .add('FObjectOnes', new FObject(FObjectOne__c.SObjectType)
                 .setNumberOfRecords(FOBJECT1_NUM_RECORDS)
                 .setPartitionFieldName(FObjectOne__c.ForceeaPartition__c)
                 .setRequiredFields(true)
-        };
+            );
     }
 
 }

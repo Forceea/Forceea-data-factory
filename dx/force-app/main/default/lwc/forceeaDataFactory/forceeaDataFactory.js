@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -50,6 +50,7 @@ export default class ForceeaDataFactory extends LightningElement {
         super();
         subscribe(channelName, -1, this.onMessageReceived.bind(this))
             .then(response => {
+                //console.log('> subscribed');
                 this.initializeAll();
             });
     }
@@ -64,12 +65,14 @@ export default class ForceeaDataFactory extends LightningElement {
 
     handleInitialEvent() {
         if (this._processUnitsExecuted === 0) {
+            //console.log('handling initial event');
             this.jobStatuses.splice(this._jobs, this.jobStatuses.length - this._jobs);
             this.statusMessage = this.jobStatuses.join(' ');
         }
     }
 
     initializeAll() {
+        //console.log('> initializeAll');
         this.logMessage = '';
         this._operationType = '';
         this.isInsert = false;
@@ -103,6 +106,7 @@ export default class ForceeaDataFactory extends LightningElement {
 
     onMessageReceived = function (response) {
         const eventDetails = response.data.payload;
+        console.log('> onMessageReceived: ' + JSON.stringify(eventDetails));
 
         const {
             JobId__c: jobId,
@@ -133,11 +137,16 @@ export default class ForceeaDataFactory extends LightningElement {
         } else if (processId && !this._processId) { // existing processId is empty
             this._processId = processId;
         } else if (processId && this._processId !== processId) { // abort any event from another process
+            //console.log('this event originated from another process and will be ignored');
             return;
         }
 
+       // console.log('p(' + this._processId + ') j(' + this._jobId + ') b(' + this._batchId + ') exec(' + jobUnitsExecuted + ') ' +
+       //     'total(' + totalJobUnits + ') m(' + message + ') jobIsCompleted(' + this._jobIsCompleted + ')');
+
         this.handleInitialEvent();
 
+        //console.log('setting attributes');
         this._operationType = operationType;
         this.isInsert = (operationType === 'insert') ? true : false;
         this._jobUnitsExecuted[jobId - 1] = jobUnitsExecuted;
@@ -149,12 +158,14 @@ export default class ForceeaDataFactory extends LightningElement {
     }
 
     updateDisplay(jobId, message) {
+        //console.log('updating display');
         this.updateJobStatusMessage(jobId);
         this.updateLogMessage(message);
         this.updateProgress();
     }
 
     updateJobStatusMessage(jobId) {
+        //console.log('updating JobStatusMessage');
         let thisJobId = jobId - 1;
 
         if (this._jobIsCompleted) {
@@ -168,6 +179,7 @@ export default class ForceeaDataFactory extends LightningElement {
     }
 
     updateLogMessage(message) {
+        //console.log('updating LogMessage');
         this.logMessage = message + this.logMessage;
     }
 
@@ -176,6 +188,7 @@ export default class ForceeaDataFactory extends LightningElement {
     }
 
     updateProgress() {
+        //console.log('updating Progress');
         if (this.progress > 100) {
             return;
         }
@@ -192,7 +205,11 @@ export default class ForceeaDataFactory extends LightningElement {
             case 'delete':
                 this.progressFooterMessage = 'Deleted ' + formattedProcessUnitsExecuted + ' records';
                 break;
+            case 'update':
+                this.progressFooterMessage = 'Updated ' + formattedProcessUnitsExecuted + ' records';
+                break;
         }
+        //console.log('progress:' + this.progress);
     }
 
 }

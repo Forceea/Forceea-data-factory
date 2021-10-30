@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -15,6 +15,9 @@
 */
 @IsTest
 public class FObjectTest {
+
+    private final static String ERROR_MESSAGE_DUPLICATE_PRICE_BOOK_ENTRIES =
+        'DUPLICATE_VALUE, This price definition already exists in this price book';
 
     @IsTest
     private static void createRecords_canInsertUsersDefault_expectSuccess() {
@@ -366,68 +369,6 @@ public class FObjectTest {
     }
 
     @IsTest
-    private static void excludeInactiveLookupRecords_true_expectSuccess() {
-        // insert active users
-        FObject objUser = new FObject('User', 5)
-            .setRequiredFields(true);
-        objUser.insertRecords(true, 'active');
-
-        // insert inactive users
-        objUser
-            .setNumberOfRecords(5)
-            .setDefinition(User.IsActive, 'static value(false)');
-        objUser.insertRecords(true, 'inactive');
-
-        Test.startTest();
-        FObject obj = new FObject(FObjectFour__c.SObjectType, 10)
-            .excludeInactiveLookupRecords(true)
-            .setDefinition('TestLookupUser__c', 'random lookup(User) source(salesforce)');
-        obj.insertRecords(true);
-        Test.stopTest();
-
-        Integer errors = 0;
-        for (FObjectFour__c record : [SELECT TestLookupUser__r.IsActive FROM FObjectFour__c]) {
-            if (!record.TestLookupUser__r.IsActive) {
-                errors++;
-            }
-        }
-        System.assertEquals(0, errors, 'excludeInactiveLookupRecords - errors found');
-    }
-
-    @IsTest
-    private static void excludeInactiveLookupRecords_false_expectSuccess() {
-        // insert active users
-        FObject objUser = new FObject('User', 5)
-            .setRequiredFields(true);
-        objUser.insertRecords(true, 'active');
-
-        // insert inactive users
-        objUser
-            .setNumberOfRecords(5)
-            .setDefinition(User.IsActive, 'static value(false)');
-        objUser.insertRecords(true, 'inactive');
-
-        Test.startTest();
-        FObject obj = new FObject(FObjectFour__c.SObjectType, 100)
-            .excludeInactiveLookupRecords(false)
-            .setDefinition('TestLookupUser__c', 'random lookup(User) source(salesforce)');
-        obj.insertRecords(true);
-        Test.stopTest();
-
-        Integer errors = 0;
-        Integer count = 0;
-        for (FObjectFour__c record : [SELECT TestLookupUser__r.IsActive FROM FObjectFour__c]) {
-            if (record.TestLookupUser__r.IsActive) {
-                count++;
-            }
-        }
-        if (count == 0) {
-            errors++;
-        }
-        System.assertEquals(0, errors, 'excludeInactiveLookupRecords - errors found');
-    }
-
-    @IsTest
     private static void fObjectConstructor_invalidSObject_expectFailure() {
         FObject.setExceptionHandling('continue');
 
@@ -657,7 +598,7 @@ public class FObjectTest {
     @IsTest
     private static void getGlobalVerbose_info_expectSuccess() {
         String mode = 'Info';
-        FObject.setGlobalVerbose(mode);
+        FObject.setGlobalVerbose(mode); // DO NOT REMOVE
 
         Test.startTest();
         String result = FObject.getGlobalVerbose();
@@ -669,7 +610,7 @@ public class FObjectTest {
     @IsTest
     private static void getGlobalVerbose_debug_expectSuccess() {
         String mode = 'Debug';
-        FObject.setGlobalVerbose(mode);
+        FObject.setGlobalVerbose(mode); // DO NOT REMOVE
 
         Test.startTest();
         String result = FObject.getGlobalVerbose();
@@ -760,7 +701,7 @@ public class FObjectTest {
         List<FObjectOne__c> records1 = (List<FObjectOne__c>) obj.getRecords();
 
         obj.setNumberOfRecords(size2);
-        obj.deleteDefinitions('TestInteger__c');
+        obj.removeDefinitions('TestInteger__c');
         obj.setDefinition('TestInteger__c', 'serial type(number) from(1) step(1) scale(0)');
         List<FObjectOne__c> records2 = (List<FObjectOne__c>) obj.getRecords();
         obj.insertRecords(true);
@@ -890,7 +831,7 @@ public class FObjectTest {
             .createRecords()
 
             .setNumberOfNextRecord(1)
-            .deleteDefinitions(FObjectOne__c.TestInteger__c)
+            .removeDefinitions(FObjectOne__c.TestInteger__c)
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(number) from(1) step(1) scale(0)')
             .setDefinition(FObjectOne__c.TestInteger__c, 'serial type(number) from(1) step(1) scale(0)');
         Test.stopTest();
@@ -938,6 +879,52 @@ public class FObjectTest {
     }
 
     @IsTest
+    private static void getVariable_number_expectSuccess() {
+        String name = 'myVar';
+
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setVariable(name, 100);
+        Test.stopTest();
+
+        System.assertEquals('100', obj.getVariable(name), 'getVariable - errors found');
+    }
+
+    @IsTest
+    private static void getVariable_boolean_expectSuccess() {
+        String name = 'myVar';
+
+        Test.startTest();
+        FObject obj = new FObject(FObjectOne__c.SObjectType)
+            .setVariable(name, false);
+        Test.stopTest();
+
+        System.assertEquals('false', obj.getVariable(name), 'getVariable - errors found');
+    }
+
+    @IsTest
+    private static void getGlobalVariable_number_expectSuccess() {
+        String name = 'myVar';
+
+        Test.startTest();
+        FObject.setGlobalVariable(name, 100);
+        Test.stopTest();
+
+        System.assertEquals('100', FObject.getGlobalVariable(name), 'getVariable - errors found');
+    }
+
+    @IsTest
+    private static void getGlobalVariable_boolean_expectSuccess() {
+        String name = 'myVar';
+
+        Test.startTest();
+        FObject.setGlobalVariable(name, false);
+        Test.stopTest();
+
+        System.assertEquals('false', FObject.getGlobalVariable(name), 'getVariable - errors found');
+    }
+
+    @IsTest
     private static void prng_checkGenerator_expectSuccess() {
         Test.startTest();
         FObject obj1 = new FObject(FObjectOne__c.SObjectType);
@@ -965,7 +952,7 @@ public class FObjectTest {
 
     @IsTest
     private static void setGlobalVerbose_debug_expectSuccess() {
-        FObject.setGlobalVerbose('debug');
+        FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
 
         Test.startTest();
         new FObject(FObjectOne__c.SObjectType, 10)
@@ -984,7 +971,7 @@ public class FObjectTest {
 
     @IsTest
     private static void setGlobalVerbose_info_expectSuccess() {
-        FObject.setGlobalVerbose('info');
+        FObject.setGlobalVerbose('info');  // DO NOT REMOVE
 
         Test.startTest();
         new FObject(FObjectOne__c.SObjectType, 10)
@@ -1002,7 +989,7 @@ public class FObjectTest {
 
     @IsTest
     private static void setGlobalVerbose_none_expectSuccess() {
-        FObject.setGlobalVerbose('none');
+        FObject.setGlobalVerbose('none'); // DO NOT REMOVE
 
         Test.startTest();
         new FObject(FObjectOne__c.SObjectType, 10)
@@ -1108,31 +1095,6 @@ public class FObjectTest {
     }
 
     @IsTest
-    private static void setStandardPricebookEntries_virtualFieldExists_expectSuccess() {
-        Test.startTest();
-        FObject obj = new FObject(Product2.SObjectType, 10)
-            .setRequiredFields(true)
-            .setDefinition(Product2.Name, 'static value("Product-")')
-            .setDefinition(Product2.Name, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(Product2.Description, 'random type(text) minLength(25) maxLength(50)')
-            .setDefinition('$StandardPrice', 'serial type(number) from(1) step(1) scale(0)')
-            .setStandardPricebookEntries('$StandardPrice');
-        obj.insertRecords(true);
-        Test.stopTest();
-
-        Integer errors = 0;
-        Integer counter = 1;
-        for (PricebookEntry record : [SELECT UnitPrice FROM PricebookEntry]) {
-            if (record.UnitPrice != counter) {
-                errors++;
-            }
-            counter++;
-        }
-
-        System.assertEquals(0, errors, 'setStandardPricebookEntries - errors found');
-    }
-
-    @IsTest
     private static void setStandardPricebookEntries_virtualFieldNotExists_expectFailure() {
         Test.startTest();
         FObject obj = new FObject(Product2.SObjectType, 10)
@@ -1151,50 +1113,6 @@ public class FObjectTest {
             errors++;
         }
         System.assertEquals(0, errors, 'setStandardPricebookEntries - errors found');
-    }
-
-    @IsTest
-    private static void setStandardPricebookEntries_getInsertedEntries_expectSuccess() {
-        Test.startTest();
-        FObject obj = new FObject(Product2.SObjectType, 10)
-            .setRequiredFields(true)
-            .setDefinition(Product2.Name, 'static value("Product-")')
-            .setDefinition(Product2.Name, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(Product2.Description, 'random type(text) minLength(25) maxLength(50)')
-            .setDefinition('$StandardPrice', 'serial type(number) from(1) step(1) scale(0)')
-            .setStandardPricebookEntries('$StandardPrice');
-        obj.insertRecords(true);
-        Test.stopTest();
-
-        Integer counter = 1;
-        Integer errors = 0;
-        List<PricebookEntry> records = (List<PricebookEntry>) FObject.getInsertedRecords(PricebookEntry.SObjectType);
-
-        for (PricebookEntry record : records) {
-            if (record.UnitPrice != counter) {
-                errors++;
-            }
-            counter++;
-        }
-        if (records.size() != obj.getNumberOfRecords()) {
-            errors = +32;
-        }
-        System.assertEquals(0, errors, 'setStandardPricebookEntries - errors found');
-    }
-
-    @IsTest
-    private static void setStandardPricebookEntries_noMethodInvoked_expectSuccess() {
-        Test.startTest();
-        FObject obj = new FObject(Product2.SObjectType, 10)
-            .setRequiredFields(true)
-            .setDefinition('Name', 'static value("Product ")')
-            .setDefinition('Name', 'serial type(number) from(100) step(1) scale(0)')
-            .setDefinition('Description', 'static value(12.34)');
-        obj.insertRecords(true);
-        Test.stopTest();
-
-        List<PricebookEntry> entries = [SELECT Id FROM PricebookEntry];
-        System.assert(entries.isEmpty(), 'setStandardPricebookEntries - errors found');
     }
 
     @IsTest
@@ -1266,7 +1184,7 @@ public class FObjectTest {
 
         Integer errors = 0;
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
-            if (objRecord.TestText__c != 'test: ' + obj.getVariableStringValue('var') + ' !test') {
+            if (objRecord.TestText__c != 'test: ' + obj.getVariable('var') + ' !test') {
                 errors++;
             }
         }
@@ -1283,7 +1201,7 @@ public class FObjectTest {
 
         Integer errors = 0;
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
-            if (objRecord.TestText__c != 'test: ' + obj.getVariableStringValue('var') + ' !test') {
+            if (objRecord.TestText__c != 'test: ' + obj.getVariable('var') + ' !test') {
                 errors++;
             }
         }
@@ -1300,7 +1218,7 @@ public class FObjectTest {
 
         Integer errors = 0;
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
-            if (objRecord.TestText__c != 'test: ' + obj.getVariableStringValue('var') + ' !test') {
+            if (objRecord.TestText__c != 'test: ' + obj.getVariable('var') + ' !test') {
                 errors++;
             }
         }
@@ -1317,7 +1235,7 @@ public class FObjectTest {
 
         Integer errors = 0;
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
-            if (objRecord.TestText__c != 'test' + obj.getVariableStringValue('var') + ' !test') {
+            if (objRecord.TestText__c != 'test' + obj.getVariable('var') + ' !test') {
                 errors++;
             }
         }
@@ -1334,7 +1252,7 @@ public class FObjectTest {
 
         Integer errors = 0;
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
-            if (objRecord.TestText__c != 'test' + obj.getVariableStringValue('var') + ' !test') {
+            if (objRecord.TestText__c != 'test' + obj.getVariable('var') + ' !test') {
                 errors++;
             }
         }
@@ -1351,7 +1269,7 @@ public class FObjectTest {
 
         Integer errors = 0;
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
-            if (objRecord.TestText__c != 'test' + obj.getVariableStringValue('var') + ' !test') {
+            if (objRecord.TestText__c != 'test' + obj.getVariable('var') + ' !test') {
                 errors++;
             }
         }
@@ -1378,12 +1296,12 @@ public class FObjectTest {
 
         Integer errors = 0;
         for (FObjectOne__c objRecord : (List<FObjectOne__c>) obj.getRecords()) {
-            if (String.valueOf(objRecord.TestCheckbox__c) != obj.getVariableStringValue('varBoolean') ||
-                String.valueOf(objRecord.TestDate__c) != obj.getVariableStringValue('varDate') ||
-                String.valueOf(objRecord.TestDatetime__c) != obj.getVariableStringValue('varDatetime') ||
-                String.valueOf(objRecord.TestDecimal__c) != obj.getVariableStringValue('varDec') ||
-                String.valueOf(objRecord.TestInteger__c.setScale(0)) != obj.getVariableStringValue('varInt') ||
-                objRecord.TestText__c != 'test: ' + obj.getVariableStringValue('varStr') + ' !test'
+            if (String.valueOf(objRecord.TestCheckbox__c) != obj.getVariable('varBoolean') ||
+                String.valueOf(objRecord.TestDate__c) != obj.getVariable('varDate') ||
+                String.valueOf(objRecord.TestDatetime__c) != obj.getVariable('varDatetime') ||
+                String.valueOf(objRecord.TestDecimal__c) != obj.getVariable('varDec') ||
+                String.valueOf(objRecord.TestInteger__c.setScale(0)) != obj.getVariable('varInt') ||
+                objRecord.TestText__c != 'test: ' + obj.getVariable('varStr') + ' !test'
                 ) {
                 errors++;
             }

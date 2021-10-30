@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -21,11 +21,11 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getLogMessage_isTerminated_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
+        async.operationType = ForceeaService.OperationType.ASYNC_INSERT;
+        async.jobId = 1;
         ForceeaQueueable fq = new ForceeaQueueable(async);
-        fq.operationType = ForceeaService.OperationType.ASYNC_INSERT;
         fq.isTerminated = true;
-        fq.jobId = 1;
 
         Test.startTest();
         String message = fq.getLogMessage();
@@ -37,12 +37,12 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getLogMessageOnFailure_delete_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
+        async.operationType = ForceeaService.OperationType.ASYNC_DELETE;
+        async.jobId = 1;
+        async.batchId = 1;
+        async.sObjectApiName = 'Account';
         ForceeaQueueable fq = new ForceeaQueueable(async);
-        fq.operationType = ForceeaService.OperationType.ASYNC_DELETE;
-        fq.jobId = 1;
-        fq.batchId = 1;
-        fq.sObjectApiName = 'Account';
 
         Test.startTest();
         fq.errorMessage = 'My Error';
@@ -55,12 +55,12 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getLogMessageOnFailure_insert_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
+        async.operationType = ForceeaService.OperationType.ASYNC_INSERT;
+        async.jobId = 1;
+        async.batchId = 1;
+        async.sObjectApiName = 'Account';
         ForceeaQueueable fq = new ForceeaQueueable(async);
-        fq.operationType = ForceeaService.OperationType.ASYNC_INSERT;
-        fq.jobId = 1;
-        fq.batchId = 1;
-        fq.sObjectApiName = 'Account';
 
         Test.startTest();
         fq.errorMessage = 'My Error';
@@ -73,7 +73,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getMaxNumOfRecordsToDeletePerBatch_withMaxUnitsPerBatch_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
         fq.numMaxUnitsPerBatch = 10;
 
@@ -85,7 +85,7 @@ public class ForceeaQueueableTest {
         fq.limitGlobalSetupCpuTime = limitGlobalSetupCpuTime;
         fq.limitDmlRows = limitDmlRows;
         fq.numBatchUnitsExecuted = numBatchUnitsExecuted;
-        Integer actualResult = fq.getMaxNumOfRecordsToDeletePerBatch();
+        Integer actualResult = fq.getMaxNumOfRecordsToUpdatedOrDeletePerBatch();
         Test.stopTest();
 
         Integer expectedResult = fq.numMaxUnitsPerBatch;
@@ -94,7 +94,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void getMaxNumOfRecordsToDeletePerBatch_withoutMaxUnitsPerBatch_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -105,16 +105,16 @@ public class ForceeaQueueableTest {
         fq.limitGlobalSetupCpuTime = limitGlobalSetupCpuTime;
         fq.limitDmlRows = limitDmlRows;
         fq.numBatchUnitsExecuted = numBatchUnitsExecuted;
-        Integer actualResult = fq.getMaxNumOfRecordsToDeletePerBatch();
+        Integer actualResult = fq.getMaxNumOfRecordsToUpdatedOrDeletePerBatch();
         Test.stopTest();
 
-        Integer expectedResult = new ForceeaQueueable(async).getMaxNumOfRecordsToDeletePerBatchFromQueueable(fq);
+        Integer expectedResult = new ForceeaQueueable(async).getMaxNumOfRecordsToUpdateOrDeletePerBatchFromQueueable(fq);
         System.assertEquals(expectedResult, actualResult, 'getMaxNumOfRecordsToDeletePerBatch - errors found');
     }
 
     @IsTest
     private static void handleOnTerminated_isNotTerminated_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Test.startTest();
@@ -128,7 +128,7 @@ public class ForceeaQueueableTest {
     @IsTest
     private static void handleOnTerminated_isTerminated_expectSuccess() {
         FObjectAsync.terminate();
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Test.startTest();
@@ -141,7 +141,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void publishLogMessageOnFailure_invalidProcess_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -166,7 +166,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void shouldTryAgainAfterError_1error_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -179,7 +179,7 @@ public class ForceeaQueueableTest {
         fq.limitGlobalSetupCpuTime = limitGlobalSetupCpuTime;
         fq.limitDmlRows = limitDmlRows;
         fq.numBatchUnitsExecuted = numBatchUnitsExecuted;
-        Boolean result = fq.shouldTryAgainAfterErrorOnDelete();
+        Boolean result = fq.shouldTryAgainAfterErrorOnUpdateOrDelete();
         Test.stopTest();
 
         System.assert(result == true, 'shouldTryAgainAfterError - errors found');
@@ -187,7 +187,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void shouldTryAgainAfterError_5errors_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -200,7 +200,7 @@ public class ForceeaQueueableTest {
         fq.limitGlobalSetupCpuTime = limitGlobalSetupCpuTime;
         fq.limitDmlRows = limitDmlRows;
         fq.numBatchUnitsExecuted = numBatchUnitsExecuted;
-        Boolean result = fq.shouldTryAgainAfterErrorOnDelete();
+        Boolean result = fq.shouldTryAgainAfterErrorOnUpdateOrDelete();
         Test.stopTest();
 
         System.assert(result == true, 'shouldTryAgainAfterError - errors found');
@@ -208,7 +208,7 @@ public class ForceeaQueueableTest {
 
     @IsTest
     private static void shouldTryAgainAfterError_6errors_expectSuccess() {
-        ForceeaAsyncTransaction async = new ForceeaAsyncTransaction();
+        Forceea.AsyncTransaction async = new Forceea.AsyncTransaction();
         ForceeaQueueable fq = new ForceeaQueueable(async);
 
         Integer limitGlobalSetupCpuTime = 10;
@@ -221,7 +221,7 @@ public class ForceeaQueueableTest {
         fq.limitGlobalSetupCpuTime = limitGlobalSetupCpuTime;
         fq.limitDmlRows = limitDmlRows;
         fq.numBatchUnitsExecuted = numBatchUnitsExecuted;
-        Boolean result = fq.shouldTryAgainAfterErrorOnDelete();
+        Boolean result = fq.shouldTryAgainAfterErrorOnUpdateOrDelete();
         Test.stopTest();
 
         System.assert(result == false, 'shouldTryAgainAfterError - errors found');

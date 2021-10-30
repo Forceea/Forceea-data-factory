@@ -248,31 +248,31 @@ public class FObjectFieldsTest {
     }
 
     @IsTest
-    private static void deleteAllDefinitions_declareNoDefinitions_expectSuccess() {
+    private static void removeAllDefinitions_declareNoDefinitions_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
-        obj.deleteAllDefinitions();
+        obj.removeAllDefinitions();
         Test.stopTest();
 
-        System.assertEquals(true, obj.getAllDefinitions().isEmpty(), 'deleteAllDefinitions - errors found');
+        System.assertEquals(true, obj.getAllDefinitions().isEmpty(), 'removeAllDefinitions - errors found');
     }
 
     @IsTest
-    private static void deleteAllDefinitions_declareSomeDefinitions_expectSuccess() {
+    private static void removeAllDefinitions_declareSomeDefinitions_expectSuccess() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition('TestText__c', 'static value(TestName_)')
             .setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)')
             .setDefinition('TestPicklistA__c', 'random type(picklist)')
             .setDefinition('TestPicklistB__c', 'random type(picklist)')
-            .deleteAllDefinitions();
+            .removeAllDefinitions();
         Test.stopTest();
 
-        System.assertEquals(true, obj.getAllDefinitions().isEmpty(), 'deleteAllDefinitions - errors found');
+        System.assertEquals(true, obj.getAllDefinitions().isEmpty(), 'removeAllDefinitions - errors found');
     }
 
     @IsTest
-    private static void deleteAllDefinitions_recordsAreClearedAfterNewDefinition_expectSuccess() {
+    private static void removeAllDefinitions_recordsAreClearedAfterNewDefinition_expectSuccess() {
         Test.startTest();
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
@@ -283,7 +283,7 @@ public class FObjectFieldsTest {
         List<FObjectOne__c> objRecords1 = obj.getRecords();
         Integer hash1 = objRecords1.hashCode();
 
-        obj.deleteAllDefinitions();
+        obj.removeAllDefinitions();
 
         obj.setDefinition('TestText__c', 'static value(TestName_)');
         obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
@@ -294,11 +294,11 @@ public class FObjectFieldsTest {
 
         Test.stopTest();
 
-        System.assertNotEquals(hash1, hash2, 'deleteAllDefinitions - errors found');
+        System.assertNotEquals(hash1, hash2, 'removeAllDefinitions - errors found');
     }
 
     @IsTest
-    private static void deleteDefinitionWithId_invalidId_expectSuccess() {
+    private static void removeDefinitionWithId_invalidId_expectSuccess() {
         String def1 = 'random type(number) from(1) to(100) scale(0)';
         String def2 = 'random type(number) from(1) to(100) scale(0)';
         String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
@@ -313,7 +313,7 @@ public class FObjectFieldsTest {
             .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
 
         Test.startTest();
-        obj1.deleteDefinitionWithId('icLFR1');
+        obj1.removeDefinitionWithId('icLFR1');
         FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
         obj1.getRecords();
         Test.stopTest();
@@ -336,11 +336,11 @@ public class FObjectFieldsTest {
             }
         }
 
-        System.assert(counter == 5 && errors == 0, 'deleteDefinitionWithId - errors found');
+        System.assert(counter == 5 && errors == 0, 'removeDefinitionWithId - errors found');
     }
 
     @IsTest
-    private static void deleteDefinitionWithId_0Def_expectSuccess() {
+    private static void removeDefinitionWithId_0Def_expectSuccess() {
         String def1 = 'random type(number) from(1) to(100) scale(0)';
         String def2 = 'random type(number) from(1) to(100) scale(0)';
         String def3 = 'Random TYPE(number) from(1) to(100) scale(0)';
@@ -355,7 +355,7 @@ public class FObjectFieldsTest {
             .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
 
         Test.startTest();
-        obj1.deleteDefinitionWithId('icLoR1');
+        obj1.removeDefinitionWithId('icLoR1');
         FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
         obj1.getRecords();
         Test.stopTest();
@@ -378,11 +378,11 @@ public class FObjectFieldsTest {
             }
         }
 
-        System.assert(counter == 4 && errors == 0, 'deleteDefinitionWithId - errors found');
+        System.assert(counter == 4 && errors == 0, 'removeDefinitionWithId - errors found');
     }
 
     @IsTest
-    private static void deleteDefinitionWithId_2Defs_expectSuccess() {
+    private static void removeDefinitionWithId_2Defs_expectSuccess() {
         FObject.setGlobalVerbose('debug'); // DO NOT REMOVE
 
         String def1 = 'random type(number) from(1) to(100) scale(0)';
@@ -400,8 +400,8 @@ public class FObjectFieldsTest {
             .setDefinition(FObjectOne__c.TestPicklistA__c, def5); // Htzod1
 
         Test.startTest();
-        obj1.deleteDefinitionWithId('icLoR1');
-        obj1.deleteDefinitionWithId('Htzod1');
+        obj1.removeDefinitionWithId('icLoR1');
+        obj1.removeDefinitionWithId('Htzod1');
         obj1.insertRecords(true);
         Test.stopTest();
 
@@ -418,35 +418,35 @@ public class FObjectFieldsTest {
                 counter++;
             } else if (item.contains('Definition [' + def5 + '] of [TestPicklistA__c] is valid with ID [Htzod1]')) {
                 errors++;
-            } else if (item.contains('Will delete the definition with ID [icLoR1]')) {
+            } else if (item.contains('Will remove the definition with ID [icLoR1]')) {
                 counter++;
-            } else if (item.contains('Will delete the definition with ID [Htzod1]')) {
+            } else if (item.contains('Will remove the definition with ID [Htzod1]')) {
                 counter++;
             }
         }
 
-        System.assert(counter == 5 && errors == 0, 'deleteDefinitionWithId - errors found');
+        System.assert(counter == 5 && errors == 0, 'removeDefinitionWithId - errors found');
     }
 
     @IsTest
-    private static void deleteDefinitions_declareNoDefinitions_expectSuccess() {
+    private static void removeDefinitions_declareNoDefinitions_expectSuccess() {
         Test.startTest();
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
         obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)')
             .setDefinition('TestPicklistA__c', 'random type(picklist)')
             .setDefinition('TestPicklistB__c', 'random type(picklist)')
-            .deleteDefinitions(FObjectOne__c.TestText__c);
+            .removeDefinitions(FObjectOne__c.TestText__c);
 
         Test.stopTest();
 
         Boolean expectedResult = true;
         Boolean actualResult = obj.getDefinitions(FObjectOne__c.TestText__c).isEmpty();
-        System.assertEquals(expectedResult, actualResult, 'deleteDefinitions - errors found');
+        System.assertEquals(expectedResult, actualResult, 'removeDefinitions - errors found');
     }
 
     @IsTest
-    private static void deleteDefinitions_declareSomeDefinitions_expectSuccess() {
+    private static void removeDefinitions_declareSomeDefinitions_expectSuccess() {
         Test.startTest();
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
@@ -455,7 +455,7 @@ public class FObjectFieldsTest {
         obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
         obj.setDefinition('TestPicklistA__c', 'random type(picklist)');
         obj.setDefinition('TestPicklistB__c', 'random type(picklist)');
-        obj.deleteDefinitions(FObjectOne__c.TestText__c);
+        obj.removeDefinitions(FObjectOne__c.TestText__c);
 
         Test.stopTest();
 
@@ -472,39 +472,39 @@ public class FObjectFieldsTest {
         if (obj.getDefinitions('TestPicklistB__c').size() != 1) {
             errors += 8;
         }
-        System.assertEquals(0, errors, 'deleteDefinitions - errors found');
+        System.assertEquals(0, errors, 'removeDefinitions - errors found');
     }
 
     @IsTest
-    private static void deleteDefinitions_invalidField_expectFailure() {
+    private static void removeDefinitions_invalidField_expectFailure() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         obj.setDefinition('TestText__c', 'static value(TestName_)');
         obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
         obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
-        obj.deleteDefinitions('TestTextX__c');
+        obj.removeDefinitions('TestTextX__c');
         Test.stopTest();
 
-        System.assertEquals('Invalid field [TestTextX__c] in method [deleteDefinitions]',
-            obj.getErrors().get('FObjectOne__c').get(0), 'deleteDefinitions - wrong error message for invalid field');
+        System.assertEquals('Invalid field [TestTextX__c] in method [removeDefinitions]',
+            obj.getErrors().get('FObjectOne__c').get(0), 'removeDefinitions - wrong error message for invalid field');
     }
 
     @IsTest
-    private static void deleteDefinitions_blankField_expectFailure() {
+    private static void removeDefinitions_blankField_expectFailure() {
         Test.startTest();
         FObject obj = new FObject(FObjectOne__c.SObjectType);
         obj.setDefinition('TestText__c', 'static value(TestName_)');
         obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
         obj.setDefinition('TestDecimal__c', 'random type(number) from(1) to(100) scale(0)');
-        obj.deleteDefinitions(' ');
+        obj.removeDefinitions(' ');
         Test.stopTest();
 
-        System.assertEquals('Invalid field [] in method [deleteDefinitions]',
-            obj.getErrors().get('FObjectOne__c').get(0), 'deleteDefinitions - wrong error message for invalid field');
+        System.assertEquals('Invalid field [] in method [removeDefinitions]',
+            obj.getErrors().get('FObjectOne__c').get(0), 'removeDefinitions - wrong error message for invalid field');
     }
 
     @IsTest
-    private static void deleteDefinitions_recordsAreClearedAfterNewDefinition_expectSuccess() {
+    private static void removeDefinitions_recordsAreClearedAfterNewDefinition_expectSuccess() {
         Test.startTest();
 
         FObject obj = new FObject(FObjectOne__c.SObjectType, 10);
@@ -515,7 +515,7 @@ public class FObjectFieldsTest {
         List<FObjectOne__c> objRecords1 = obj.getRecords();
         Integer hash1 = objRecords1.hashCode();
 
-        obj.deleteDefinitions(FObjectOne__c.TestText__c);
+        obj.removeDefinitions(FObjectOne__c.TestText__c);
 
         obj.setDefinition('TestText__c', 'static value(TestName_)');
         obj.setDefinition('TestText__c', 'random type(number) from(1) to(100) scale(0)');
@@ -525,7 +525,7 @@ public class FObjectFieldsTest {
 
         Test.stopTest();
 
-        System.assertNotEquals(hash1, hash2, 'deleteDefinitions - errors found');
+        System.assertNotEquals(hash1, hash2, 'removeDefinitions - errors found');
     }
 
     @IsTest

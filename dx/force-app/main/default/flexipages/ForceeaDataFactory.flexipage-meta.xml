@@ -3,7 +3,7 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-            <componentName>forceeaDataFactory</componentName>
+                <componentName>forceeaDataFactory</componentName>
             </componentInstance>
         </itemInstances>
         <name>main</name>

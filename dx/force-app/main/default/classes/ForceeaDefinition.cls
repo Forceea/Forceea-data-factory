@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -29,7 +29,7 @@ public with sharing class ForceeaDefinition {
     /**
      * @description The definition clusters.
      */
-    public List<ForceeaCluster> clusters = new List<ForceeaCluster>();
+    public List<Forceea.Cluster> clusters = new List<Forceea.Cluster>();
     /**
      * @description The the values for permutations.
      */
@@ -144,7 +144,7 @@ public with sharing class ForceeaDefinition {
     /* METHODS */
 
     // check the data type of all cluster arguments
-    private Boolean allArgumentsMatch(ForceeaClusterType clusterType, List<String> arguments) {
+    private Boolean allArgumentsMatch(Forceea.ClusterType clusterType, List<String> arguments) {
         ForceeaService.ValueType clusterValueType = clusterType.valueType;
 
         ForceeaService.ValueType argumentValueType;
@@ -181,7 +181,7 @@ public with sharing class ForceeaDefinition {
         return true;
     }
 
-    private Boolean argumentIsValid(ForceeaCluster cluster) {
+    private Boolean argumentIsValid(Forceea.Cluster cluster) {
         Boolean result = true;
 
         switch on cluster.parameter.toLowerCase() {
@@ -218,9 +218,8 @@ public with sharing class ForceeaDefinition {
      * @param clusterIndex The cluster index.
      * @return True if the cluster arguments are valid, based on the cluster type.
      */
-    private Boolean argumentsMatch(ForceeaClusterType clusterType, Integer clusterIndex) {
-        ForceeaCluster cluster = this.clusters.get(clusterIndex);
-
+    private Boolean argumentsMatch(Forceea.ClusterType clusterType, Integer clusterIndex) {
+        Forceea.Cluster cluster = this.clusters.get(clusterIndex);
         if (valueMustHaveOnlyOneItemButItHasMore(clusterType, cluster) || valueIsWrong(clusterType, cluster)) {
             return false;
         }
@@ -244,7 +243,7 @@ public with sharing class ForceeaDefinition {
      * @param clusterType The cluster type.
      * @return A boolean value.
      */
-    private Boolean clusterTypeExists(ForceeaClusterType clusterType) {
+    private Boolean clusterTypeExists(Forceea.ClusterType clusterType) {
         ClusterTypeValidationResult results = getClusterTypeValidationResult(clusterType);
         if (results.index == -1 || parameterIsNotFoundOrIsFoundMoreThanOnce(results.countOfParameter)) {
             return false;
@@ -325,15 +324,15 @@ public with sharing class ForceeaDefinition {
 
     /**
      * @description Finds how many times the Parameter exists and its position (index).
-     * @param clusterType An ForceeaClusterType object.
+     * @param clusterType An Forceea.ClusterType object.
      * @return An object of ClusterTypeValidationResult.
      */
-    private ClusterTypeValidationResult getClusterTypeValidationResult(ForceeaClusterType clusterType) {
+    private ClusterTypeValidationResult getClusterTypeValidationResult(Forceea.ClusterType clusterType) {
         Integer countOfParameter = 0; // counts how many times a cluster parameter is found
         Integer counter = 0;
         Integer index = 0; // the position of a definition cluster with a specified cluster type parameter
 
-        for (ForceeaCluster cluster : this.clusters) {
+        for (Forceea.Cluster cluster : this.clusters) {
             if (parameterIsValid(clusterType, cluster)) {
                 countOfParameter++;
                 index = counter;
@@ -364,7 +363,6 @@ public with sharing class ForceeaDefinition {
         String definitionIdKey = getDefinitionIdKey();
         String checksum = getChecksum();
         Integer suffixNumber = getNextSuffixNumber(definitionIdKey);
-
         String result = checksum + String.valueOf(suffixNumber);
         maxSuffixNumbersByKey.put(definitionIdKey, suffixNumber);
 
@@ -387,7 +385,7 @@ public with sharing class ForceeaDefinition {
      * @param cluster The cluster.
      * @return The updated definition string with the new source.
      */
-    private String getDefinitionStringWithNewSource(String newSource, ForceeaCluster cluster) {
+    private String getDefinitionStringWithNewSource(String newSource, Forceea.Cluster cluster) {
         String previousSource = cluster.arguments.get(0);
         return this.definitionString.replace(previousSource, newSource);
     }
@@ -715,7 +713,7 @@ public with sharing class ForceeaDefinition {
      * @param cluster The cluster.
      * @return True, if the parameter is valid.
      */
-    private Boolean parameterIsValid(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+    private Boolean parameterIsValid(Forceea.ClusterType clusterType, Forceea.Cluster cluster) {
         return clusterType.parameter == cluster.parameter;
     }
 
@@ -724,7 +722,7 @@ public with sharing class ForceeaDefinition {
      * @param cluster The cluster.
      * @return True, if the parameter is source.
      */
-    private Boolean parameterIsSource(ForceeaCluster cluster) {
+    private Boolean parameterIsSource(Forceea.Cluster cluster) {
         return cluster.parameter.equalsIgnoreCase(ForceeaGenerator.PARAMETER_SOURCE);
     }
 
@@ -733,7 +731,7 @@ public with sharing class ForceeaDefinition {
      * @param newSource The new source (forceea or salesforce).
      */
     public void setNewSource(String newSource) {
-        for (ForceeaCluster cluster : this.clusters) {
+        for (Forceea.Cluster cluster : this.clusters) {
             if (parameterIsSource(cluster)) {
                 this.definitionString = getDefinitionStringWithNewSource(newSource, cluster);
                 cluster.setSourceParameter(newSource);
@@ -801,7 +799,7 @@ public with sharing class ForceeaDefinition {
 
         // assess each Cluster Type
         Integer numValidClusterTypes = 0;
-        for (ForceeaClusterType clusterType : definitionType.clusterTypes) {
+        for (Forceea.ClusterType clusterType : definitionType.clusterTypes) {
             if (clusterTypeExists(clusterType)) {
                 numValidClusterTypes++;
             } else {
@@ -881,7 +879,7 @@ public with sharing class ForceeaDefinition {
             return;
         }
 
-        ForceeaFieldInfo field = ForceeaService.getField(this.sObjectApiName, this.fieldApiName);
+        Forceea.FieldInfo field = ForceeaService.getField(this.sObjectApiName, this.fieldApiName);
         if (!field.allowsMultipleDefinitions && fieldHasMultipleDefinitions()) {
             this.fObj.addError(this.fieldApiName,
                 'Field [' + this.fieldApiName + '] does not accept multiple definitions');
@@ -906,24 +904,24 @@ public with sharing class ForceeaDefinition {
         }
     }
 
-    private Boolean valueIsWrong(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+    private Boolean valueIsWrong(Forceea.ClusterType clusterType, Forceea.Cluster cluster) {
         return clusterType.value != null && // the parameter has a value
             cluster.arguments.size() == 1 && // there is only 1 argument
             clusterType.value != cluster.arguments.get(0); // this is not the expected value
     }
 
-    private Boolean valueIsBlank(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+    private Boolean valueIsBlank(Forceea.ClusterType clusterType, Forceea.Cluster cluster) {
         return clusterType.value == '' &&
             cluster.arguments.size() == 1 &&
             String.isBlank(cluster.arguments.get(0));
     }
 
-    private Boolean valueMustHaveOnlyOneItemButItHasMore(ForceeaClusterType clusterType, ForceeaCluster cluster) {
+    private Boolean valueMustHaveOnlyOneItemButItHasMore(Forceea.ClusterType clusterType, Forceea.Cluster cluster) {
         return !clusterType.allowsMultipleArguments &&
             cluster.arguments.size() > 1;
     }
 
-    private Boolean valueTypeIsString(ForceeaClusterType clusterType) {
+    private Boolean valueTypeIsString(Forceea.ClusterType clusterType) {
         return clusterType.valueType == ForceeaService.ValueType.TYPE_STRING &&
             (clusterType.value == null || clusterType.value != '');
     }

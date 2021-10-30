@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -108,31 +108,6 @@ public class ForceeaGeneratorRandomLookupTest {
         for (FObjectOne__c objRecord : records2) {
             if (String.isBlank(objRecord.TestLookup__c)) {
                 errors++;
-            }
-        }
-        System.assertEquals(0, errors, 'random lookup salesforce - errors found');
-    }
-
-    @IsTest
-    private static void randomLookupSalesforce_isActiveUser_expectSuccess() {
-        FObject.setSeed(1);
-
-        Test.startTest();
-        FObject obj1 = new FObject('User', 10)
-            .setRequiredFields(true)
-            .setDefinition('IsActive', 'random type(boolean)');
-        obj1.insertRecords(true);
-
-        FObject obj2 = new FObject('FObjectFour__c');
-        obj2.setDefinition('TestLookupUser__c', 'random lookup(User) source(salesforce)');
-        obj2.insertRecords(true);
-        Test.stopTest();
-
-        Integer errors = 0;
-        for (FObjectFour__c objRecord : [SELECT TestLookupUser__r.IsActive FROM FObjectFour__c LIMIT 1000]) {
-            if (objRecord.TestLookupUser__r.IsActive == false) {
-                errors++;
-                break;
             }
         }
         System.assertEquals(0, errors, 'random lookup salesforce - errors found');

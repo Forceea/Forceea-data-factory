@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (v2.5.2)
+  Forceea data factory (v2.6.0)
   Copyright (C) 2021 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
@@ -228,7 +228,7 @@ public class FObjectDmlTest {
         obj.insertRecords(true);
         records1.addAll((List<FObjectOne__c>) obj.getRecords());
 
-        obj.deleteAllDefinitions();
+        obj.removeAllDefinitions();
 
         obj.setDefinition('TestText__c', 'static value(a2)')
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)')
@@ -255,7 +255,7 @@ public class FObjectDmlTest {
         obj.insertRecords(false);
         records1.addAll((List<FObjectOne__c>) obj.getRecords());
 
-        obj.deleteAllDefinitions();
+        obj.removeAllDefinitions();
 
         obj
             .setDefinition('TestText__c', 'static value(a2)')
@@ -282,7 +282,7 @@ public class FObjectDmlTest {
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj.insertRecords(true, group1);
 
-        obj.deleteDefinitions(FObjectOne__c.TestIntegerUnique__c)
+        obj.removeDefinitions(FObjectOne__c.TestIntegerUnique__c)
             .setDefinition(FObjectOne__c.TestIntegerUnique__c, 'serial type(number) from(1) step(1) scale(0)');
         obj.insertRecords(true, group2);
         Test.stopTest();
@@ -314,7 +314,7 @@ public class FObjectDmlTest {
             'getInsertedGroupRecords - errors found');
     }
 
-@IsTest
+    @IsTest
     private static void getInsertedGroupRecords_differentInstancesWithTemplateNotOptimized_expectSuccess() {
         String group1 = 'GroupA';
         String group2 = 'GroupB';
@@ -375,7 +375,7 @@ public class FObjectDmlTest {
         System.assert(ForceeaUtilityTest.insertedGroupRecordsAreValidForDifferentInstances(obj1, obj2, group1, group2),
             'getInsertedGroupRecords - errors found');
     }
-    
+
     @IsTest
     private static void getInsertedRecordsStatic_invalidObject_expectFailure() {
         Test.startTest();
@@ -441,7 +441,7 @@ public class FObjectDmlTest {
             .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
         obj1.insertRecords(true, 'GroupA');
 
-        obj1.deleteDefinitions(FObjectOne__c.TestText__c)
+        obj1.removeDefinitions(FObjectOne__c.TestText__c)
             .setNumberOfRecords(size2)
             .setDefinition(FObjectOne__c.TestText__c, 'random type(list) value(v3,v4)');
         obj1.insertRecords(true, 'GroupB');
@@ -619,35 +619,6 @@ public class FObjectDmlTest {
     }
 
     @IsTest
-    private static void insertRecords_createRecordsAsUser_expectSuccess() {
-        Test.startTest();
-        FObject userObj = new FObject('User', 1)
-            .setRequiredFields(true)
-            .setDefinition('Title', 'static value(Developer)')
-            .setDefinition('ProfileId',
-                'static lookup(Profile) field(Name) value(System Administrator) source(salesforce)');
-        List<Database.SaveResult> saveResults = userObj.insertRecords(true);
-
-        if (saveResults[0].isSuccess()) {
-            List<User> users = (List<User>) userObj.getRecords();
-            System.runAs(users[0]) {
-                FObject obj = new FObject(FObjectOne__c.SObjectType)
-                    .setDefinition(FObjectOne__c.TestTextRequired__c, 'static value(test)');
-                saveResults = obj.insertRecords(false);
-            }
-        }
-        Test.stopTest();
-
-        Integer errors = 0;
-        for (Database.SaveResult sr : saveResults) {
-            if (!sr.isSuccess()) {
-                errors++;
-            }
-        }
-        System.assertEquals(0, errors, 'insertRecords - errors found');
-    }
-
-    @IsTest
     private static void insertRecords_negativeRecords_expectFailure() {
         FObject.setExceptionHandling('continue');
 
@@ -659,26 +630,6 @@ public class FObjectDmlTest {
         String expectedResult = 'Invalid number of records of [FObjectOne__c]';
         String actualResult = obj.getErrors().get('FObjectOne__c').get(0);
         System.assertEquals(expectedResult, actualResult, 'insertRecords - errors found');
-    }
-
-    @IsTest
-    private static void insertRecords_userWithProfile_expectSuccess() {
-        Test.startTest();
-        FObject obj = new FObject('User', 1)
-            .setRequiredFields(true)
-            .setDefinition('ProfileId',
-                'static lookup(Profile) field(Name) value(System Administrator) source(salesforce)')
-            .setDefinition('Title', 'static value(Forceea Developer)');
-        List<Database.SaveResult> saveResults = obj.insertRecords(false);
-        Test.stopTest();
-
-        Integer errors = 0;
-        for (Database.SaveResult sr : saveResults) {
-            if (!sr.isSuccess()) {
-                errors++;
-            }
-        }
-        System.assertEquals(0, errors, 'insertRecords - errors found');
     }
 
     @IsTest
@@ -1242,63 +1193,6 @@ public class FObjectDmlTest {
             !saveResults.containsKey('FObjectTwos') ||
             !saveResults.containsKey('FoursA') || !saveResults.containsKey('FoursB')) {
             errors += 8;
-        }
-        System.assertEquals(0, errors, 'insertRecordsFromTemplate - errors found');
-    }
-
-    @IsTest
-    private static void insertRecordsFromTemplateOptimized_pricebookEntries_expectSuccess() {
-        Map<String, FObject> template = new Map<String, FObject>();
-        template.putAll(template1());
-        template.putAll(template3());
-        template.put('Products', new FObject(Product2.SObjectType, 10)
-            .setRequiredFields(true)
-            .setDefinition(Product2.Name, 'static value("Product-")')
-            .setDefinition(Product2.Name, 'serial type(number) from(1) step(1) scale(0)')
-            .setDefinition(Product2.Description, 'random type(text) minLength(25) maxLength(50)')
-            .setDefinition('$StandardPrice', 'serial type(number) from(1) step(1) scale(0)')
-            .setStandardPricebookEntries('$StandardPrice')
-        );
-
-        Integer numRecordsA1 = template.get('Ones').getNumberOfRecords();
-        Integer numRecordsA2 = template.get('Twos').getNumberOfRecords();
-        Integer numRecordsA3 = template.get('Threes').getNumberOfRecords();
-        Integer numRecordsB = template.get('FObjectTwos').getNumberOfRecords();
-        Integer numRecordsC1 = template.get('FoursA').getNumberOfRecords();
-        Integer numRecordsC2 = template.get('FoursB').getNumberOfRecords();
-        Integer numRecordsProd = template.get('Products').getNumberOfRecords();
-
-        Test.startTest();
-        FObject.setDmlOptimizer(true);
-        Map<String, List<Database.SaveResult>> saveResults = FObject.insertRecordsFromTemplate(template, true);
-        Integer dmlStatements = Limits.getDmlStatements();
-        Test.stopTest();
-
-        Integer errors = 0;
-        if (template.get('FObjectTwos').getInsertedRecords().size() != numRecordsB ||
-            template.get('Ones').getInsertedRecords().size() != numRecordsA1 ||
-            template.get('Twos').getInsertedRecords().size() != numRecordsA2 ||
-            template.get('Threes').getInsertedRecords().size() != numRecordsA3 ||
-            template.get('FoursA').getInsertedRecords().size() != numRecordsC1 ||
-            template.get('FoursB').getInsertedRecords().size() != numRecordsC2 ||
-            template.get('Products').getInsertedRecords().size() != numRecordsProd) {
-            errors += 1;
-        }
-        if (!saveResults.containsKey('Ones') || !saveResults.containsKey('Twos') || !saveResults.containsKey('Threes') ||
-            !saveResults.containsKey('FObjectTwos') || !saveResults.containsKey('FObjectTwos') ||
-            !saveResults.containsKey('FoursA') || !saveResults.containsKey('Products')) {
-            errors += 2;
-        }
-        if (dmlStatements != 6) {
-            errors += 4;
-        }
-        Integer counter = 1;
-        for (PricebookEntry record : [SELECT UnitPrice FROM PricebookEntry]) {
-            if (record.UnitPrice != counter) {
-                errors += 8;
-                break;
-            }
-            counter++;
         }
         System.assertEquals(0, errors, 'insertRecordsFromTemplate - errors found');
     }
@@ -2244,7 +2138,8 @@ public class FObjectDmlTest {
         obj.insertRecords(true);
 
         Test.startTest();
-        obj.setDefinitionForUpdate(FObjectOne__c.TestInteger__c, 'serial type(number) from(1) step(1) scale(0)')
+        obj
+            .setDefinitionForUpdate(FObjectOne__c.TestInteger__c, 'serial type(number) from(1) step(1) scale(0)')
             .setNumberOfRecords(1)
             .setNumberOfNextRecord(1)
             .updateFields()

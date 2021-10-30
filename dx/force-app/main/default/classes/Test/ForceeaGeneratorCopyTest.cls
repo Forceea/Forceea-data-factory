@@ -136,7 +136,7 @@ public class ForceeaGeneratorCopyTest {
 
         Test.startTest();
         obj
-            .deleteAllDefinitions()
+            .removeAllDefinitions()
             .setDefinition(FObjectOne__c.TestText__c, 'copy field(TestInteger__c)')
             .setDefinition(FObjectOne__c.TestInteger__c, 'random type(number) from(1) to(100) scale(0)');
         Test.stopTest();

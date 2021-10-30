@@ -238,7 +238,7 @@ public class ForceeaGeneratorTest {
         obj.createRecords();
 
         Test.startTest();
-        obj.deleteDefinitions(FObjectOne__c.TestText__c)
+        obj.removeDefinitions(FObjectOne__c.TestText__c)
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(A,B,C) mode(permutation)')
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(1,2,3,4) mode(permutation)')
             .createRecords();
@@ -294,7 +294,7 @@ public class ForceeaGeneratorTest {
         obj.createRecords();
 
         Test.startTest();
-        obj.deleteDefinitions(FObjectOne__c.TestText__c)
+        obj.removeDefinitions(FObjectOne__c.TestText__c)
             .setDefinition(FObjectOne__c.TestText__c, 'serial type(list) value(A,B,C) mode(permutation)')
             .createRecords();
         Test.stopTest();
