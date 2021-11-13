@@ -7,9 +7,7 @@
 
 ### What is Forceea?
 
-Forceea (forsi:a) is a powerful data factory for Salesforce, it's based on [Dadela](https://github.com/Forceea/Dadela) data generation language, and
-* allows developers to easily create SObject records for test methods.
-* facilitates administrators or business users to populate any org with SObject or Big Object records for testing or demonstration purposes.
+Forceea (forsi:a) is the most advanced and sophisticated native open-source data factory framework for Salesforce, powered by [Dadela](https://github.com/Forceea/Dadela) data generation language. The framework allows developers to easily create records for test methods and facilitates administrators or business users to populate any org with records for testing or demonstration purposes.
 
 ### Forceea Sponsors
 
