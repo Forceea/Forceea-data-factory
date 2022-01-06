@@ -1,5 +1,3 @@
-#### New! [Register](https://rebrand.ly/ForceeaRegistration) your company and get free support, training and oher benefits!
-
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
