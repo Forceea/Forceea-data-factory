@@ -59,7 +59,4 @@ where ID is the package ID you can find in the above installation links (startin
 * Validates the definitions based on the field data type.
 * Has an extended error messaging system.
 
-### How can you find more information?
-
-* Read [Forceea Success Guide](https://rebrand.ly/cgh14)
-* Visit [forceea.com](https://www.forceea.com)
+To find more information read the [Forceea Success Guide](https://rebrand.ly/cgh14)
