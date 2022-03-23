@@ -10,17 +10,17 @@ Forceea (forsi:a) is the most advanced and sophisticated native open-source data
 ### Forceea Sponsors
 
 <a href="http://www.acmantics.gr">
-       <img src="https://drive.google.com/uc?export=view&id=1MfhGuNh6Dr5emTjREZl0o_F8aUQr4JA3" style="width: auto; height: auto"/>
+       <img src="https://acmanticsgp-my.sharepoint.com/:i:/g/personal/nikos_mitrakis_acmantics_com/EcrEhBgXyv5LmHXlfpN0UJoBJvvvVhp6aCxbp2ivPg4GOg?e=PVZU6y" style="width: auto; height: auto"/>
 <a href="http://cloudjedi.com">
-       <img src="https://drive.google.com/uc?export=view&id=1N5ZHASB4Yu4fqIjulXnrWaCG4vF_SUmn" style="width: auto; height: auto"/>
+       <img src="https://acmanticsgp-my.sharepoint.com/:i:/g/personal/nikos_mitrakis_acmantics_com/ESmrJc6zySlMomQZSh_nHIUBWYrg2INEMaSq-NJ6SyLHDw?e=xmJrg4" style="width: auto; height: auto"/>
 <a href="https://www.netugroup.com/our-services/business-solutions/salesforce">
-       <img src="https://drive.google.com/uc?export=view&id=1N21fjGxnDhwgcTG7hlPGbwyGJE8nnW6K" style="width: auto; height: auto"/>
+       <img src="https://acmanticsgp-my.sharepoint.com/:i:/g/personal/nikos_mitrakis_acmantics_com/ERbvq339yMNJhX4TWFcYPTABMIOfWAMiL3Fay6hhzKXhOw?e=amzQSB" style="width: auto; height: auto"/>
 <a href="https://organizer.solutions/gopro.html">
-       <img src="https://drive.google.com/uc?export=view&id=1MqiScMbxT85xBMQ1xrTTAt5KT2maDYDy" style="width: auto; height: auto"/>
+       <img src="https://acmanticsgp-my.sharepoint.com/:i:/g/personal/nikos_mitrakis_acmantics_com/EXoVkcknSCJHuqk1hk40HuABpWu0onJuP0UPdzm4PNcxPQ?e=AeLyiB" style="width: auto; height: auto"/>
 <a href="https://bit.ly/36DOqn0">
-       <img src="https://drive.google.com/uc?export=view&id=1VnOJEMjTUk1TMuRtJPWUjKipZX4zN4gi" style="width: auto; height: auto"/>       
+       <img src="https://acmanticsgp-my.sharepoint.com/:i:/g/personal/nikos_mitrakis_acmantics_com/Ec2fk8wHX2dJmqqZJDuaocwB-KFAy7xhmf91TONqH5bmOA?e=tbmwsQ" style="width: auto; height: auto"/>       
 <a href="https://robinconsulting.gr">
-       <img src="https://drive.google.com/uc?export=view&id=1N1gdPSeNe9QIS-g-uH3LiN92G8MGiQov" style="width: auto; height: auto"/>
+       <img src="https://acmanticsgp-my.sharepoint.com/:i:/g/personal/nikos_mitrakis_acmantics_com/EUfO71sWJD9DrhmKhY3WWnUBEQasmG4caJUhhztWzfSD4w?e=o8ma1C" style="width: auto; height: auto"/>
        
 ### How can you deploy it?
        
