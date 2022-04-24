@@ -9,11 +9,11 @@ Forceea (forsi:a) is the most advanced and sophisticated native open-source data
 
 ### Forceea Sponsors
 
-<a href="http://www.passion-for-salesforce.com.gr">Acmantics</a> |
+<a href="https://www.acmantix.com">Acmantix</a> |
 <a href="http://cloudjedi.com">Cloud Jedi</a> |
 <a href="https://www.netugroup.com/our-services/business-solutions/salesforce">NetU</a> |
 <a href="https://organizer.solutions/gopro.html">Organizer</a> |
-<a href="https://bit.ly/36DOqn0">Provar Testing</a> |
+<a href="https://www.provartesting.com">Provar Testing</a> |
 <a href="https://robinconsulting.gr">Robin Consulting</a>
        
 ### How can you deploy it?
