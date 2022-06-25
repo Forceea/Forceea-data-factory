@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.6.0)
-  Copyright (C) 2021 Nikos Mitrakis
+  Forceea data factory (v2.7.0)
+  Copyright (C) 2022 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -39,6 +39,7 @@ public with sharing class ForceeaQueueable implements Queueable {
     private Map<String, Integer> sObjectApiNames { get; set; }
     private List<Forceea.FObjectAsynchronous> sObjectsToUpdateOrDelete { get; set; }
     private Map<String, Forceea.FObjectAsynchronous> template { get; set; }
+    private List<String> whereClauses = new List<String>();
 
     /* INSTANCE VARIABLES & PROPERTIES */
 
@@ -101,67 +102,19 @@ public with sharing class ForceeaQueueable implements Queueable {
     private String sObjectApiName { get; set; }
     private Integer sObjectToUpdateOrDeleteIndex { get; set; }
     private Integer timeFrameForUpdateInMinutes { get; set; }
+    private String whereClauseOnDelete { get; set; }
+    private String whereClauseOnUpdate { get; set; }
     private String verbose { get; set; }
 
     /* CONSTRUCTORS */
 
     public ForceeaQueueable(Forceea.AsyncTransaction asyncTransaction) {
-        this.batchId = asyncTransaction.batchId;
-        this.dateTimeNow = asyncTransaction.dateTimeNow;
-        this.errorMessage = '';
-        this.numFirstRecordsBySObject = asyncTransaction.numFirstRecordsBySObject;
-        this.hasFailed = false;
-        this.hasMoreRecordsToUpdateOrDelete = false;
-        this.hasPartitioning = asyncTransaction.hasPartitioning;
-        this.isBenchmark = asyncTransaction.isBenchmark;
-        this.isExcludedOnAsyncUpdateOrDelete = asyncTransaction.isExcludedOnAsyncUpdateOrDelete;
-        this.isTerminated = false;
-        this.isTheLastSObject = false;
-        this.jobId = asyncTransaction.jobId;
-        this.jobIsCompleted = false;
-        this.language = asyncTransaction.language;
-        this.limitDataGenerationCpuTime = 0;
-        this.limitDmlRows = 0;
-        this.limitFObjectSetupCpuTime = 0;
-        this.limitGlobalSetupCpuTime = 0;
-        this.locality = asyncTransaction.locality;
-        this.numBatchUnitsExecuted = 0;
-        this.numBatchUnitsToExecute = 0;
-        this.numErrors = asyncTransaction.numErrors;
-        this.numJobs = asyncTransaction.numJobs;
-        this.numJobUnitsExecuted = asyncTransaction.numJobUnitsExecuted;
-        this.numJobUnitsToExecute = asyncTransaction.numJobUnitsToExecute;
-        this.numMaxRecordOnAsyncDelete = asyncTransaction.numMaxRecordOnAsyncDelete;
-        this.numMaxRecordOnAsyncUpdate = asyncTransaction.numMaxRecordOnAsyncUpdate;
-        this.numMaxUnitsPerBatch = asyncTransaction.numMaxUnitsPerBatch;
-        this.numProcessUnitsToExecute = asyncTransaction.numProcessUnitsToExecute;
-        this.numRecordsFoundToUpdateOrDelete = 0;
-        this.numTotalJobUnits = asyncTransaction.numTotalJobUnits;
-        this.operationIsSuccessful = true;
-        this.operationType = asyncTransaction.operationType;
-        if (this.operationType != ForceeaService.OperationType.ASYNC_INSERT) {
-            Integer index = asyncTransaction.sObjectToUpdateOrDeleteIndex;
-            if (!asyncTransaction.sObjectsToUpdateOrDelete.isEmpty()) {
-                this.definitionsOnUpdateOrDelete = asyncTransaction.sObjectsToUpdateOrDelete.get(index).definitions;
-            }
-        }
-        this.partitionFieldValue = asyncTransaction.partitionFieldValue;
-        this.processId = asyncTransaction.processId;
-        this.queryLimit = BENCHMARK_QUERY_LIMIT;
-        this.sector = asyncTransaction.sector;
-        this.seed = asyncTransaction.seed;
-        this.shouldCheckNextSector = false;
-        this.shouldCheckSameSector = false;
-        this.shouldCreateNewBatch = false;
-        this.shouldMoveToNextSObject = false;
-        this.shouldTryAgainAfterError = false;
-        this.sObjectApiName = asyncTransaction.sObjectApiName;
-        this.sObjectApiNames = new Map<String, Integer>();
-        this.sObjectToUpdateOrDeleteIndex = asyncTransaction.sObjectToUpdateOrDeleteIndex;
-        this.sObjectsToUpdateOrDelete = asyncTransaction.sObjectsToUpdateOrDelete;
-        this.template = asyncTransaction.template;
-        this.timeFrameForUpdateInMinutes = asyncTransaction.timeFrameForUpdateInMinutes;
-        this.verbose = asyncTransaction.verbose;
+        setParametersOnConstructor(asyncTransaction);
+    }
+
+    public ForceeaQueueable(String jsonString) {
+        Forceea.AsyncTransaction asyncTransaction = (Forceea.AsyncTransaction) JSON.deserialize(jsonString, Forceea.AsyncTransaction.class);
+        setParametersOnConstructor(asyncTransaction);
     }
 
     /* METHODS */
@@ -242,7 +195,7 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-     * @description Decides what happens as a next step when deleting.
+     * @description Decides what happens as a next step when updating or deleting.
      */
     private void decideWhatHappensNextOnUpdateOrDelete() {
         if (this.shouldCreateNewBatch) {
@@ -325,24 +278,23 @@ public with sharing class ForceeaQueueable implements Queueable {
 
     /**
      * @description Generates the WHERE clause when the async update operation is executed.
-     * @return A string of the WHERE clause.
      */
-    private String getAdditionalWhereClause() {
-        String result = '';
+    private void setRecordTypeClause() {
+        String clause = '';
         Integer counter = 0;
         final Map<String, String> valuesByField = getValuesByField();
 
         if (!valuesByField.isEmpty()) {
             for (String fieldName : valuesByField.keySet()) {
                 if (counter > 1) {
-                    result += WHERE_AND;
+                    clause += WHERE_AND;
                 }
-                result += fieldName + ' = \'' + valuesByField.get(fieldName) + '\'';
+                clause += fieldName + ' = \'' + valuesByField.get(fieldName) + '\'';
                 counter++;
             }
         }
 
-        return result;
+        this.whereClauses.add(clause);
     }
 
     /**
@@ -381,9 +333,9 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-      * @description Retrieves the global limits.
-      * @return The query LIMIT when benchmarking on update or delete.
-      */
+     * @description Retrieves the global limits.
+     * @return The query LIMIT when benchmarking on update or delete.
+     */
     private Integer getBenchmarkQueryLimitOnUpdateOrDelete() {
         Integer userMaxLimit = 0;
         if (isUpdate()) {
@@ -499,13 +451,44 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-     * @description Retrieves the max CPU time.
-     * @return The max CPU time.
-     */
+ * @description Retrieves the max CPU time.
+ * @return The max CPU time.
+ */
     @TestVisible
     private Integer getMaxCpuTime() {
-        Decimal dec = LIMITS_THRESHOLD * Limits.getLimitCpuTime();
-        return (Integer) dec;
+        Decimal result = LIMITS_THRESHOLD * Limits.getLimitCpuTime();
+        return (Integer) result;
+    }
+
+    private Integer getMaxIterationsForCpuTime() {
+        Integer allowedCpuTime = getMaxCpuTime() - this.limitGlobalSetupCpuTime - this.limitFObjectSetupCpuTime;
+
+        Integer result = 1;
+        if (this.limitDataGenerationCpuTime > 0) {
+            result = (Integer) allowedCpuTime / this.limitDataGenerationCpuTime;
+        }
+
+        return result;
+    }
+
+    private Integer getMaxIterationsForDmlRows() {
+        Integer result = 1;
+
+        if (Limits.getDmlRows() > 0) {
+            result = (Integer) Limits.getLimitDmlRows() / Limits.getDmlRows();
+        }
+
+        return result;
+    }
+
+    private Integer getMaxIterationsForHeapSize() {
+        Integer result = 1;
+
+        if (Limits.getHeapSize() > 0) {
+            result = (Integer) Limits.getLimitHeapSize() / Limits.getHeapSize();
+        }
+
+        return result;
     }
 
     /**
@@ -517,20 +500,14 @@ public with sharing class ForceeaQueueable implements Queueable {
             return this.numMaxUnitsPerBatch;
         }
 
-        Integer allowedCpuTime = getMaxCpuTime() - this.limitGlobalSetupCpuTime - this.limitFObjectSetupCpuTime;
-        Integer maxIterationsForCpuTime = 1;
-        if (this.limitDataGenerationCpuTime > 0) {
-            maxIterationsForCpuTime = (Integer) allowedCpuTime / this.limitDataGenerationCpuTime;
-        }
-
-        Integer maxIterationsForDmlRows = 1;
-        if (Limits.getDmlRows() > 0) {
-            maxIterationsForDmlRows = (Integer) Limits.getLimitDmlRows() / Limits.getDmlRows();
-        }
+        Integer maxIterationsForCpuTime = getMaxIterationsForCpuTime();
+        Integer maxIterationsForDmlRows = getMaxIterationsForDmlRows();
+        Integer maxIterationsForHeapSize = getMaxIterationsForHeapSize();
 
         List<Integer> maxIterations = new List<Integer>{
             maxIterationsForCpuTime,
-            maxIterationsForDmlRows
+            maxIterationsForDmlRows,
+            maxIterationsForHeapSize
         };
         maxIterations.sort();
 
@@ -548,7 +525,6 @@ public with sharing class ForceeaQueueable implements Queueable {
         results.sort();
         return results.get(0);
     }
-
 
     /**
      * @description Calculates the max number of records than can be updated or deleted per batch.
@@ -602,6 +578,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private FObject getNewFObject(Forceea.FObjectAsynchronous async) {
         Integer numRecords = async.numOfRecords * this.numBatchUnitsToExecute;
+
         FObject newFObject = new FObject(async.sObjectApiName, numRecords)
             .setRequiredFields(async.setRequiredFields);
 
@@ -623,10 +600,10 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-      * @description Returns the maximum number of records that can be deleted in each batch
-      *   when the delete operation raises the DELETE_OPERATION_TOO_LARGE error.
-      * @return An integer number.
-      */
+     * @description Returns the maximum number of records that can be deleted in each batch
+     *   when the delete operation raises the DELETE_OPERATION_TOO_LARGE error.
+     * @return An integer number.
+     */
     private Integer getNumMaxUnitsPerBatchOnDeleteOperationTooLarge() {
         return ForceeaService.getNumberReducedByPercent(this.numMaxUnitsPerBatch, 20);
     }
@@ -669,10 +646,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @return The SOQL query string.
      */
     private String getQueryString(String partitionFieldName) {
-        String result = getQuerySelectClause() + getQueryFromClause() +
-            getQueryWhereClause(partitionFieldName) + getQueryLimitClause();
-
-        return result;
+        return getQuerySelectClause() + getQueryFromClause() + getQueryWhereClause(partitionFieldName) + getQueryLimitClause();
     }
 
     /**
@@ -681,28 +655,12 @@ public with sharing class ForceeaQueueable implements Queueable {
      * @return The SOQL WHERE clause.
      */
     private String getQueryWhereClause(String partitionFieldName) {
-        String result = '';
-        String additionalWhereClause = getAdditionalWhereClause();
+        setPartitionFieldClause(partitionFieldName);
+        setRecordTypeClause();
+        setUserDefinedClause();
+        setLastModifiedDateClause();
 
-        if (this.hasPartitioning) {
-            result = WHERE_KEYWORD + partitionFieldName + ' = \'';
-            result += String.escapeSingleQuotes(this.partitionFieldValue + String.valueOf(this.sector)) + '\'';
-            result += String.isBlank(additionalWhereClause) ? '' : WHERE_AND + additionalWhereClause;
-            result += isUpdate() ? WHERE_AND + getWhereClauseOnUpdate() : '';
-            return result;
-        }
-
-        if (String.isNotBlank(additionalWhereClause)) {
-            result = WHERE_KEYWORD + additionalWhereClause;
-            result += isUpdate() ? WHERE_AND + getWhereClauseOnUpdate() : '';
-            return result;
-        }
-
-        if (isUpdate()) {
-            result = WHERE_KEYWORD + getWhereClauseOnUpdate();
-        }
-
-        return result;
+        return getWhereClause();
     }
 
     /**
@@ -711,17 +669,7 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private List<SObject> getRecordsToUpdateOrDelete() {
         Forceea.FObjectAsynchronous obj = this.sObjectsToUpdateOrDelete.get(this.sObjectToUpdateOrDeleteIndex);
-        this.bigObjectIndexFieldsString = obj.bigObjectIndexFieldsString;
-        this.isExcludedOnAsyncUpdateOrDelete = obj.isExcludedOnAsyncUpdateOrDelete;
-        this.numMaxRecordOnAsyncDelete = obj.numMaxRecordOnAsyncDelete;
-        this.numMaxRecordOnAsyncUpdate = obj.numMaxRecordOnAsyncUpdate;
-        this.sObjectApiName = obj.sObjectApiName;
-        this.timeFrameForUpdateInMinutes = obj.timeFrameForUpdateInMinutes;
-
-        this.isBigObject = ForceeaService.isBigObject(this.sObjectApiName);
-        if (this.isBigObject) {
-            deactivateBenchmarking();
-        }
+        setPropertiesFromFObjectAsynchronous(obj);
 
         List<SObject> results = new List<SObject>();
         try {
@@ -758,22 +706,6 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
-     * @description Generates the WHERE clause when the async update operation is executed.
-     * @return A string of the WHERE clause.
-     */
-    private String getWhereClauseOnUpdate() {
-        if (this.operationType != ForceeaService.OperationType.ASYNC_UPDATE) {
-            return '';
-        }
-
-        Datetime dt = this.dateTimeNow.addMinutes(-this.timeFrameForUpdateInMinutes);
-        String timeString = String.valueOfGmt(dt);
-        timeString = timeString.substringBefore(' ') + 'T' + timeString.substringAfter(' ') + 'Z';
-
-        return 'LastModifiedDate <= ' + timeString;
-    }
-
-    /**
      * @description Generates the valuesByField map.
      * @return A map with key: fieldName, value: field value, used in SOQL WHERE field = value.
      */
@@ -797,6 +729,34 @@ public with sharing class ForceeaQueueable implements Queueable {
         }
 
         return results;
+    }
+
+    /**
+     * @description Retrieves the WHERE clause.
+     * @return The WHERE clause string.
+     */
+    private String getWhereClause() {
+        String result = getStringOfWhereClausesWithoutWhereKeyword();
+        return (String.isNotBlank(result)) ? WHERE_KEYWORD + result : result;
+    }
+
+    /**
+     * @description Retrieves the string of WHERE clauses without the WHERE keyword.
+     * @return The WHERE clause string.
+     */
+    private String getStringOfWhereClausesWithoutWhereKeyword() {
+        String result = '';
+        Integer counter = 0;
+
+        for (String clause : this.whereClauses) {
+            if (String.isBlank(clause)) {
+                continue;
+            }
+            result += (counter > 0) ? WHERE_AND + clause : clause;
+            counter++;
+        }
+
+        return result;
     }
 
     /**
@@ -1013,7 +973,6 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     @TestVisible
     private String publishLogMessageOnFailure() {
-
         this.operationIsSuccessful = false;
         this.numErrors++;
         this.shouldTryAgainAfterError = shouldTryAgainAfterErrorOnUpdateOrDelete();
@@ -1025,6 +984,41 @@ public with sharing class ForceeaQueueable implements Queueable {
      */
     private void publishLogMessageOnSuccess() {
         publishLogMessage();
+    }
+
+    /**
+     * @description Sets class properties from Forceea.FObjectAsynchronous.
+     * @param obj
+     */
+    private void setPropertiesFromFObjectAsynchronous(Forceea.FObjectAsynchronous obj) {
+        this.bigObjectIndexFieldsString = obj.bigObjectIndexFieldsString;
+        this.isExcludedOnAsyncUpdateOrDelete = obj.isExcludedOnUpdateOrDelete;
+        this.numMaxRecordOnAsyncDelete = obj.numMaxRecordOnDelete;
+        this.numMaxRecordOnAsyncUpdate = obj.numMaxRecordOnUpdate;
+        this.sObjectApiName = obj.sObjectApiName;
+        this.timeFrameForUpdateInMinutes = obj.timeFrameForUpdateInMinutes;
+        this.whereClauseOnDelete = obj.whereClauseOnDelete;
+        this.whereClauseOnUpdate = obj.whereClauseOnUpdate;
+
+        this.isBigObject = ForceeaService.isBigObject(this.sObjectApiName);
+        if (this.isBigObject) {
+            deactivateBenchmarking();
+        }
+    }
+
+    /**
+     * @description Sets the LastModifiedDate WHERE clause.
+     */
+    private void setLastModifiedDateClause() {
+        if (this.operationType != ForceeaService.OperationType.ASYNC_UPDATE) {
+            return;
+        }
+
+        Datetime dt = this.dateTimeNow.addMinutes(-this.timeFrameForUpdateInMinutes);
+        String timeString = String.valueOfGmt(dt);
+        timeString = timeString.substringBefore(' ') + 'T' + timeString.substringAfter(' ') + 'Z';
+
+        this.whereClauses.add('LastModifiedDate <= ' + timeString);
     }
 
     /**
@@ -1059,7 +1053,89 @@ public with sharing class ForceeaQueueable implements Queueable {
     }
 
     /**
+     * @description Sets various properties when the constructor is executed.
+     * @param asyncTransaction A Forceea.AsyncTransaction object.
+     */
+    private void setParametersOnConstructor(Forceea.AsyncTransaction asyncTransaction) {
+        this.batchId = asyncTransaction.batchId;
+        this.dateTimeNow = asyncTransaction.dateTimeNow;
+        this.errorMessage = '';
+        this.numFirstRecordsBySObject = asyncTransaction.numFirstRecordsBySObject;
+        this.hasFailed = false;
+        this.hasMoreRecordsToUpdateOrDelete = false;
+        this.hasPartitioning = asyncTransaction.hasPartitioning;
+        this.isBenchmark = asyncTransaction.isBenchmark;
+        this.isExcludedOnAsyncUpdateOrDelete = asyncTransaction.isExcludedOnAsyncUpdateOrDelete;
+        this.isTerminated = false;
+        this.isTheLastSObject = false;
+        this.jobId = asyncTransaction.jobId;
+        this.jobIsCompleted = false;
+        this.language = asyncTransaction.language;
+        this.limitDataGenerationCpuTime = 0;
+        this.limitDmlRows = 0;
+        this.limitFObjectSetupCpuTime = 0;
+        this.limitGlobalSetupCpuTime = 0;
+        this.locality = asyncTransaction.locality;
+        this.numBatchUnitsExecuted = 0;
+        this.numBatchUnitsToExecute = 0;
+        this.numErrors = asyncTransaction.numErrors;
+        this.numJobs = asyncTransaction.numJobs;
+        this.numJobUnitsExecuted = asyncTransaction.numJobUnitsExecuted;
+        this.numJobUnitsToExecute = asyncTransaction.numJobUnitsToExecute;
+        this.numMaxRecordOnAsyncDelete = asyncTransaction.numMaxRecordOnAsyncDelete;
+        this.numMaxRecordOnAsyncUpdate = asyncTransaction.numMaxRecordOnAsyncUpdate;
+        this.numMaxUnitsPerBatch = asyncTransaction.numMaxUnitsPerBatch;
+        this.numProcessUnitsToExecute = asyncTransaction.numProcessUnitsToExecute;
+        this.numRecordsFoundToUpdateOrDelete = 0;
+        this.numTotalJobUnits = asyncTransaction.numTotalJobUnits;
+        this.operationIsSuccessful = true;
+        this.operationType = asyncTransaction.operationType;
+        if (this.operationType != ForceeaService.OperationType.ASYNC_INSERT) {
+            Integer index = asyncTransaction.sObjectToUpdateOrDeleteIndex;
+            if (!asyncTransaction.sObjectsToUpdateOrDelete.isEmpty()) {
+                this.definitionsOnUpdateOrDelete = asyncTransaction.sObjectsToUpdateOrDelete.get(index).definitions;
+            }
+        }
+        this.partitionFieldValue = asyncTransaction.partitionFieldValue;
+        this.processId = asyncTransaction.processId;
+        this.queryLimit = BENCHMARK_QUERY_LIMIT;
+        this.sector = asyncTransaction.sector;
+        this.seed = asyncTransaction.seed;
+        this.shouldCheckNextSector = false;
+        this.shouldCheckSameSector = false;
+        this.shouldCreateNewBatch = false;
+        this.shouldMoveToNextSObject = false;
+        this.shouldTryAgainAfterError = false;
+        this.sObjectApiName = asyncTransaction.sObjectApiName;
+        this.sObjectApiNames = new Map<String, Integer>();
+        this.sObjectToUpdateOrDeleteIndex = asyncTransaction.sObjectToUpdateOrDeleteIndex;
+        this.sObjectsToUpdateOrDelete = asyncTransaction.sObjectsToUpdateOrDelete;
+        this.template = asyncTransaction.template;
+        this.timeFrameForUpdateInMinutes = asyncTransaction.timeFrameForUpdateInMinutes;
+        this.verbose = asyncTransaction.verbose;
+    }
+
+    private void setPartitionFieldClause(String partitionFieldName) {
+        if (!this.hasPartitioning) {
+            return;
+        }
+
+        String clause = partitionFieldName + ' = \'' +
+            String.escapeSingleQuotes(this.partitionFieldValue + String.valueOf(this.sector)) + '\'';
+        this.whereClauses.add(clause);
+    }
+
+    private void setUserDefinedClause() {
+        if (isUpdate()) {
+            this.whereClauses.add(this.whereClauseOnUpdate);
+        } else {
+            this.whereClauses.add(this.whereClauseOnDelete);
+        }
+    }
+
+    /**
      * @description Decides if must continue to the next sector when updating or deleting.
+     * @param newSector The number of the new sector.
      * @return True, if should continue to the next sector.
      */
     private Boolean shouldContinueToNextSectorOnUpdateOrDelete(Integer newSector) {
@@ -1136,6 +1212,7 @@ public with sharing class ForceeaQueueable implements Queueable {
 
     /**
      * @description Updates records.
+     * @param recordsToUpdate
      */
     private void updateRecords(List<SObject> recordsToUpdate) {
         try {

@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.6.0)
-  Copyright (C) 2021 Nikos Mitrakis
+  Forceea data factory (2.7.0)
+  Copyright (C) 2022 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -13,7 +13,7 @@
   You can find a copy of the GNU General Public License at
   https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
-public with sharing class Forceea {
+global with sharing class Forceea {
 
     /* CLASSES */
 
@@ -143,15 +143,17 @@ public with sharing class Forceea {
     public class FObjectAsynchronous {
         public List<Forceea.FieldDefinition> definitions = new List<Forceea.FieldDefinition>();
         public String bigObjectIndexFieldsString = '';
-        public Boolean isExcludedOnAsyncUpdateOrDelete = false;
-        public Integer numMaxRecordOnAsyncDelete = 0;
-        public Integer numMaxRecordOnAsyncUpdate = 0;
+        public Boolean isExcludedOnUpdateOrDelete = false;
+        public Integer numMaxRecordOnDelete = 0;
+        public Integer numMaxRecordOnUpdate = 0;
         public Integer numOfRecords = 0;
         public Boolean numOfRecordsIsAuto = false;
         public Integer timeFrameForUpdateInMinutes = 0;
         public String partitionFieldName = '';
         public Boolean setRequiredFields = false;
         public String sObjectApiName = '';
+        public String whereClauseOnDelete = '';
+        public String whereClauseOnUpdate = '';
     }
 
     /**
@@ -165,7 +167,7 @@ public with sharing class Forceea {
     /**
      * @description The class for template.
      */
-    public class Template {
+    global class Template {
 
         /* COLLECTIONS */
 
@@ -174,19 +176,19 @@ public with sharing class Forceea {
 
         /* CONSTRUCTORS */
 
-        public Template() {
+        global Template() {
             this.templateMap = new Map<String, FObject>();
         }
 
-        public Template(String key, FObject obj) {
+        global Template(String key, FObject obj) {
             this.templateMap.put(key, obj);
         }
 
-        public Template(Map<String, FObject> newTemplate) {
+        global Template(Map<String, FObject> newTemplate) {
             this.templateMap.putAll(newTemplate);
         }
 
-        public Template(Template newTemplate) {
+        global Template(Template newTemplate) {
             this.add(newTemplate);
         }
 
@@ -197,7 +199,7 @@ public with sharing class Forceea {
          * @param newTemplate The new template to add.
          * @return The current Template.
          */
-        public Template add(Template newTemplate) {
+        global Template add(Template newTemplate) {
             this.templateMap.putAll(newTemplate.templateMap);
             return this;
         }
@@ -207,7 +209,7 @@ public with sharing class Forceea {
          * @param newMapTemplate The new template map to add.
          * @return The current Template.
          */
-        public Template add(Map<String, FObject> newMapTemplate) {
+        global Template add(Map<String, FObject> newMapTemplate) {
             this.templateMap.putAll(newMapTemplate);
             return this;
         }
@@ -218,7 +220,7 @@ public with sharing class Forceea {
          * @param obj The FObject.
          * @return The current Template.
          */
-        public Template add(String key, FObject obj) {
+        global Template add(String key, FObject obj) {
             this.templateMap.put(key, obj);
             return this;
         }
@@ -228,7 +230,7 @@ public with sharing class Forceea {
          * @param key The FObject key.
          * @return An FObject.
          */
-        public FObject getFObject(String key) {
+        global FObject getFObject(String key) {
             return this.templateMap.get(key);
         }
 
@@ -236,7 +238,7 @@ public with sharing class Forceea {
          * @description Retrieves the results of the last insertion.
          * @return A map of save results.
          */
-        public Map<String, List<Database.SaveResult>> getInsertResults() {
+        global Map<String, List<Database.SaveResult>> getInsertResults() {
             return this.insertResults;
         }
 
@@ -244,7 +246,7 @@ public with sharing class Forceea {
          * @description Retrieves the template map.
          * @return A map with key: FObject key, value: FObject.
          */
-        public Map<String, FObject> getMap() {
+        global Map<String, FObject> getMap() {
             return this.templateMap;
         }
 
@@ -268,7 +270,7 @@ public with sharing class Forceea {
          * @param allOrNone If true, the operation allows partial success.
          * @return The current Template.
          */
-        public Template insertRecords(Boolean allOrNone) {
+        global Template insertRecords(Boolean allOrNone) {
             this.insertResults = FObject.insertRecordsFromTemplate(this.templateMap, allOrNone);
             return this;
         }
@@ -278,7 +280,7 @@ public with sharing class Forceea {
          * @param key The key to keep.
          * @return The current template with only the given key.
          */
-        public Template keep(String key) {
+        global Template keep(String key) {
             if (this.templateMap.containsKey(key)) {
                 this.templateMap = new Map<String, FObject> {
                     key => this.templateMap.get(key)
@@ -292,7 +294,7 @@ public with sharing class Forceea {
          * @param pivotKey The pivot key.
          * @return The current template with only the keys after the pivot key.
          */
-        public Template keepAfter(String pivotKey) {
+        global Template keepAfter(String pivotKey) {
             if (!this.templateMap.containsKey(pivotKey)) {
                 return this;
             }
@@ -318,7 +320,7 @@ public with sharing class Forceea {
          * @param pivotKey The pivot key.
          * @return The current template with only the keys before the pivot key.
          */
-        public Template keepBefore(String pivotKey) {
+        global Template keepBefore(String pivotKey) {
             if (!this.templateMap.containsKey(pivotKey)) {
                 return this;
             }
@@ -340,7 +342,7 @@ public with sharing class Forceea {
          * @param keysToKeep The list of keys to keep.
          * @return The current template with only the given keys.
          */
-        public Template keep(List<String> keysToKeep) {
+        global Template keep(List<String> keysToKeep) {
             List<String> existingMapKeys = new List<String>(this.templateMap.keySet());
             List<String> keys = ForceeaService.keepValuesInList(existingMapKeys, keysToKeep);
             Forceea.Template result = new Forceea.Template();
@@ -358,7 +360,7 @@ public with sharing class Forceea {
          * @param keyToRemove The key to remove.
          * @return The current template without the given key.
          */
-        public Template remove(String keyToRemove) {
+        global Template remove(String keyToRemove) {
             this.templateMap.remove(keyToRemove);
             return this;
         }
@@ -368,7 +370,7 @@ public with sharing class Forceea {
          * @param pivotKey The pivot key.
          * @return The current template without the FObjects with key after the given key.
          */
-        public Template removeAfter(String pivotKey) {
+        global Template removeAfter(String pivotKey) {
             if (!this.templateMap.containsKey(pivotKey)) {
                 return this;
             }
@@ -396,7 +398,7 @@ public with sharing class Forceea {
          * @param pivotKey The pivot key.
          * @return The current template without the FObjects with key before the given key.
          */
-        public Template removeBefore(String pivotKey) {
+        global Template removeBefore(String pivotKey) {
             if (!this.templateMap.containsKey(pivotKey)) {
                 return this;
             }
@@ -422,7 +424,7 @@ public with sharing class Forceea {
          * @param keysToRemove The keys to remove.
          * @return The current template without the given keys.
          */
-        public Template remove(List<String> keysToRemove) {
+        global Template remove(List<String> keysToRemove) {
             List<String> existingMapKeys = new List<String>(this.templateMap.keySet());
             List<String> keys = ForceeaService.removeValuesFromList(existingMapKeys, keysToRemove);
             this.templateMap = getTemplate(keys);

@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.6.0)
-  Copyright (C) 2021 Nikos Mitrakis
+  Forceea data factory (2.7.0)
+  Copyright (C) 2022 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -731,6 +731,7 @@ public with sharing class ForceeaGenerator {
      */
     private List<SObject> getLookupRecordsFromSalesforce(
         String lookupSObjectApiName, String lookupFieldApiName, String whereClause) {
+
         List<SObject> results = new List<SObject>();
         try {
             Boolean isActiveFieldExists = existsIsActiveStandardField(lookupSObjectApiName);

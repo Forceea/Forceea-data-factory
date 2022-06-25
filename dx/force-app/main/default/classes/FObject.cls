@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.6.0)
-  Copyright (C) 2021 Nikos Mitrakis
+  Forceea data factory (v2.7.0)
+  Copyright (C) 2022 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -13,7 +13,7 @@
   You can find a copy of the GNU General Public License at
   https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
-public with sharing class FObject {
+global with sharing class FObject {
 
     /* CLASSES */
 
@@ -61,7 +61,6 @@ public with sharing class FObject {
     @TestVisible
     private static final Integer DEFAULT_NUM_RECORDS_TO_DISPLAY = 20;
     private static final String DEBUG_LOG_PROMPT = 'FORCEEA ';
-    private static final Integer DEFAULT_MAX_NUMBER_OF_RECORDS_ON_ASYNC_UPDATE_OR_DELETE = 200;
     @TestVisible
     private static final Integer DEFAULT_QUERY_LIMIT = 1000;
     @TestVisible
@@ -73,7 +72,7 @@ public with sharing class FObject {
     private static final String SYMBOL_MILESTONE = '>>';
     private static final String SYMBOL_SUCCESS = '-';
     private static final VerboseLevel VERBOSE_MODE = VerboseLevel.VERBOSE_NONE;
-    private static final String VERSION = '2.6.0';
+    private static final String VERSION = '2.7.0';
 
     private static final String MESSAGE_INVALID_PROCESS = 'Process is invalid and will terminate.';
     private static final String MESSAGE_INVALID_VALUE = 'Invalid value';
@@ -475,18 +474,38 @@ public with sharing class FObject {
      * @description The field API name for replacing definitions.
      */
     private String fieldApiNameForReplacement { get; set; }
-    // if true, Forceea sets all required fields
+    /**
+     * @description If true, Forceea sets all required fields.
+     */
     private Boolean requiredFieldsShouldBeAutomaticallyConfigured { get; set; }
-    // the SObject API name
+    /**
+     * @description The SObject API name.
+     */
     private String sObjectApiName { get; set; }
-    // the SObject type
+    /**
+     * @description The SObject type.
+     */
     public Schema.SObjectType sObjType { get; set; }
-    // the key of the Template that contains this FObject
+    /**
+     * @description The key of the Template that contains this FObject.
+     */
     private String templateKey { get; set; }
-    // the level of verbose mode
+    /**
+     * @description The level of verbose mode.
+     */
     private VerboseLevel verboseMode { get; set; }
-    // the name of the virtual field for getting the values of Standard Price Book entries
+    /**
+     * @description The name of the virtual field for getting the values of Standard Price Book entries.
+     */
     private String virtualFieldForStandardPriceBookEntries { get; set; }
+    /**
+     * @description The SOQL WHERE clause for filtering the records to be deleted asynchronously.
+     */
+    private String whereClauseOnAsyncDelete { get; set; }
+    /**
+     * @description The SOQL WHERE clause for filtering the records to be updated asynchronously.
+     */
+    private String whereClauseOnAsyncUpdate { get; set; }
 
     /* INITIALIZATION */
 
@@ -508,23 +527,27 @@ public with sharing class FObject {
 
     // FObject from existing record(s) with/without group
 
-    public FObject(SObject insertedRecord) {
-        this(null, new List<SObject>{ insertedRecord }, '');
+    global FObject(SObject insertedRecord) {
+        this(null, new List<SObject>{
+            insertedRecord
+        }, '');
     }
 
-    public FObject(SObject insertedRecord, String groupName) {
-        this(null, new List<SObject>{ insertedRecord }, groupName);
+    global FObject(SObject insertedRecord, String groupName) {
+        this(null, new List<SObject>{
+            insertedRecord
+        }, groupName);
     }
 
-    public FObject(List<SObject> insertedRecords) {
+    global FObject(List<SObject> insertedRecords) {
         this(null, insertedRecords, '');
     }
 
-    public FObject(List<SObject> insertedRecords, String groupName) {
+    global FObject(List<SObject> insertedRecords, String groupName) {
         this(null, insertedRecords, groupName);
     }
 
-    public FObject(Schema.SObjectType sObjType, List<SObject> insertedRecords, String groupName) {
+    global FObject(Schema.SObjectType sObjType, List<SObject> insertedRecords, String groupName) {
         if (insertedRecords == null || insertedRecords.isEmpty()) {
             return;
         }
@@ -545,19 +568,19 @@ public with sharing class FObject {
 
     // FObject from API Name or SObject type with/without group
 
-    public FObject(Schema.SObjectType sObjectType) {
+    global FObject(Schema.SObjectType sObjectType) {
         fObjectConstructorHandler(sObjectType, '', 0);
     }
 
-    public FObject(String sObjectName) {
+    global FObject(String sObjectName) {
         fObjectConstructorHandler(null, sObjectName, 0);
     }
 
-    public FObject(Schema.SObjectType sObjectType, Integer records) {
+    global FObject(Schema.SObjectType sObjectType, Integer records) {
         fObjectConstructorHandler(sObjectType, '', records);
     }
 
-    public FObject(String sObjectName, Integer records) {
+    global FObject(String sObjectName, Integer records) {
         fObjectConstructorHandler(null, sObjectName, records);
     }
 
@@ -634,7 +657,7 @@ public with sharing class FObject {
      */
     public void addErrorInvalidFieldInMethod(String sObjectApiName, String fieldName, String methodName) {
         addError(sObjectApiName, ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldName.trim() +
-            '] in method [' + methodName + ']');
+        '] in method [' + methodName + ']');
     }
 
     private void addFieldInPosition(List<String> fields, String controllingFieldApiName, Integer position) {
@@ -730,7 +753,7 @@ public with sharing class FObject {
         for (String field : getFieldsToProcess()) {
             if (field == fieldApiName) {
                 for (Integer recordCounter = 0; recordCounter < this.records; recordCounter++) {
-                    try { // append new value to existing value
+                    try {
                         if (definitionIsFunction) {
                             this.fieldValuesMatrix[fieldCounter][recordCounter] = fieldValues[recordCounter];
                         } else {
@@ -751,7 +774,7 @@ public with sharing class FObject {
      * @param definitionId The Definition ID.
      * @return An FObject instance.
      */
-    public FObject appendDefinitionsAfterId(String definitionId) {
+    global FObject appendDefinitionsAfterId(String definitionId) {
         DefinitionWrapper definitionDetails = getDefinitionDetailsFromId(definitionId);
         Integer definitionPosition = definitionDetails.position;
         String fieldApiName = definitionDetails.fieldApiName;
@@ -765,7 +788,7 @@ public with sharing class FObject {
      * @param fieldName The field API name.
      * @return An FObject instance.
      */
-    public FObject appendDefinitions(String fieldName) {
+    global FObject appendDefinitions(String fieldName) {
         String fieldApiName = ForceeaService.getFieldApiName(
             this, '', this.sObjectApiName, fieldName, null, '', 'replaceDefinitions');
 
@@ -781,7 +804,7 @@ public with sharing class FObject {
      * @param sObjectField The SObjectField.
      * @return An FObject instance.
      */
-    public FObject appendDefinitions(Schema.SObjectField sObjectField) {
+    global FObject appendDefinitions(Schema.SObjectField sObjectField) {
         String fieldApiName = sObjectField.getDescribe().getName();
         appendDefinitionsOfField(fieldApiName);
 
@@ -799,7 +822,7 @@ public with sharing class FObject {
 
         List<Integer> definitionIndexes = getDefinitionIndexes(fieldApiName);
         Integer size = definitionIndexes.size();
-        Integer lastDefinitionPosition = definitionIndexes.get(size -1);
+        Integer lastDefinitionPosition = definitionIndexes.get(size - 1);
         this.nextNewFieldPositionByFieldName.put(fieldApiName, lastDefinitionPosition + 1);
     }
 
@@ -808,7 +831,7 @@ public with sharing class FObject {
      * @param insertUsers True, if we allow users to be inserted in non-testing mode.
      * @return An FObject instance.
      */
-    public FObject canInsertUsers(Boolean insertUsers) {
+    global FObject canInsertUsers(Boolean insertUsers) {
         this.canInsertUsers = insertUsers;
         return this;
     }
@@ -909,7 +932,7 @@ public with sharing class FObject {
      * @description Creates records using the declared field definitions.
      * @return An FObject instance.
      */
-    public FObject createRecords() {
+    global FObject createRecords() {
         this.mustCreateNewRecords = true;
         createNewRecords();
 
@@ -921,7 +944,7 @@ public with sharing class FObject {
      * @param recordNumber The number of the next record to be created.
      * @return An FObject instance.
      */
-    public FObject createRecords(Integer recordNumber) {
+    global FObject createRecords(Integer recordNumber) {
         this.mustCreateNewRecords = true;
 
         if (recordNumber <= 0) {
@@ -938,7 +961,7 @@ public with sharing class FObject {
     }
 
     /* DEPRECATED */
-    public FObject deleteAllDefinitions() {
+    global FObject deleteAllDefinitions() {
         ForceeaService.methodIsDeprecated('deleteAllDefinitions');
         return removeAllDefinitions();
     }
@@ -952,19 +975,19 @@ public with sharing class FObject {
     }
 
     /* DEPRECATED */
-    public FObject deleteDefinitions(Schema.SObjectField sObjectField) {
+    global FObject deleteDefinitions(Schema.SObjectField sObjectField) {
         ForceeaService.methodIsDeprecated('deleteDefinitions');
         return removeDefinitions(sObjectField);
     }
 
     /* DEPRECATED */
-    public FObject deleteDefinitions(String fieldName) {
+    global FObject deleteDefinitions(String fieldName) {
         ForceeaService.methodIsDeprecated('deleteDefinitions');
         return removeDefinitions(fieldName);
     }
 
     /* DEPRECATED */
-    public FObject deleteDefinitionWithId(String definitionId) {
+    global FObject deleteDefinitionWithId(String definitionId) {
         ForceeaService.methodIsDeprecated('deleteDefinitionWithId');
         return removeDefinitionWithId(definitionId);
     }
@@ -975,7 +998,7 @@ public with sharing class FObject {
      * @param allOrNone If true, the operation allows partial success.
      * @return A list of Database.DeleteResult objects.
      */
-    public List<Database.DeleteResult> deleteRecords(String whereClause, Boolean allOrNone) {
+    global List<Database.DeleteResult> deleteRecords(String whereClause, Boolean allOrNone) {
         List<Database.DeleteResult> results = new List<Database.DeleteResult>();
         if (FObject.processMustTerminate() || allOrNone == null) {
             return results;
@@ -1022,7 +1045,7 @@ public with sharing class FObject {
             }
             counterField++;
             forceeaDebug(ForceeaService.DEBUG, SYMBOL_SUCCESS + ' ' + MESSAGE_VALUES +
-                ' [' + fieldName + ']: ' + String.join(values, ', '));
+            ' [' + fieldName + ']: ' + String.join(values, ', '));
         }
     }
 
@@ -1044,6 +1067,7 @@ public with sharing class FObject {
 
     /**
      * @description Displays the message MESSAGE_WILL_DELETE_FIELD_DEFINITIONS.
+     * @param sObjectNameFieldName
      */
     private void displayMessageWillRemoveFieldDefinitions(String sObjectNameFieldName) {
         if (this.isUpdate) {
@@ -1087,7 +1111,7 @@ public with sharing class FObject {
      * @param isExcluded If true, the lookup records with IsActive=false will be excluded.
      * @return An FObject instance.
      */
-    public FObject excludeInactiveLookupRecords(Boolean isExcluded) {
+    global FObject excludeInactiveLookupRecords(Boolean isExcluded) {
         this.excludeInactiveLookupRecords = isExcluded;
         return this;
     }
@@ -1097,7 +1121,7 @@ public with sharing class FObject {
      * @param isExcluded If true, the SObject will be excluded from the async delete process.
      * @return An FObject instance.
      */
-    public FObject excludeOnAsyncDelete(Boolean isExcluded) {
+    global FObject excludeOnAsyncDelete(Boolean isExcluded) {
         this.isExcludedOnAsyncDelete = isExcluded;
         return this;
     }
@@ -1107,7 +1131,7 @@ public with sharing class FObject {
      * @param isExcluded If true, the SObject will be excluded from the async update process.
      * @return An FObject instance.
      */
-    public FObject excludeOnAsyncUpdate(Boolean isExcluded) {
+    global FObject excludeOnAsyncUpdate(Boolean isExcluded) {
         this.isExcludedOnAsyncUpdate = isExcluded;
         return this;
     }
@@ -1122,11 +1146,11 @@ public with sharing class FObject {
     }
 
     /**
- 	 * @description Informs whether the field is defined.
- 	 * @param fieldApiName The API name of a field.
- 	 * @param isForUpdate True, if the field is for update.
- 	 * @return True, if the field is already defined.
-	 */
+     * @description Informs whether the field is defined.
+     * @param fieldApiName The API name of a field.
+     * @param isForUpdate True, if the field is for update.
+     * @return True, if the field is already defined.
+     */
     private Boolean fieldIsDefined(String fieldApiName, Boolean isForUpdate) {
         List<String> fieldsToSearch = (isForUpdate) ? this.fieldsForUpdate : this.fields;
 
@@ -1141,6 +1165,7 @@ public with sharing class FObject {
 
     /**
      * @description Informs whether the field exists in the list of fields.
+     * @param fieldApiName
      * @return True, if the field is not already defined with a definition.
      */
     private Boolean fieldDoesNotExist(String fieldApiName) {
@@ -1150,6 +1175,7 @@ public with sharing class FObject {
 
     /**
      * @description Informs whether the field is for replacement.
+     * @param fieldApiName
      * @return True, if the field is set for replacing its definitions, set with replaceDefinitions.
      */
     private Boolean fieldIsNotForReplacement(String fieldApiName) {
@@ -1171,7 +1197,7 @@ public with sharing class FObject {
      * @param message The message to post.
      * @return True, if the message was displayed.
      */
-    public Boolean forceeaDebug(String errorLevel, String message) {
+    private Boolean forceeaDebug(String errorLevel, String message) {
         String chars = '.=';
         message = message.right(1).containsAny(chars) ? message : message + '.';
 
@@ -1195,7 +1221,7 @@ public with sharing class FObject {
      * @description Retrieves a map of all definitions of every field.
      * @return A map of key:string, value: list of string values.
      */
-    public Map<String, List<String>> getAllDefinitions() {
+    global Map<String, List<String>> getAllDefinitions() {
         Map<String, List<String>> results = new Map<String, List<String>>();
         validateDefinitions();
 
@@ -1204,11 +1230,27 @@ public with sharing class FObject {
             if (results.containsKey(field)) {
                 results.get(field).add(def.definitionString);
             } else {
-                results.put(field, new List<String>{def.definitionString});
+                results.put(field, new List<String>{
+                    def.definitionString
+                });
             }
         }
 
         return results;
+    }
+
+    /**
+     * @description Corrects the provided maximum number of records to update or delete asynchronously per batch.
+     * @param numberOfRecords The maximum number of records.
+     * @return An instance of FObject.
+     */
+    private Integer getCorrectMaxNumberOfRecordOnAsyncUpdateOrDelete(Integer numberOfRecords) {
+        Integer result = Limits.getLimitDmlRows();
+        if (numberOfRecords > 0 && numberOfRecords < Limits.getLimitDmlRows()) {
+            result = numberOfRecords;
+        }
+
+        return result;
     }
 
     /**
@@ -1222,7 +1264,7 @@ public with sharing class FObject {
     /**
      * @description Retrieves the CPU time of global setup.
      * @return The CPU time of global setup in ms.
-    */
+     */
     public static Integer getCpuTimeOfGlobalSetup() {
         return FObject.cpuTimeOfGlobalSetup;
     }
@@ -1230,7 +1272,7 @@ public with sharing class FObject {
     /**
      * @description Retrieves the CPU time of SObject setup.
      * @return The CPU time of SObject setup in ms.
-    */
+     */
     public Integer getCpuTimeOfSObjectSetup() {
         return this.cpuTimeOfObjectSetup;
     }
@@ -1310,7 +1352,7 @@ public with sharing class FObject {
      * @param definitionString The definition string.
      * @param source The source (forceea or salesforce.
      * @return The updated definition string.
-     * @return A list of string values.
+     * A list of string values.
      */
     private String getDefinitionStringWithReplacedSource(String definitionString, String source) {
         String sourceParameterForceea = 'source(forceea)';
@@ -1326,11 +1368,11 @@ public with sharing class FObject {
     }
 
     /**
-    * @description Retrieves a list of all definitions of a field.
-    * @param sObjectField The SObjectField.
-    * @return A list of string values.
-    */
-    public List<String> getDefinitions(Schema.SObjectField sObjectField) {
+     * @description Retrieves a list of all definitions of a field.
+     * @param sObjectField The SObjectField.
+     * @return A list of string values.
+     */
+    global List<String> getDefinitions(Schema.SObjectField sObjectField) {
         return getDefinitions(sObjectField.getDescribe().getName());
     }
 
@@ -1339,7 +1381,7 @@ public with sharing class FObject {
      * @param fieldApiName The API name of the field.
      * @return A list of string values.
      */
-    public List<String> getDefinitions(String fieldApiName) {
+    global List<String> getDefinitions(String fieldApiName) {
         validateDefinitions();
         String thisFieldApiName = fieldApiName.trim();
 
@@ -1384,6 +1426,8 @@ public with sharing class FObject {
 
     /**
      * @description Retrieves the DML description.
+     * @param suffix
+     * @param startsWith
      * @return A string of the DML description in the preferred tense.
      */
     private String getDmlDescription(String suffix, String startsWith) {
@@ -1402,6 +1446,7 @@ public with sharing class FObject {
 
     /**
      * @description Retrieves the description of a DML milestone.
+     * @param numRecords
      * @return The description string.
      */
     private String getDmlMilestoneDescription(Integer numRecords) {
@@ -1417,7 +1462,7 @@ public with sharing class FObject {
      * @description Retrieves a list of the errors found during the process of creating the records of an FObject.
      * @return A map of key: String, value: List<String> values.
      */
-    public Map<String, List<String>> getErrors() {
+    global Map<String, List<String>> getErrors() {
         Map<String, List<String>> results = new Map<String, List<String>>();
 
         for (Error err : this.errors) {
@@ -1551,7 +1596,7 @@ public with sharing class FObject {
      * @description Retrieves the debug logs.
      * @return The list of debug logs.
      */
-    public static List<String> getGlobalDebugLogs() {
+    global static List<String> getGlobalDebugLogs() {
         return FObject.debugLogs;
     }
 
@@ -1559,7 +1604,7 @@ public with sharing class FObject {
      * @description Retrieves the language.
      * @return An string value.
      */
-    public static String getGlobalLanguage() {
+    global static String getGlobalLanguage() {
         return FObject.language;
     }
 
@@ -1567,7 +1612,7 @@ public with sharing class FObject {
      * @description Retrieves the locality.
      * @return An string value.
      */
-    public static String getGlobalLocality() {
+    global static String getGlobalLocality() {
         return FObject.locality;
     }
 
@@ -1575,7 +1620,7 @@ public with sharing class FObject {
      * @description Retrieves the group name.
      * @return The string of group name.
      */
-    public String getGroupName() {
+    global String getGroupName() {
         return this.groupName;
     }
 
@@ -1583,7 +1628,7 @@ public with sharing class FObject {
      * @description Retrieves the default query limit.
      * @return The default query limit.
      */
-    public Integer getGlobalQueryLimit() {
+    global Integer getGlobalQueryLimit() {
         if (this.dmlIsDelete && this.isBigObject) {
             return DEFAULT_QUERY_LIMIT_FOR_BIG_OBJECT;
         } else {
@@ -1592,10 +1637,28 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Retrieves the global variable value.
+     * @param name The variable name.
+     * @return The variable value as a string.
+     */
+    global static String getGlobalVariable(String name) {
+        String result = '';
+
+        for (Forceea.Variable var : FObject.globalVariablesByName.values()) {
+            if (var.name.equalsIgnoreCase(name)) {
+                result = FObject.getVariableStringValue(var);
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * @description Retrieves the global verbose.
      * @return The global verbose (none, info, debug).
      */
-    public static String getGlobalVerbose() {
+    global static String getGlobalVerbose() {
         switch on FObject.globalVerboseMode {
             when VERBOSE_INFO {
                 return 'info';
@@ -1631,7 +1694,7 @@ public with sharing class FObject {
      * @param groupName The group name of the inserted records.
      * @return An SObject.
      */
-    public SObject getInsertedGroupRecord(String groupName) {
+    global SObject getInsertedGroupRecord(String groupName) {
         String key = ForceeaService.getStringValueToLower(groupName);
 
         if (this.instanceInsertedRecordsByGroup.containsKey(key) &&
@@ -1647,7 +1710,7 @@ public with sharing class FObject {
      * @param groupName The group name of the inserted records.
      * @return A list of SObjects.
      */
-    public List<SObject> getInsertedGroupRecords(String groupName) {
+    global List<SObject> getInsertedGroupRecords(String groupName) {
         List<SObject> results = new List<SObject>();
         String key = ForceeaService.getStringValueToLower(groupName);
 
@@ -1664,7 +1727,7 @@ public with sharing class FObject {
      * @param groupName The group name of the inserted records.
      * @return A list of SObjects.
      */
-    public static List<SObject> getInsertedGroupRecords(Schema.SObjectType sObjectType, String groupName) {
+    global static List<SObject> getInsertedGroupRecords(Schema.SObjectType sObjectType, String groupName) {
         return getInsertedGroupRecords(sObjectType.getDescribe().getName(), groupName);
     }
 
@@ -1674,14 +1737,14 @@ public with sharing class FObject {
      * @param groupName The group name of the inserted records.
      * @return A list of SObjects.
      */
-    public static List<SObject> getInsertedGroupRecords(String sObjectName, String groupName) {
+    global static List<SObject> getInsertedGroupRecords(String sObjectName, String groupName) {
         List<SObject> results = new List<SObject>();
         String sObjectApiName = ForceeaService.getSObjectApiName(sObjectName);
 
         if (String.isBlank(sObjectApiName)) {
             String methodName = String.isBlank(groupName) ? 'getInsertedRecords' : 'getInsertedGroupRecords';
             FObject.postDebug(ForceeaService.ERROR, DEBUG_LOG_PROMPT + SYMBOL_FAILURE + ' ' +
-                'Invalid SObject [' + sObjectName + '] in static method ' + methodName, FObject.globalVerboseMode);
+            'Invalid SObject [' + sObjectName + '] in static method ' + methodName, FObject.globalVerboseMode);
             return results;
         }
 
@@ -1697,7 +1760,7 @@ public with sharing class FObject {
      * @description Retrieves the first inserted record of an SObject.
      * @return An SObject.
      */
-    public SObject getInsertedRecord() {
+    global SObject getInsertedRecord() {
         return getInsertedGroupRecord('');
     }
 
@@ -1705,7 +1768,7 @@ public with sharing class FObject {
      * @description Retrieves all inserted records of an SObject.
      * @return A list of SObjects.
      */
-    public List<SObject> getInsertedRecords() {
+    global List<SObject> getInsertedRecords() {
         return getInsertedGroupRecords('');
     }
 
@@ -1714,7 +1777,7 @@ public with sharing class FObject {
      * @param sObjectType The SObject type.
      * @return A list of SObjects.
      */
-    public static List<SObject> getInsertedRecords(Schema.SObjectType sObjectType) {
+    global static List<SObject> getInsertedRecords(Schema.SObjectType sObjectType) {
         return FObject.getInsertedGroupRecords(sObjectType.getDescribe().getName(), '');
     }
 
@@ -1723,7 +1786,7 @@ public with sharing class FObject {
      * @param sObjectApiName The SObject API name.
      * @return A list of SObjects.
      */
-    public static List<SObject> getInsertedRecords(String sObjectApiName) {
+    global static List<SObject> getInsertedRecords(String sObjectApiName) {
         return FObject.getInsertedGroupRecords(sObjectApiName, '');
     }
 
@@ -1762,7 +1825,9 @@ public with sharing class FObject {
             if (fObj.containsSelfLookupDefinition() || fObj.hasMockCommand() || fObj.hasStandardPriceBookEntries()) {
                 Integer counter = countersBySObjectName.get(sObjectApiName) + 1;
                 countersBySObjectName.put(sObjectApiName, counter);
-                results.put(sObjectApiName + '.' + String.valueOf(counter), new List<FObject>{ fObj });
+                results.put(sObjectApiName + '.' + String.valueOf(counter), new List<FObject>{
+                    fObj
+                });
             } else {
                 List<FObject> fObjects =
                     results.containsKey(sObjectApiName) ? results.get(sObjectApiName) : new List<FObject>();
@@ -1810,7 +1875,7 @@ public with sharing class FObject {
      * @description Retrieves the max number of records that should be deleted asynchronously in any batch.
      * @return An integer value.
      */
-    public Integer getMaxNumberOfRecordOnAsyncDelete() {
+    global Integer getMaxNumberOfRecordOnAsyncDelete() {
         return this.numMaxRecordOnAsyncDelete;
     }
 
@@ -1818,7 +1883,7 @@ public with sharing class FObject {
      * @description Retrieves the number of records that should be updated asynchronously in any batch.
      * @return An integer value.
      */
-    public Integer getMaxNumberOfRecordOnAsyncUpdate() {
+    global Integer getMaxNumberOfRecordOnAsyncUpdate() {
         return this.numMaxRecordOnAsyncUpdate;
     }
 
@@ -1826,7 +1891,7 @@ public with sharing class FObject {
      * @description Retrieves the number of records.
      * @return An integer value.
      */
-    public Integer getNumberOfRecords() {
+    global Integer getNumberOfRecords() {
         return this.records;
     }
 
@@ -1842,7 +1907,7 @@ public with sharing class FObject {
      * @description Retrieves the API name of the Partition field.
      * @return A string value of the Partition field name.
      */
-    public String getPartitionFieldName() {
+    global String getPartitionFieldName() {
         return this.partitionFieldName;
     }
 
@@ -1870,12 +1935,12 @@ public with sharing class FObject {
     }
 
     /**
-	 * @description Creates a PricebookEntry record.
-	 * @param standardPriceBookId The standard pricebook ID
-	 * @param product2Id The product ID.
-	 * @param unitPrice The unit price.
-	 * @return An PricebookEntry SObject record.
-	 */
+     * @description Creates a PricebookEntry record.
+     * @param standardPriceBookId The standard pricebook ID
+     * @param product2Id The product ID.
+     * @param unitPrice The unit price.
+     * @return An PricebookEntry SObject record.
+     */
     private SObject getPricebookEntry(Id standardPriceBookId, Id product2Id, Decimal unitPrice) {
         SObject result = PricebookEntry.SObjectType.newSObject();
 
@@ -1891,7 +1956,7 @@ public with sharing class FObject {
      * @description Retrieves the FObject query LIMIT.
      * @return The query LIMIT.
      */
-    public Integer getQueryLimit() {
+    global Integer getQueryLimit() {
         return this.queryLimit;
     }
 
@@ -1900,7 +1965,7 @@ public with sharing class FObject {
      * @param recordCounter The number of the record.
      * @return An SObject.
      */
-    public SObject getRecord(Integer recordCounter) {
+    global SObject getRecord(Integer recordCounter) {
         SObject result = this.sObjType.newSObject();
         List<String> fieldsToProcess = getFieldsToProcess();
 
@@ -1918,7 +1983,7 @@ public with sharing class FObject {
             } catch (TypeException exp) {
                 addError(fieldName,
                     MESSAGE_INVALID_VALUE + ' [' + fieldValue + '] ' +
-                        MESSAGE_FOR_RECORD + recordCounter + ' of field [' + fieldName + ']');
+                    MESSAGE_FOR_RECORD + recordCounter + ' of field [' + fieldName + ']');
             }
         }
 
@@ -1929,7 +1994,7 @@ public with sharing class FObject {
      * @description Retrieves the new created records of an SObject.
      * @return A list of SObjects.
      */
-    public List<SObject> getRecords() {
+    global List<SObject> getRecords() {
         createNewRecords();
         List<SObject> results = new List<SObject>(this.createdRecords);
 
@@ -1959,14 +2024,13 @@ public with sharing class FObject {
      * @description Retrieves the SObject API name.
      * @return A string value of the SObject name.
      */
-    public String getSObjectName() {
+    global String getSObjectName() {
         return this.sObjectApiName;
     }
 
     /**
      * @description Retrieves the list of Standard Pricebook entries to insert.
      * @param virtualFieldValues The list of virtual field values.
-     * @param standardPriceBookId The ID of the standard pricebook.
      * @return An PricebookEntry SObject record.
      */
     private List<SObject> getStandardPricebookEntriesToInsert(List<String> virtualFieldValues) {
@@ -2080,7 +2144,7 @@ public with sharing class FObject {
      * @description Retrieves all updated records.
      * @return A list of SObjects.
      */
-    public List<SObject> getUpdatedRecords() {
+    global List<SObject> getUpdatedRecords() {
         List<SObject> results = new List<SObject>(this.updatedRecords);
         return results;
     }
@@ -2107,28 +2171,10 @@ public with sharing class FObject {
      * @param name The variable name.
      * @return The variable value as a string.
      */
-    public String getVariable(String name) {
+    global String getVariable(String name) {
         String result = '';
 
         for (Forceea.Variable var : this.variables.values()) {
-            if (var.name.equalsIgnoreCase(name)) {
-                result = FObject.getVariableStringValue(var);
-                break;
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * @description Retrieves the global variable value.
-     * @param name The variable name.
-     * @return The variable value as a string.
-     */
-    public static String getGlobalVariable(String name) {
-        String result = '';
-
-        for (Forceea.Variable var : FObject.globalVariablesByName.values()) {
             if (var.name.equalsIgnoreCase(name)) {
                 result = FObject.getVariableStringValue(var);
                 break;
@@ -2161,6 +2207,22 @@ public with sharing class FObject {
         }
 
         return result;
+    }
+
+    /**
+     * @description Retrieves the SOQL WHERE clause for filtering the records to be deleted asynchronously.
+     * @return The WHERE clause string.
+     */
+    global String getWhereClauseOnAsyncDelete() {
+        return this.whereClauseOnAsyncDelete;
+    }
+
+    /**
+     * @description Retrieves the SOQL WHERE clause for filtering the records to be updated asynchronously.
+     * @return The WHERE clause string.
+     */
+    global String getWhereClauseOnAsyncUpdate() {
+        return this.whereClauseOnAsyncUpdate;
     }
 
     /**
@@ -2221,7 +2283,7 @@ public with sharing class FObject {
         if (errors > 0) {
             forceeaDebug(ForceeaService.WARN,
                 'Found ' + ForceeaService.getCountable('error', errors) + ' ' + dmlDescription + ' ' +
-                    ForceeaService.getCountable('record', this.deleteResults.size()) + ' of [' + this.sObjectApiName + ']');
+                ForceeaService.getCountable('record', this.deleteResults.size()) + ' of [' + this.sObjectApiName + ']');
         }
     }
 
@@ -2263,7 +2325,7 @@ public with sharing class FObject {
         if (errors > 0) {
             forceeaDebug(ForceeaService.WARN,
                 'Found ' + ForceeaService.getCountable('error', errors) + ' ' + dmlDescription + ' ' +
-                    ForceeaService.getCountable('record', this.saveResults.size()) + ' of [' + this.sObjectApiName + ']');
+                ForceeaService.getCountable('record', this.saveResults.size()) + ' of [' + this.sObjectApiName + ']');
         }
     }
 
@@ -2306,8 +2368,8 @@ public with sharing class FObject {
         if (errors > 0) {
             FObject.forceeaDebugStatic(ForceeaService.WARN,
                 'Found ' + ForceeaService.getCountable('error', errors) + ' inserting ' +
-                    ForceeaService.getCountable('record', FObject.saveResultsWithOptimizer.size()) +
-                    ' of [' + sObjectApiName + ']');
+                ForceeaService.getCountable('record', FObject.saveResultsWithOptimizer.size()) +
+                ' of [' + sObjectApiName + ']');
         }
     }
 
@@ -2388,6 +2450,7 @@ public with sharing class FObject {
 
     /**
      * @description Removes existing field definitions and sets the position of the next definition.
+     * @param fieldApiName
      */
     private void handleReplacementOfDefinitionId(String fieldApiName) {
         if (this.definitionPositionForReplacement == -1) {
@@ -2465,7 +2528,7 @@ public with sharing class FObject {
      *   for this parameter and a record fails, the remainder of the DML operation can still succeed.
      * @return A list of Database.SaveResult objects.
      */
-    public List<Database.SaveResult> insertRecords(Boolean allOrNone) {
+    global List<Database.SaveResult> insertRecords(Boolean allOrNone) {
         String groupName = '';
         if (String.isNotBlank(this.groupName)) {
             groupName = this.groupName;
@@ -2481,7 +2544,7 @@ public with sharing class FObject {
      * @param groupName The group name of the inserted records.
      * @return A list of Database.SaveResult objects.
      */
-    public List<Database.SaveResult> insertRecords(Boolean allOrNone, String groupName) {
+    global List<Database.SaveResult> insertRecords(Boolean allOrNone, String groupName) {
         List<Database.SaveResult> results = new List<Database.SaveResult>();
         if (FObject.processMustTerminate() || allOrNone == null) {
             return results;
@@ -2538,7 +2601,7 @@ public with sharing class FObject {
      * @param allOrNone Specifies whether the operation allows partial success.
      * @return A map with key: template key, value: a list of SaveResult.
      */
-    public static Map<String, List<Database.SaveResult>> insertRecordsFromTemplate(
+    global static Map<String, List<Database.SaveResult>> insertRecordsFromTemplate(
         Map<String, FObject> template, Boolean allOrNone) {
         Map<String, List<Database.SaveResult>> results = new Map<String, List<Database.SaveResult>>();
         if (template == null || template.isEmpty() || allOrNone == null) {
@@ -2560,7 +2623,7 @@ public with sharing class FObject {
      * @return A list of Database.SaveResult objects, with key: template key, value: a list of SaveResult.
      */
     /* DEPRECATED */
-    public static Map<String, List<Database.SaveResult>> insertRecordsFromTemplateWithKeys(
+    global static Map<String, List<Database.SaveResult>> insertRecordsFromTemplateWithKeys(
         Map<String, FObject> template, Boolean allOrNone, List<String> keys) {
         ForceeaService.methodIsDeprecated('insertRecordsFromTemplateWithKeys');
         Map<String, List<Database.SaveResult>> results = new Map<String, List<Database.SaveResult>>();
@@ -2580,7 +2643,7 @@ public with sharing class FObject {
      * @return A list of Database.SaveResult objects, with key: template key, value: a list of SaveResult.
      */
     /* DEPRECATED */
-    public static Map<String, List<Database.SaveResult>> insertRecordsFromTemplateWithoutKeys(
+    global static Map<String, List<Database.SaveResult>> insertRecordsFromTemplateWithoutKeys(
         Map<String, FObject> template, Boolean allOrNone, List<String> keys) {
         ForceeaService.methodIsDeprecated('insertRecordsFromTemplateWithoutKeys');
         Map<String, List<Database.SaveResult>> results = new Map<String, List<Database.SaveResult>>();
@@ -2602,7 +2665,7 @@ public with sharing class FObject {
      * @return A list of Database.SaveResult objects.
      */
     /* DEPRECATED */
-    public static Map<String, List<Database.SaveResult>> insertRecordsFromTemplateBeforeKey(
+    global static Map<String, List<Database.SaveResult>> insertRecordsFromTemplateBeforeKey(
         Map<String, FObject> template, Boolean allOrNone, String lastKey) {
         ForceeaService.methodIsDeprecated('insertRecordsFromTemplateBeforeKey');
         Map<String, List<Database.SaveResult>> results = new Map<String, List<Database.SaveResult>>();
@@ -2714,7 +2777,7 @@ public with sharing class FObject {
         String text = 'Inserted ' + ForceeaService.getCountable('record', FObject.numInsertedRecordsWithOptimizer) +
             ' of [' + sObjectApiName + ']';
         FObject.forceeaDebugStatic(ForceeaService.INFO, SYMBOL_MILESTONE + ' ' + text +
-            '. Transaction duration: ' + Limits.getCpuTime() + 'ms.');
+        '. Transaction duration: ' + Limits.getCpuTime() + 'ms.');
     }
 
     /**
@@ -2733,7 +2796,7 @@ public with sharing class FObject {
         Integer virtualFieldPosition = this.getFieldPosition(this.virtualFieldForStandardPriceBookEntries);
         if (virtualFieldPosition == -1) {
             addError(this.sObjectApiName, MESSAGE_INVALID_VIRTUAL_FIELD + ' [' +
-                this.virtualFieldForStandardPriceBookEntries + '] ' + MESSAGE_METHOD_SET_STANDARD_PRICEBOOK_ENTRIES);
+            this.virtualFieldForStandardPriceBookEntries + '] ' + MESSAGE_METHOD_SET_STANDARD_PRICEBOOK_ENTRIES);
             return;
         }
 
@@ -2804,7 +2867,7 @@ public with sharing class FObject {
         FObject.numFirstRecordsBySObject.put(this.sObjectApiName, numFirstRecord + this.records);
 
         resetMilestoneTimer('Created ' +
-            ForceeaService.getCountable('record', this.createdRecords.size()) + ' of [' + this.sObjectApiName + ']');
+        ForceeaService.getCountable('record', this.createdRecords.size()) + ' of [' + this.sObjectApiName + ']');
         displaySeparatorOnMethodFinish();
     }
 
@@ -2852,13 +2915,14 @@ public with sharing class FObject {
 
     /**
      * @description Executes after the update of fields.
+     * @param groupName
      */
     private void onAfterUpdateFields(String groupName) {
         if (String.isBlank(groupName)) {
             resetMilestoneTimer('Updated the field values of ' + this.numUpdatedRecords + ' records');
         } else {
             resetMilestoneTimer('Updated the field values of ' + this.numUpdatedRecords +
-                ' records of group [' + groupName + ']');
+            ' records of group [' + groupName + ']');
         }
 
         deleteAllDefinitionsForUpdateOfAllFields();
@@ -2898,8 +2962,8 @@ public with sharing class FObject {
     }
 
     /**
-    * @description Executes before the deletion of records.
-    */
+     * @description Executes before the deletion of records.
+     */
     private void onBeforeDeleteRecords() {
         this.deleteResults.clear();
         this.deletedRecords.clear();
@@ -2933,8 +2997,8 @@ public with sharing class FObject {
     }
 
     /**
-      * @description Executes before the update of fields.
-      */
+     * @description Executes before the update of fields.
+     */
     private void onBeforeUpdateFields() {
         FObject.displaySeparatorOnMethodStart(
             this.sObjectApiName, 'Update fields', this.templateKey);
@@ -3032,7 +3096,7 @@ public with sharing class FObject {
             parameter = result.substringBefore('('); // get parameter
             if (!parameterIsValid(parameter)) { // is invalid
                 addError(fieldApiName, 'Invalid parameter [' + parameter.trim() + '] in definition [' +
-                    def.definitionString + ']');
+                def.definitionString + ']');
                 def.setValid(false);
                 return '';
             }
@@ -3170,7 +3234,7 @@ public with sharing class FObject {
      * @description Determines if the process is valid.
      * @return True, if the process is valid.
      */
-    public static Boolean processIsValid() {
+    global static Boolean processIsValid() {
         return FObject.processIsValid;
     }
 
@@ -3199,7 +3263,7 @@ public with sharing class FObject {
      * @description Removes all definitions of every field.
      * @return An FObject instance.
      */
-    public FObject removeAllDefinitions() {
+    global FObject removeAllDefinitions() {
         forceeaDebug(ForceeaService.INFO, MESSAGE_WILL_REMOVE_ALL_FIELDS_DEFINITIONS + ' [' + this.sObjectApiName + ']');
         this.definitions.clear();
         this.fields.clear();
@@ -3238,7 +3302,7 @@ public with sharing class FObject {
      * @param sObjectField The SObjectField.
      * @return An FObject instance.
      */
-    public FObject removeDefinitions(Schema.SObjectField sObjectField) {
+    global FObject removeDefinitions(Schema.SObjectField sObjectField) {
         return removeAllDefinitionsOfField(sObjectField.getDescribe().getName());
     }
 
@@ -3247,7 +3311,7 @@ public with sharing class FObject {
      * @param fieldName The field API name.
      * @return An FObject instance.
      */
-    public FObject removeDefinitions(String fieldName) {
+    global FObject removeDefinitions(String fieldName) {
         return removeAllDefinitionsOfField(fieldName);
     }
 
@@ -3256,10 +3320,10 @@ public with sharing class FObject {
      * @param definitionId The Definition ID.
      * @return An FObject instance.
      */
-    public FObject removeDefinitionWithId(String definitionId) {
+    global FObject removeDefinitionWithId(String definitionId) {
         Integer index = 0;
 
-        for (ForceeaDefinition def: this.definitions) {
+        for (ForceeaDefinition def : this.definitions) {
             if (def.definitionId == definitionId) {
                 this.definitions.remove(index);
                 forceeaDebug(ForceeaService.DEBUG, MESSAGE_WILL_REMOVE_DEFINITION_WITH_ID + ' [' + definitionId + ']');
@@ -3326,7 +3390,7 @@ public with sharing class FObject {
      * @param fieldName The field API name.
      * @return An FObject instance.
      */
-    public FObject replaceDefinitions(String fieldName) {
+    global FObject replaceDefinitions(String fieldName) {
         String fieldApiName = ForceeaService.getFieldApiName(
             this, '', this.sObjectApiName, fieldName, null, '', 'replaceDefinitions');
 
@@ -3343,7 +3407,7 @@ public with sharing class FObject {
      * @param sObjectField The SObjectField.
      * @return An FObject instance.
      */
-    public FObject replaceDefinitions(Schema.SObjectField sObjectField) {
+    global FObject replaceDefinitions(Schema.SObjectField sObjectField) {
         String fieldApiName = sObjectField.getDescribe().getName();
         replaceDefinitionsOfField(fieldApiName);
 
@@ -3369,8 +3433,7 @@ public with sharing class FObject {
      * @param definitionId The Definition ID.
      * @return An FObject instance.
      */
-    public FObject replaceDefinitionWithId(String definitionId) {
-        //this.fieldApiNameForReplacement = getDefinitionDetailsFromId(definitionId).fieldApiName;
+    global FObject replaceDefinitionWithId(String definitionId) {
         this.definitionPositionForReplacement = getDefinitionDetailsFromId(definitionId).position;
         this.definitionIdForReplacement = definitionId;
 
@@ -3401,12 +3464,13 @@ public with sharing class FObject {
      */
     private void resetMilestoneTimer(String infoText) {
         forceeaDebug(ForceeaService.INFO, SYMBOL_MILESTONE + ' ' + infoText + ' in ' +
-            this.milestoneDuration + 'ms. Transaction duration: ' + Limits.getCpuTime() + 'ms.');
+        this.milestoneDuration + 'ms. Transaction duration: ' + Limits.getCpuTime() + 'ms.');
         this.milestoneStartTime = Limits.getCpuTime();
     }
 
     /**
      * @description Defines the process as synchronous or asynchronous.
+     * @param isAsync
      */
     public static void setAsync(Boolean isAsync) {
         FObject.isAsync = isAsync;
@@ -3418,7 +3482,7 @@ public with sharing class FObject {
      * @param definitionString The field definition string.
      * @return An FObject instance.
      */
-    public FObject setDefinition(Schema.SObjectField sObjectField, String definitionString) {
+    global FObject setDefinition(Schema.SObjectField sObjectField, String definitionString) {
         setDefinition('', sObjectField, false, false, definitionString.trim());
         return this;
     }
@@ -3429,7 +3493,7 @@ public with sharing class FObject {
      * @param definitionString The field definition string.
      * @return An FObject instance.
      */
-    public FObject setDefinition(String fieldApiName, String definitionString) {
+    global FObject setDefinition(String fieldApiName, String definitionString) {
         setDefinition(fieldApiName.trim(), null, false, false, definitionString.trim());
         return this;
     }
@@ -3496,7 +3560,7 @@ public with sharing class FObject {
      * @param definition The field definition (command + script).
      * @return An FObject instance.
      */
-    public FObject setDefinitionForUpdate(Schema.SObjectField sObjectField, String definition) {
+    global FObject setDefinitionForUpdate(Schema.SObjectField sObjectField, String definition) {
         setDefinition(sObjectField.getDescribe().getName(), null, false, true, definition);
         return this;
     }
@@ -3507,7 +3571,7 @@ public with sharing class FObject {
      * @param definition The field definition (command + script).
      * @return An FObject instance.
      */
-    public FObject setDefinitionForUpdate(String fieldApiName, String definition) {
+    global FObject setDefinitionForUpdate(String fieldApiName, String definition) {
         setDefinition(fieldApiName, null, false, true, definition);
         return this;
     }
@@ -3579,7 +3643,7 @@ public with sharing class FObject {
             Integer minlength = (field.length < 5) ? field.length : 5;
             setDefinition(field.fieldName, null, true, false,
                 'random type(string) minLength(' + minlength + ') maxLength(' +
-                    field.length + ') startWith(upper) include(lower,upper)');
+                field.length + ') startWith(upper) include(lower,upper)');
         } else if (field.dataType == Schema.DisplayType.TEXTAREA) {
             setDefinition(field.fieldName, null, true, false,
                 'random type(text) minLength(30) maxLength(100)');
@@ -3654,7 +3718,7 @@ public with sharing class FObject {
                 setDefinitionFromField(field);
                 this.requiredFieldNames.add(fieldApiName);
                 forceeaDebug(ForceeaService.DEBUG, SYMBOL_SUCCESS + ' ' + ForceeaService.MESSAGE_GENERATED_DEFINITION +
-                    ' of [' + fieldApiName + ']');
+                ' of [' + fieldApiName + ']');
             }
         }
     }
@@ -3709,7 +3773,7 @@ public with sharing class FObject {
      * @description Defines if Forceea will optimized the DML operation when inserting records from a Template.
      * @param isOptimized If true, the DML operation will be optimized for Templates.
      */
-    public static void setDmlOptimizer(Boolean isOptimized) {
+    global static void setDmlOptimizer(Boolean isOptimized) {
         if (FObject.isGlobalMocking) {
             FObject.hasActivatedDmlOptimizer = false;
         } else {
@@ -3721,7 +3785,7 @@ public with sharing class FObject {
      * @description Sets the exception handling's mode
      * @param mode The exception handling mode (break, continue)
      */
-    public static void setExceptionHandling(String mode) {
+    global static void setExceptionHandling(String mode) {
         Set<String> modes = new Set<String>{
             'break', 'continue'
         };
@@ -3775,14 +3839,14 @@ public with sharing class FObject {
                 controllingFieldPosition = this.fields.indexOf(controllingFieldApiName);
             } else if (controllingFieldType == Schema.DisplayType.BOOLEAN) {
                 forceeaDebug(ForceeaService.WARN, 'The Checkbox field type is not supported ' +
-                    'for the controlling field of dependent field [' + dependentFieldApiName + ']');
+                'for the controlling field of dependent field [' + dependentFieldApiName + ']');
                 continue;
             }
 
             if (controllingFieldPosition == -1) { // controlling field is not defined
                 // create a new definition for the controlling field, before the definition of the dependent field
                 forceeaDebug(ForceeaService.INFO, 'Did not find a definition for the controlling field [' +
-                    controllingFieldApiName + '] of dependent field [' + dependentFieldApiName + '] and will generate a definition');
+                controllingFieldApiName + '] of dependent field [' + dependentFieldApiName + '] and will generate a definition');
                 setDefinition(controllingFieldApiName, null, true, this.isUpdate, 'random type(picklist)');
             }
             upsertFieldBeforePosition(controllingFieldApiName, dependentFieldApiName, dependentFieldPosition);
@@ -3849,7 +3913,7 @@ public with sharing class FObject {
     /**
      * @description Sets the Forceea settings from the default custom settings.
      * @param defaultCustomSettings The default custom settings.
-    */
+     */
     private static void setForceeaSettingsFromCustomSettings(ForceeaSettings__c defaultCustomSettings) {
         FObject.numRecordsToCreate = defaultCustomSettings.RecordsToCreate__c.intValue();
         FObject.numRecordsToDisplay = defaultCustomSettings.RecordsToDisplay__c.intValue();
@@ -3876,7 +3940,7 @@ public with sharing class FObject {
      * @description Sets the language at the class level.
      * @param language The language for all FObject instances.
      */
-    public static void setGlobalLanguage(String language) {
+    global static void setGlobalLanguage(String language) {
         FObject.language = language.trim();
     }
 
@@ -3884,7 +3948,7 @@ public with sharing class FObject {
      * @description Sets the locality at the class level.
      * @param locality The language for all FObject instances.
      */
-    public static void setGlobalLocality(String locality) {
+    global static void setGlobalLocality(String locality) {
         FObject.locality = locality.trim();
     }
 
@@ -3892,7 +3956,7 @@ public with sharing class FObject {
      * @description Defines the ID mocking for all records.
      * @param isMocked If true, Forceea sets ID mocking for all FObjects.
      */
-    public static void setGlobalMocking(Boolean isMocked) {
+    global static void setGlobalMocking(Boolean isMocked) {
         FObject.isGlobalMocking = isMocked;
         if (isMocked) {
             FObject.hasActivatedDmlOptimizer = false;
@@ -3926,7 +3990,7 @@ public with sharing class FObject {
      * @description Sets the global SOQL query LIMIT.
      * @param queryLimit The SOQL query LIMIT for all FObject instances.
      */
-    public static void setGlobalQueryLimit(Integer queryLimit) {
+    global static void setGlobalQueryLimit(Integer queryLimit) {
         FObject.globalQueryLimit = FObject.getValidatedQueryLimit(queryLimit);
     }
 
@@ -3935,27 +3999,27 @@ public with sharing class FObject {
      * @param name The variable name.
      * @param value The variable value.
      */
-    public static void setGlobalVariable(String name, Boolean value) {
+    global static void setGlobalVariable(String name, Boolean value) {
         FObject.globalVariablesByName.put(name, new Forceea.Variable(name, value, true));
     }
 
-    public static void setGlobalVariable(String name, Date value) {
+    global static void setGlobalVariable(String name, Date value) {
         FObject.globalVariablesByName.put(name, new Forceea.Variable(name, value, true));
     }
 
-    public static void setGlobalVariable(String name, Datetime value) {
+    global static void setGlobalVariable(String name, Datetime value) {
         FObject.globalVariablesByName.put(name, new Forceea.Variable(name, value, true));
     }
 
-    public static void setGlobalVariable(String name, Decimal value) {
+    global static void setGlobalVariable(String name, Decimal value) {
         FObject.globalVariablesByName.put(name, new Forceea.Variable(name, value, true));
     }
 
-    public static void setGlobalVariable(String name, Integer value) {
+    global static void setGlobalVariable(String name, Integer value) {
         FObject.globalVariablesByName.put(name, new Forceea.Variable(name, value, true));
     }
 
-    public static void setGlobalVariable(String name, String value) {
+    global static void setGlobalVariable(String name, String value) {
         FObject.globalVariablesByName.put(name, new Forceea.Variable(name, value, true));
     }
 
@@ -3963,7 +4027,7 @@ public with sharing class FObject {
      * @description Sets the verbose mode at the class level.
      * @param verboseMode The verbose mode (none, info, debug).
      */
-    public static void setGlobalVerbose(String verboseMode) {
+    global static void setGlobalVerbose(String verboseMode) {
         verboseMode = verboseMode.toLowerCase().trim();
 
         if (verboseMode == 'none') {
@@ -3980,7 +4044,7 @@ public with sharing class FObject {
      * @param groupName The group name.
      * @return An FObject instance.
      */
-    public FObject setGroupName(String groupName) {
+    global FObject setGroupName(String groupName) {
         if (String.isNotBlank(groupName)) {
             this.groupName = groupName.trim();
         }
@@ -3992,7 +4056,7 @@ public with sharing class FObject {
      * @param indexFields The list of index fields.
      * @return An FObject instance.
      */
-    public FObject setIndexFields(Set<String> indexFields) {
+    global FObject setIndexFields(Set<String> indexFields) { // TODO Test coverage
         List<String> indexFieldsList = new List<String>(indexFields);
         String fieldsString = String.join(indexFieldsList, ',');
         return setIndexFields(fieldsString);
@@ -4003,7 +4067,7 @@ public with sharing class FObject {
      * @param indexFieldsString The comma-separated string of index fields.
      * @return An FObject instance.
      */
-    public FObject setIndexFields(String indexFieldsString) {
+    global FObject setIndexFields(String indexFieldsString) {
         this.bigObjectIndexFieldsString = indexFieldsString;
         return this;
     }
@@ -4046,10 +4110,8 @@ public with sharing class FObject {
      * @param numberOfRecords The maximum number of records to be deleted.
      * @return An instance of FObject.
      */
-    public FObject setMaxNumberOfRecordOnAsyncDelete(Integer numberOfRecords) {
-        this.numMaxRecordOnAsyncDelete = numberOfRecords >= 1
-            ? numberOfRecords
-            : DEFAULT_MAX_NUMBER_OF_RECORDS_ON_ASYNC_UPDATE_OR_DELETE;
+    global FObject setMaxNumberOfRecordOnAsyncDelete(Integer numberOfRecords) {
+        this.numMaxRecordOnAsyncDelete = getCorrectMaxNumberOfRecordOnAsyncUpdateOrDelete(numberOfRecords);
         return this;
     }
 
@@ -4058,10 +4120,8 @@ public with sharing class FObject {
      * @param numberOfRecords The maximum number of records to be updated.
      * @return An instance of FObject.
      */
-    public FObject setMaxNumberOfRecordOnAsyncUpdate(Integer numberOfRecords) {
-        this.numMaxRecordOnAsyncUpdate = numberOfRecords >= 1
-            ? numberOfRecords
-            : DEFAULT_MAX_NUMBER_OF_RECORDS_ON_ASYNC_UPDATE_OR_DELETE;
+    global FObject setMaxNumberOfRecordOnAsyncUpdate(Integer numberOfRecords) {
+        this.numMaxRecordOnAsyncUpdate = getCorrectMaxNumberOfRecordOnAsyncUpdateOrDelete(numberOfRecords);
         return this;
     }
 
@@ -4070,7 +4130,7 @@ public with sharing class FObject {
      * @param numberOfNextRecord The number of the next record.
      * @return An FObject instance.
      */
-    public FObject setNumberOfNextRecord(Integer numberOfNextRecord) {
+    global FObject setNumberOfNextRecord(Integer numberOfNextRecord) {
         this.numNextRecord = (numberOfNextRecord <= 0) ? 1 : numberOfNextRecord;
         FObject.numFirstRecordsBySObject.put(this.sObjectApiName, this.numNextRecord);
 
@@ -4082,7 +4142,7 @@ public with sharing class FObject {
      * @param numberOfRecords The number of records.
      * @return An FObject instance.
      */
-    public FObject setNumberOfRecords(Integer numberOfRecords) {
+    global FObject setNumberOfRecords(Integer numberOfRecords) {
         if (numberOfRecords <= 0) {
             this.records = 1;
         } else {
@@ -4099,7 +4159,7 @@ public with sharing class FObject {
      * @param generationMode The mode.
      * @return An FObject instance.
      */
-    public FObject setNumberOfRecords(String generationMode) {
+    global FObject setNumberOfRecords(String generationMode) {
         if (generationMode.toLowerCase() == PERMUTATIONS_AUTO) {
             this.processHasPermutations = true;
         }
@@ -4112,7 +4172,7 @@ public with sharing class FObject {
      * @param sObjectFieldName The partition SObjectField.
      * @return An FObject instance.
      */
-    public FObject setPartitionFieldName(Schema.SObjectField sObjectFieldName) {
+    global FObject setPartitionFieldName(Schema.SObjectField sObjectFieldName) {
         this.partitionFieldName = sObjectFieldName.getDescribe().getName();
         return this;
     }
@@ -4149,7 +4209,7 @@ public with sharing class FObject {
      * @param isValid If true, the process is valid.
      * @return An FObject instance.
      */
-    public FObject setProcessValid(Boolean isValid) {
+    public FObject setProcessAsValid(Boolean isValid) {
         FObject.processIsValid = isValid;
         return this;
     }
@@ -4159,7 +4219,7 @@ public with sharing class FObject {
      * @param queryLimit The LIMIT.
      * @return An FObject instance.
      */
-    public FObject setQueryLimit(Integer queryLimit) {
+    global FObject setQueryLimit(Integer queryLimit) {
         this.queryLimit = FObject.getValidatedQueryLimit(queryLimit);
         return this;
     }
@@ -4196,8 +4256,7 @@ public with sharing class FObject {
      * @description Set Record Types.
      */
     private void setRecordTypes() {
-        if (this.isBigObject)
-        {
+        if (this.isBigObject) {
             return;
         }
 
@@ -4221,15 +4280,16 @@ public with sharing class FObject {
      * @param fieldsAreRequired If true, Forceea automatically defines the required fields.
      * @return An FObject instance.
      */
-    public FObject setRequiredFields(Boolean fieldsAreRequired) {
+    global FObject setRequiredFields(Boolean fieldsAreRequired) {
         this.requiredFieldsShouldBeAutomaticallyConfigured = fieldsAreRequired;
         return this;
     }
 
     /**
      * @description Sets the PRNG seed.
+     * @param seedNumber
      */
-    public static void setSeed(Long seedNumber) {
+    global static void setSeed(Long seedNumber) {
         FObject.seed = seedNumber;
     }
 
@@ -4291,7 +4351,7 @@ public with sharing class FObject {
      * @param source The new source (forceea or salesforce).
      * @return An FObject instance.
      */
-    public FObject setSource(String source) {
+    global FObject setSource(String source) {
         String sourceToValidate = source.toLowerCase().trim();
 
         if (ForceeaService.sourceIsValid(sourceToValidate)) {
@@ -4310,7 +4370,7 @@ public with sharing class FObject {
      * @param source The new source (forceea or salesforce).
      * @return An FObject instance.
      */
-    public FObject setSource(Schema.SObjectField sObjField, String source) {
+    global FObject setSource(Schema.SObjectField sObjField, String source) {
         String fieldApiName = ForceeaService.getFieldApiName(
             this, '', this.sObjectApiName, '', sObjField, '', 'standard');
         for (ForceeaDefinition def : this.definitions) {
@@ -4326,10 +4386,10 @@ public with sharing class FObject {
      * @param virtualFieldName The virtual field name.
      * @return An FObject instance.
      */
-    public FObject setStandardPricebookEntries(String virtualFieldName) {
+    global FObject setStandardPricebookEntries(String virtualFieldName) {
         if (!virtualFieldIsValid(virtualFieldName)) {
             addError(this.sObjectApiName, MESSAGE_INVALID_VIRTUAL_FIELD + ' [' +
-                virtualFieldName.trim() + '] ' + MESSAGE_METHOD_SET_STANDARD_PRICEBOOK_ENTRIES);
+            virtualFieldName.trim() + '] ' + MESSAGE_METHOD_SET_STANDARD_PRICEBOOK_ENTRIES);
             return this;
         }
 
@@ -4343,7 +4403,7 @@ public with sharing class FObject {
      * @param minutes The SObjectField.
      * @return An FObject instance.
      */
-    public FObject setTimeFrameOnAsyncUpdate(Integer minutes) {
+    global FObject setTimeFrameOnAsyncUpdate(Integer minutes) { // TODO Test coverage
         this.timeFrameForUpdateInMinutes = minutes > 0
             ? minutes
             : DEFAULT_TIME_FRAME_FOR_UPDATE;
@@ -4353,30 +4413,65 @@ public with sharing class FObject {
     /**
      * @description Sets a variable.
      * @param name The variable name.
-     * @param value The variable value.
+     * @param value The Boolean variable value.
      * @return An FObject instance.
      */
-    public FObject setVariable(String name, Boolean value) {
+    global FObject setVariable(String name, Boolean value) {
         this.variables.put(name, new Forceea.Variable(name, value, false));
         return this;
     }
-    public FObject setVariable(String name, Date value) {
+
+    /**
+     * @description Sets a variable.
+     * @param name The variable name.
+     * @param value The Date variable value.
+     * @return An FObject instance.
+     */
+    global FObject setVariable(String name, Date value) {
         this.variables.put(name, new Forceea.Variable(name, value, false));
         return this;
     }
-    public FObject setVariable(String name, Datetime value) {
+
+    /**
+     * @description Sets a variable.
+     * @param name The variable name.
+     * @param value The Datetime variable value.
+     * @return An FObject instance.
+     */
+    global FObject setVariable(String name, Datetime value) {
         this.variables.put(name, new Forceea.Variable(name, value, false));
         return this;
     }
-    public FObject setVariable(String name, Decimal value) {
+
+    /**
+     * @description Sets a variable.
+     * @param name The variable name.
+     * @param value The Decimal variable value.
+     * @return An FObject instance.
+     */
+    global FObject setVariable(String name, Decimal value) {
         this.variables.put(name, new Forceea.Variable(name, value, false));
         return this;
     }
-    public FObject setVariable(String name, Integer value) {
+
+    /**
+     * @description Sets a variable.
+     * @param name The variable name.
+     * @param value The Integer variable value.
+     * @return An FObject instance.
+     */
+    global FObject setVariable(String name, Integer value) {
         this.variables.put(name, new Forceea.Variable(name, value, false));
         return this;
     }
-    public FObject setVariable(String name, String value) {
+
+    /**
+     * @description Sets a variable.
+     * @param name The variable name.
+     * @param value The String variable value.
+     * @return An FObject instance.
+     */
+    global FObject setVariable(String name, String value) {
         this.variables.put(name, new Forceea.Variable(name, value, false));
         return this;
     }
@@ -4386,7 +4481,7 @@ public with sharing class FObject {
      * @param mode The verbose mode (none, info, debug).
      * @return An FObject instance.
      */
-    public FObject setVerbose(String mode) {
+    global FObject setVerbose(String mode) {
         mode = mode.toLowerCase();
 
         if (mode == 'none') {
@@ -4401,7 +4496,28 @@ public with sharing class FObject {
     }
 
     /**
+     * @description Sets the SOQL WHERE clause for filtering the records to be deleted asynchronously.
+     * @param whereClause The SOQL WHERE clause.
+     * @return An FObject instance.
+     */
+    global FObject setWhereClauseOnAsyncDelete(String whereClause) {
+        this.whereClauseOnAsyncDelete = whereClause;
+        return this;
+    }
+
+    /**
+     * @description Sets the SOQL WHERE clause for filtering the records to be updated asynchronously.
+     * @param whereClause The SOQL WHERE clause.
+     * @return An FObject instance.
+     */
+    global FObject setWhereClauseOnAsyncUpdate(String whereClause) {
+        this.whereClauseOnAsyncUpdate = whereClause;
+        return this;
+    }
+
+    /**
      * @description Informs if the string is the same as the SObject API name.
+     * @param sObjectApiName
      * @return True, if the string is the valid SOBject API name.
      */
     private Boolean stringIsNotEqualToSObjectApiName(String sObjectApiName) {
@@ -4412,18 +4528,20 @@ public with sharing class FObject {
      * @description Updates the fields of the recent records.
      * @return An instance of FObject.
      */
-    public FObject updateFields() {
+    global FObject updateFields() {
         return updateFields(null);
     }
 
     /**
      * @description Updates the fields of group records.
+     * @param groupName
      * @return An instance of FObject.
      */
-    public FObject updateFields(String groupName) {
+    global FObject updateFields(String groupName) {
         if (FObject.processMustTerminate()) {
             return this;
         }
+
         onBeforeUpdateFields();
         handleRecordsWithUpdatedValues(groupName);
         onAfterUpdateFields(groupName);
@@ -4437,7 +4555,7 @@ public with sharing class FObject {
      *   for this parameter and a record fails, the remainder of the DML operation can still succeed.
      * @return A list of Database.SaveResult objects.
      */
-    public List<Database.SaveResult> updateRecords(Boolean allOrNone) {
+    global List<Database.SaveResult> updateRecords(Boolean allOrNone) {
         List<Database.SaveResult> results = new List<Database.SaveResult>();
         if (FObject.processMustTerminate() || allOrNone == null) {
             return results;
@@ -4454,11 +4572,11 @@ public with sharing class FObject {
     /**
      * @description Inserts or moves a controlling field before a dependent field.
      *   If the field exists, it is moved before the position.
-	 *   If it doesn't exist, it is inserted before the position.
-	 * @param controllingFieldApiName The controlling field API name.
-	 * @param dependentFieldApiName The dependent field API name.
-	 * @param dependentFieldPosition The dependent field position.
-	 */
+     *   If it doesn't exist, it is inserted before the position.
+     * @param controllingFieldApiName The controlling field API name.
+     * @param dependentFieldApiName The dependent field API name.
+     * @param dependentFieldPosition The dependent field position.
+     */
     private void upsertFieldBeforePosition(
         String controllingFieldApiName, String dependentFieldApiName, Integer dependentFieldPosition) {
         Boolean mustAddControllingField = false;
@@ -4470,7 +4588,7 @@ public with sharing class FObject {
                 fields.remove(fieldPosition);
                 mustAddControllingField = true;
                 forceeaDebug(ForceeaService.INFO, 'Moved definition of controlling field [' +
-                    controllingFieldApiName + '] before definition of its dependent field [' + dependentFieldApiName + ']');
+                controllingFieldApiName + '] before definition of its dependent field [' + dependentFieldApiName + ']');
             }
         } else {
             mustAddControllingField = true;
@@ -4487,15 +4605,16 @@ public with sharing class FObject {
 
     /**
      * @description Validates the user-defined and system-defined definitions.
+     * @return
      */
-    public void validateDefinitions() {
+    global FObject validateDefinitions() { // TODO test coverage + documentation
         if (this.definitionsAreValidated) {
-            return;
+            return this;
         }
 
         if (this.definitions.isEmpty()) {
             forceeaDebug(ForceeaService.DEBUG, 'Found no definitions to validate.');
-            return;
+            return this;
         }
         forceeaDebug(ForceeaService.DEBUG, MESSAGE_WILL_VALIDATE_FIELD_DEFINITIONS + ' of [' + this.sObjectApiName + ']');
         setDefinitionsAsFunctions();
@@ -4517,17 +4636,19 @@ public with sharing class FObject {
 
             if (def.isValid()) {
                 forceeaDebug(ForceeaService.DEBUG, SYMBOL_SUCCESS + ' Definition [' + def.definitionString +
-                    '] of [' + def.fieldApiName + '] is valid with ID [' + def.definitionId + ']');
+                '] of [' + def.fieldApiName + '] is valid with ID [' + def.definitionId + ']');
             }
         }
 
         this.definitionsAreValidated = true;
         setFieldDependency();
+
+        return this;
     }
 
     /**
-	* @description Validates the field definitions when updating field values.
-	*/
+     * @description Validates the field definitions when updating field values.
+     */
     private void validateDefinitionsOnUpdate() {
         validateDefinitions();
 

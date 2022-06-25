@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.6.0)
-  Copyright (C) 2021 Nikos Mitrakis
+  Forceea data factory (2.7.0)
+  Copyright (C) 2022 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -14,6 +14,10 @@
   https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
 public with sharing class ForceeaService {
+
+    /* CONSTANTS */
+
+    private static final String MAXIMUM_STACK_DEPTH_HAS_BEEN_REACHED = 'Maximum stack depth has been reached';
 
     /* ENUMS */
 
@@ -204,7 +208,28 @@ public with sharing class ForceeaService {
      * @param fObjectTransaction An instance of AsyncTransaction.
      */
     public static void enqueueJob(Forceea.AsyncTransaction fObjectTransaction) {
-        System.enqueueJob(new ForceeaQueueable(fObjectTransaction));
+        try {
+            System.enqueueJob(new ForceeaQueueable(fObjectTransaction));
+        } catch (Exception exp) {
+            handleMaxStackDepthError(exp, fObjectTransaction);
+        }
+    }
+
+    private static Boolean errorIsRelatedToMaxStackDepth(Exception exp) {
+        return exp.getMessage().contains(MAXIMUM_STACK_DEPTH_HAS_BEEN_REACHED);
+    }
+
+    private static void handleMaxStackDepthError(Exception exp, Forceea.AsyncTransaction fObjectTransaction) {
+        if (!errorIsRelatedToMaxStackDepth(exp)) {
+            return;
+        }
+
+        executeWithFuture(JSON.serialize(fObjectTransaction));
+    }
+
+    @Future
+    private static void executeWithFuture(String jsonString) {
+        System.enqueueJob(new ForceeaQueueable(jsonString));
     }
 
     /**
@@ -273,7 +298,7 @@ public with sharing class ForceeaService {
             SObjectField fieldInfo = ForceeaService.getSObjectFieldsByName(sObjectApiName.toLowerCase()).get(fieldApiName);
             if (fieldInfo != sObjectField) {
                 fObj.addError(fObj.getSObjectName(), ForceeaService.MESSAGE_INVALID_FIELD + ' [' + fieldApiName +
-                    '] for SObject [' + fObj.getSObjectName() + ']');
+                '] for SObject [' + fObj.getSObjectName() + ']');
             }
         }
 
@@ -293,7 +318,7 @@ public with sharing class ForceeaService {
             when 'copy-from' {
                 fObj.addError(relatedFieldApiName,
                     'Invalid lookup field [' + sObjectApiName + '.' + fieldName + '] ' +
-                        MESSAGE_IN_DEFINITION + ' [' + definitionString + ']');
+                    MESSAGE_IN_DEFINITION + ' [' + definitionString + ']');
             }
             when 'removedefinitions' {
                 if (!fObj.isUpdate) {
@@ -452,7 +477,7 @@ public with sharing class ForceeaService {
             when 'lookup' {
                 fObj.addError(relatedFieldApiName,
                     MESSAGE_INVALID_LOOKUP_SOBJECT + ' [' + sObjectName +
-                        '] in definition [' + definitionString + ']');
+                    '] in definition [' + definitionString + ']');
             }
         }
 

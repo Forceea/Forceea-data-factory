@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.6.0)
-  Copyright (C) 2021 Nikos Mitrakis
+  Forceea data factory (2.7.0)
+  Copyright (C) 2022 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -13,7 +13,7 @@
   You can find a copy of the GNU General Public License at
   https://github.com/Forceea/Forceea-data-factory/blob/master/LICENSE
 */
-public with sharing class FObjectAsync {
+global with sharing class FObjectAsync {
 
     /* CONSTANTS */
 
@@ -30,7 +30,7 @@ public with sharing class FObjectAsync {
     /* INSTANCE COLLECTIONS */
 
     private Map<String, Forceea.FObjectAsynchronous> asyncTemplate = new Map<String, Forceea.FObjectAsynchronous>();
-    private Map<String, FObject> template = new Map<String, FObject>();
+    private Forceea.Template template { get; set; }
 
     /* INSTANCE VARIABLES & PROPERTIES */
 
@@ -68,15 +68,9 @@ public with sharing class FObjectAsync {
 
     /* CONSTRUCTORS */
 
-    public FObjectAsync(Map<String, FObject> template) {
+    global FObjectAsync(Forceea.Template template) {
         this.template = template;
-        this.asyncTemplate = getAsyncTemplate(this.template);
-        ForceeaService.setProcessCustomSetting(false);
-    }
-
-    public FObjectAsync(Forceea.Template template) {
-        this.template = template.getMap();
-        this.asyncTemplate = getAsyncTemplate(this.template);
+        this.asyncTemplate = getAsyncTemplate();
         ForceeaService.setProcessCustomSetting(false);
     }
 
@@ -103,7 +97,7 @@ public with sharing class FObjectAsync {
      * @description Deletes records asynchronously.
      * @return An instance of FObjectAsync.
      */
-    public FObjectAsync deleteRecords() {
+    global FObjectAsync deleteRecords() {
         if (FObjectAsync.anotherProcessIsActive() || !ForceeaService.recordsCanBeDeletedInThisOrg()) {
             return this;
         }
@@ -132,14 +126,9 @@ public with sharing class FObjectAsync {
             fObjectsToUpdateOrDelete = getReversedList(asyncFObjects);
         }
 
-        if (hasBlankPartitionFieldInAnySObject(fObjectsToUpdateOrDelete)) {
-            this.numJobs = 1;
-            this.hasPartitioning = false;
-        } else {
-            this.hasPartitioning = true;
-        }
-
+        handleBlankPartitions(fObjectsToUpdateOrDelete);
         Datetime dateTimeNow = Datetime.now();
+
         for (Integer jobId = 1; jobId <= this.numJobs; jobId++) {
             this.asyncTrans = new Forceea.AsyncTransaction();
             this.asyncTrans.numJobUnitsToExecute = 1;
@@ -160,7 +149,7 @@ public with sharing class FObjectAsync {
      */
     private void enqueueJobsOnInsert() {
         Map<String, Integer> numOfFirstRecordsBySObject = new Map<String, Integer>();
-        for (FObject sObj : this.template.values()) {
+        for (FObject sObj : this.template.getMap().values()) {
             numOfFirstRecordsBySObject.put(sObj.getSObjectName(), 1);
         }
 
@@ -187,12 +176,13 @@ public with sharing class FObjectAsync {
      * @param template The standard template.
      * @return A map with key: the standard template key, value: an instance of Forceea.FObjectAsync.
      */
-    private Map<String, Forceea.FObjectAsynchronous> getAsyncTemplate(Map<String, FObject> template) {
+    private Map<String, Forceea.FObjectAsynchronous> getAsyncTemplate() {
         Map<String, Forceea.FObjectAsynchronous> results = new Map<String, Forceea.FObjectAsynchronous>();
+        Map<String, FObject> templateMap = this.template.getMap();
 
-        for (String key : template.keySet()) {
+        for (String key : templateMap.keySet()) {
             Forceea.FObjectAsynchronous fObjAsync = new Forceea.FObjectAsynchronous();
-            FObject fObj = template.get(key);
+            FObject fObj = templateMap.get(key);
 
             fObjAsync.numOfRecords = fObj.getNumberOfRecords();
             fObjAsync.numOfRecordsIsAuto = fObj.numOfRecordsIsAuto();
@@ -200,10 +190,13 @@ public with sharing class FObjectAsync {
             fObjAsync.sObjectApiName = fObj.getSObjectName();
             fObjAsync.setRequiredFields = fObj.requiredFieldsShouldBeAutomaticallyConfigured();
             fObjAsync.bigObjectIndexFieldsString = fObj.bigObjectIndexFieldsString;
-            fObjAsync.isExcludedOnAsyncUpdateOrDelete = fObj.isExcludedOnAsyncDelete() || fObj.isExcludedOnAsyncUpdate();
-            fObjAsync.numMaxRecordOnAsyncDelete = fObj.getMaxNumberOfRecordOnAsyncDelete();
-            fObjAsync.numMaxRecordOnAsyncUpdate = fObj.getMaxNumberOfRecordOnAsyncUpdate();
+            fObjAsync.isExcludedOnUpdateOrDelete = fObj.isExcludedOnAsyncDelete() || fObj.isExcludedOnAsyncUpdate();
+            fObjAsync.numMaxRecordOnDelete = fObj.getMaxNumberOfRecordOnAsyncDelete();
+            fObjAsync.numMaxRecordOnUpdate = fObj.getMaxNumberOfRecordOnAsyncUpdate();
             fObjAsync.timeFrameForUpdateInMinutes = fObj.getTimeFrameOnAsyncUpdate();
+            fObjAsync.whereClauseOnDelete = fObj.getWhereClauseOnAsyncDelete();
+            fObjAsync.whereClauseOnUpdate = fObj.getWhereClauseOnAsyncUpdate();
+
             fObjAsync.definitions = new List<Forceea.FieldDefinition>();
             for (ForceeaDefinition def : fObj.definitions) {
                 Forceea.FieldDefinition fd = new Forceea.FieldDefinition();
@@ -211,6 +204,7 @@ public with sharing class FObjectAsync {
                 fd.fieldApiName = def.fieldApiName;
                 fObjAsync.definitions.add(fd);
             }
+
             results.put(key, fObjAsync);
         }
 
@@ -227,13 +221,15 @@ public with sharing class FObjectAsync {
         for (Forceea.FObjectAsynchronous obj : this.asyncTemplate.values()) {
             Forceea.FObjectAsynchronous newObj = new Forceea.FObjectAsynchronous();
             newObj.definitions = obj.definitions;
-            newObj.isExcludedOnAsyncUpdateOrDelete = obj.isExcludedOnAsyncUpdateOrDelete;
-            newObj.numMaxRecordOnAsyncDelete = obj.numMaxRecordOnAsyncDelete;
-            newObj.numMaxRecordOnAsyncUpdate = obj.numMaxRecordOnAsyncUpdate;
+            newObj.isExcludedOnUpdateOrDelete = obj.isExcludedOnUpdateOrDelete;
+            newObj.numMaxRecordOnDelete = obj.numMaxRecordOnDelete;
+            newObj.numMaxRecordOnUpdate = obj.numMaxRecordOnUpdate;
             newObj.partitionFieldName = obj.partitionFieldName;
             newObj.sObjectApiName = obj.sObjectApiName;
             newObj.bigObjectIndexFieldsString = obj.bigObjectIndexFieldsString;
             newObj.timeFrameForUpdateInMinutes = obj.timeFrameForUpdateInMinutes;
+            newObj.whereClauseOnDelete = obj.whereClauseOnDelete;
+            newObj.whereClauseOnUpdate = obj.whereClauseOnUpdate;
             results.add(newObj);
         }
 
@@ -262,12 +258,14 @@ public with sharing class FObjectAsync {
      */
     private Map<String, Integer> getNextRecordNumbersBySObjectMap(Map<String, Integer> numFirstRecordsBySObject) {
         Map<String, Integer> results = new Map<String, Integer>(numFirstRecordsBySObject);
-        List<FObject> fObjects = this.template.values();
+        List<FObject> fObjects = this.template.getMap().values();
 
         for (FObject obj : fObjects) {
             String sObjectApiName = obj.getSObjectName();
+
             Integer previousFirstRecord = results.get(sObjectApiName);
             Integer newFirstRecord = previousFirstRecord + obj.getNumberOfRecords() * this.asyncTrans.numJobUnitsToExecute;
+
             results.put(sObjectApiName, newFirstRecord);
         }
 
@@ -359,6 +357,19 @@ public with sharing class FObjectAsync {
     }
 
     /**
+     * @description Sets the number of jobs to 1 if there is at least one blank partition field.
+     * @param fObjectsToUpdateOrDelete The list of Forceea.FObjectAsync.
+     */
+    private void handleBlankPartitions(List<Forceea.FObjectAsynchronous> fObjectsToUpdateOrDelete) {
+        this.hasPartitioning = true;
+
+        if (hasBlankPartitionFieldInAnySObject(fObjectsToUpdateOrDelete)) {
+            this.numJobs = 1;
+            this.hasPartitioning = false;
+        }
+    }
+
+    /**
      * @description Informs if there is any Forceea.FObjectAsync object with blank Partition field.
      * @param asyncFObjects The list of Forceea.FObjectAsync.
      * @return True, if there is at least one SObject to be deleted with a blank Partition Field.
@@ -393,7 +404,7 @@ public with sharing class FObjectAsync {
      * @description Inserts records asynchronously.
      * @return An instance of FObjectAsync.
      */
-    public FObjectAsync insertRecords() {
+    global FObjectAsync insertRecords() {
         if (FObjectAsync.anotherProcessIsActive()) {
             return this;
         }
@@ -433,7 +444,7 @@ public with sharing class FObjectAsync {
      * @param numberOfIterations The number of iterations.
      * @return An instance of FObjectAsync.
      */
-    public FObjectAsync setNumberOfIterations(Integer numberOfIterations) {
+    global FObjectAsync setNumberOfIterations(Integer numberOfIterations) {
         this.numIterationsToExecute = numberOfIterations > 0 ? numberOfIterations : 1;
         return this;
     }
@@ -443,7 +454,7 @@ public with sharing class FObjectAsync {
      * @param numberOfMaxIterationsPerBatch The number of iterations per batch.
      * @return An instance of FObjectAsync.
      */
-    public FObjectAsync setMaxNumberOfIterationsPerBatch(Integer numberOfMaxIterationsPerBatch) {
+    global FObjectAsync setMaxNumberOfIterationsPerBatch(Integer numberOfMaxIterationsPerBatch) {
         this.numMaxIterationsPerBatch = numberOfMaxIterationsPerBatch > 1 ? numberOfMaxIterationsPerBatch : 1;
         return this;
     }
@@ -453,7 +464,7 @@ public with sharing class FObjectAsync {
      * @param numberOfJobs The number of jobs.
      * @return An instance of FObjectAsync.
      */
-    public FObjectAsync setNumberOfJobs(Integer numberOfJobs) {
+    global FObjectAsync setNumberOfJobs(Integer numberOfJobs) {
         this.numJobs = numberOfJobs > 0 ? numberOfJobs : 1;
         return this;
     }
@@ -478,7 +489,7 @@ public with sharing class FObjectAsync {
      * @param partitionFieldValue The Partition field value.
      * @return An instance of FObjectAsync.
      */
-    public FObjectAsync setPartitionFieldValue(String partitionFieldValue) {
+    global FObjectAsync setPartitionFieldValue(String partitionFieldValue) {
         this.partitionFieldValue = partitionFieldValue.trim();
         return this;
     }
@@ -506,7 +517,7 @@ public with sharing class FObjectAsync {
      * @description Terminates the async process.
      */
     @AuraEnabled
-    public static void terminate() {
+    global static void terminate() {
         ForceeaService.setProcessCustomSetting(true);
         FObjectAsync.processIsTerminated = true;
         ForceeaService.publishUserMessage(ForceeaService.asyncMessageType.MESSAGE_TYPE_INFO,
@@ -533,7 +544,7 @@ public with sharing class FObjectAsync {
      * @description Updates records asynchronously.
      * @return An instance of FObjectAsync.
      */
-    public FObjectAsync updateRecords() {
+    global FObjectAsync updateRecords() {
         if (FObjectAsync.anotherProcessIsActive()) {
             return this;
         }
