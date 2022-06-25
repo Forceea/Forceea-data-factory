@@ -1,7 +1,7 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
-# Forceea 2.6.0
+# Forceea 2.7.0
 
 ### What is Forceea?
 
@@ -32,11 +32,10 @@ or this link for **Sandboxes**:
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
                                                                                                                        
-You may also use the Salesforce CLI command:
+You may also use the Salesforce CLI command (recommended):
 ```
-sfdx force:package:install -w 10 -b 10 -p ID -r -u <UsernameOrOrgAlias>
+sfdx force:package:install -w 10 -b 10 -p 04t4I000000cyhZQAQ -r -u <UsernameOrOrgAlias>
 ```
-where ID is the package ID you can find in the above installation links (starting with "04t")
 
 ### What can Forceea do?
 
