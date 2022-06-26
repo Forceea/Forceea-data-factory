@@ -20,14 +20,14 @@ Forceea (forsi:a) is the most advanced and sophisticated native open-source data
        
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
 
-<a href="https://rebrand.ly/Forceea260Production">
+<a href="https://rebrand.ly/Forceea270Production">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
 
 or this link for **Sandboxes**:
 
-<a href="https://rebrand.ly/Forceea260Sandbox">
+<a href="https://rebrand.ly/Forceea270Sandbox">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
