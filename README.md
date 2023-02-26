@@ -1,6 +1,8 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
+> Read the [Forceea Success Guide](https://rebrand.ly/cgh14)
+
 # Forceea 2.8.0
 
 ### What is Forceea?
@@ -9,7 +11,7 @@ Forceea (forsi:a) is the most advanced and sophisticated native open-source data
 
 ### Forceea Sponsors
 
-<a href="https://www.acmantix.com">Acmantix</a>
+<a href="https://www.acmantix.com">Acmantix</a> | 
 <a href="https://organizer.solutions/gopro.html">Organizer</a>
        
 ### How can you deploy it?
@@ -47,5 +49,3 @@ sfdx package install -w 10 -b 10 -p 04t4I0000011V6PQAU -r -o <UsernameOrOrgAlias
 * Supports variables and functions.
 * Validates the definitions based on the field data type.
 * Has an extended error messaging system.
-
-To find more information read the [Forceea Success Guide](https://rebrand.ly/cgh14)
