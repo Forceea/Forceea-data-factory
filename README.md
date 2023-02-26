@@ -13,13 +13,14 @@ Forceea (forsi:a) is the most advanced and sophisticated native open-source data
 <a href="https://organizer.solutions/gopro.html">Organizer</a>
        
 ### How can you deploy it?
-       
+      
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
 
 <a href="https://rebrand.ly/Forceea28Production">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
+
 or this link for **Sandboxes**:
 
 <a href="https://rebrand.ly/Forceea28Sandbox">
@@ -29,7 +30,7 @@ or this link for **Sandboxes**:
                                                                                                                        
 You may also use the Salesforce CLI command (recommended):
 ```
-sfdx force:package:install -w 10 -b 10 -p 04t4I000000cyhZQAQ -r -u <UsernameOrOrgAlias>
+sfdx package install -w 10 -b 10 -p 04t4I0000011V6PQAU -r -o <UsernameOrOrgAlias>
 ```
 
 ### What can Forceea do?
