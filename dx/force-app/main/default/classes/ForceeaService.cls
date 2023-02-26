@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (2.7.0)
-  Copyright (C) 2022 Nikos Mitrakis
+  Forceea data factory (v2.8.0)
+  Copyright (C) 2023 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -34,7 +34,7 @@ public with sharing class ForceeaService {
         RANDOM_FIRSTNAME, RANDOM_LASTNAME,
         RANDOM_EMAIL, RANDOM_BOOLEAN, RANDOM_URL,
         RANDOM_LOOKUP, RANDOM_LOOKUP_WHERE,
-        SERIAL_NUMBER, SERIAL_DATE, SERIAL_DATETIME, SERIAL_PICKLIST, SERIAL_LOOKUP,
+        SERIAL_NUMBER, SERIAL_NUMBER_MODE, SERIAL_DATE, SERIAL_DATETIME, SERIAL_PICKLIST, SERIAL_LOOKUP,
         SERIAL_LIST_STRING, SERIAL_LIST_INTEGER, SERIAL_LIST_DECIMAL,
         SERIAL_LIST_DATE, SERIAL_LIST_DATETIME, SERIAL_LIST_TIME,
         STATIC_INTEGER, STATIC_DECIMAL,

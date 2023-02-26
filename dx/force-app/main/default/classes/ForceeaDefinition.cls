@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (2.7.0)
-  Copyright (C) 2022 Nikos Mitrakis
+  Forceea data factory (v2.8.0)
+  Copyright (C) 2023 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -412,6 +412,27 @@ public with sharing class ForceeaDefinition {
     }
 
     /**
+     * @description Returns the permutation values of definition.
+     * @return A list of string values.
+     */
+    private List<String> getPermutationValues() {
+        List<String> results = new List<String>();
+
+        switch on this.type.id {
+            when SERIAL_NUMBER_MODE, SERIAL_PICKLIST,
+                SERIAL_LIST_STRING, SERIAL_LIST_INTEGER, SERIAL_LIST_DECIMAL,
+                SERIAL_LIST_DATE, SERIAL_LIST_DATETIME, SERIAL_LIST_TIME {
+                results = new ForceeaGenerator(this).getListValuesForPermutations();
+            }
+            when SERIAL_LOOKUP {
+                results = new ForceeaGenerator(this).getLookupValuesForPermutations();
+            }
+        }
+
+        return results;
+    }
+
+    /**
      * @description Creates a random string of lowercase/uppercase characters (letters).
      * @return A list of string values.
      */
@@ -469,7 +490,7 @@ public with sharing class ForceeaDefinition {
                 typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
                 typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST ||
                 typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
-                ) {
+            ) {
                 return true;
             } else {
                 return false;
@@ -488,7 +509,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST ||
                     typeId == ForceeaService.DefinitionTypeId.RANDOM_PICKLIST_EXCEPT ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST
-                    ) {
+                ) {
                     result = false;
                 }
             }
@@ -506,7 +527,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_DATE ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_DATETIME
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -520,10 +541,11 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DECIMAL ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER_MODE ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_DECIMAL ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -537,10 +559,11 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DECIMAL ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER_MODE ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_DECIMAL ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -551,7 +574,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.RANDOM_LIST_STRING ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -567,10 +590,11 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER_MODE ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -582,7 +606,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.RANDOM_LOOKUP_WHERE ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LOOKUP ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP
-                    ) {
+                ) {
                     result = false;
                 }
             }
@@ -597,7 +621,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_DATETIME ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_DATETIME
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -609,7 +633,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_TIME ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_TIME
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -623,10 +647,11 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER_MODE ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -640,7 +665,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -656,10 +681,11 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LIST_STRING ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER ||
+                    typeId == ForceeaService.DefinitionTypeId.SERIAL_NUMBER_MODE ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_BLANK ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_INTEGER ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_STRING
-                    ) {
+                ) {
                     result = true;
                 }
             }
@@ -674,7 +700,7 @@ public with sharing class ForceeaDefinition {
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_LOOKUP ||
                     typeId == ForceeaService.DefinitionTypeId.SERIAL_PICKLIST ||
                     typeId == ForceeaService.DefinitionTypeId.STATIC_LOOKUP
-                    ) {
+                ) {
                     result = false;
                 }
             }
@@ -759,23 +785,12 @@ public with sharing class ForceeaDefinition {
             return;
         }
 
-        List<String> results = new List<String>();
-        switch on this.type.id {
-            when SERIAL_LIST_STRING, SERIAL_LIST_INTEGER, SERIAL_LIST_DECIMAL,
-                SERIAL_LIST_DATE, SERIAL_LIST_DATETIME, SERIAL_LIST_TIME, SERIAL_PICKLIST {
-                results = new ForceeaGenerator(this).getListValuesForPermutations();
-            }
-            when SERIAL_LOOKUP {
-                results = new ForceeaGenerator(this).getLookupValuesForPermutations();
-            }
+        List<String> results = getPermutationValues();
+        if (!results.isEmpty()) {
+            this.permutationValues = results;
+            this.fObj.permutationsList.add(this.permutationValues);
+            this.positionForPermutations = this.fObj.permutationsList.size() - 1;
         }
-        if (results.isEmpty()) {
-            return;
-        }
-
-        this.permutationValues = results;
-        this.fObj.permutationsList.add(this.permutationValues);
-        this.positionForPermutations = this.fObj.permutationsList.size() - 1;
     }
 
     /**

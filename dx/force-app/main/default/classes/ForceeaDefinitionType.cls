@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.5)
-  Copyright (C) 2022 Nikos Mitrakis
+  Forceea data factory (v2.8.0)
+  Copyright (C) 2023 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -410,6 +410,16 @@ public with sharing class ForceeaDefinitionType {
         dt.clusterTypes.add(new Forceea.ClusterType('from', ForceeaService.ValueType.TYPE_DECIMAL, null, false));
         dt.clusterTypes.add(new Forceea.ClusterType('step', ForceeaService.ValueType.TYPE_DECIMAL, null, false));
         dt.clusterTypes.add(new Forceea.ClusterType('scale', ForceeaService.ValueType.TYPE_INTEGER, null, false));
+        FObject.definitionTypes.add(dt);
+
+        // example: serial type(number) from(10) to(100) step(1.5) scale(0) mode(permutation)
+        dt = new ForceeaDefinitionType(ForceeaService.DefinitionTypeId.SERIAL_NUMBER_MODE, 'SerialNumberMode', 'serial');
+        dt.clusterTypes.add(new Forceea.ClusterType('type', ForceeaService.ValueType.TYPE_STRING, 'number', false));
+        dt.clusterTypes.add(new Forceea.ClusterType('from', ForceeaService.ValueType.TYPE_DECIMAL, null, false));
+        dt.clusterTypes.add(new Forceea.ClusterType('to', ForceeaService.ValueType.TYPE_DECIMAL, null, false));
+        dt.clusterTypes.add(new Forceea.ClusterType('step', ForceeaService.ValueType.TYPE_DECIMAL, null, false));
+        dt.clusterTypes.add(new Forceea.ClusterType('scale', ForceeaService.ValueType.TYPE_INTEGER, null, false));
+        dt.clusterTypes.add(new Forceea.ClusterType('mode', ForceeaService.ValueType.TYPE_STRING, null, false));
         FObject.definitionTypes.add(dt);
 
         // example: serial type(date) from(2017-01-01) step(1)

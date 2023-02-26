@@ -1,5 +1,5 @@
 /*
-  Forceea data factory (2.7.0)
+  Forceea data factory (2.8.0)
   Copyright (C) 2022 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms

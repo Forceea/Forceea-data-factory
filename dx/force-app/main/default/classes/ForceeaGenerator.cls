@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (2.7.0)
-  Copyright (C) 2022 Nikos Mitrakis
+  Forceea data factory (v2.8.0)
+  Copyright (C) 2023 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -36,6 +36,7 @@ public with sharing class ForceeaGenerator {
     private static final String PARAMETER_SCALE = 'scale';
     private static final String PARAMETER_MODE = 'mode';
     public static final String PARAMETER_SOURCE = 'source';
+    private static final String PARAMETER_STEP = 'step';
     private static final String PARAMETER_TO = 'to';
     private static final String PARAMETER_VALUE = 'value';
     private static final String PARAMETER_WHERE = 'where';
@@ -643,6 +644,9 @@ public with sharing class ForceeaGenerator {
         switch on getClusterArgument('type').toLowerCase() {
             when 'list' {
                 results = getClusterArguments(PARAMETER_VALUE);
+            }
+            when 'number' {
+                results = getUniqueSerialValues();
             }
             when 'picklist' {
                 results = getFieldPicklistValuesExcludingExceptions();
@@ -2133,6 +2137,31 @@ public with sharing class ForceeaGenerator {
         return results;
     }
 
+    public List<String> getSerialNumbers(Decimal fromNumber, Decimal toNumber, Decimal stepNumber, Integer scale) {
+        List<String> results = new List<String>();
+
+        if ((toNumber > fromNumber && stepNumber < 0) ||
+            (fromNumber > toNumber && stepNumber > 0)) {
+            return results;
+        }
+
+        Decimal counter = fromNumber;
+
+        if (stepNumber < 0) {
+            do {
+                results.add(counter.setScale(scale).toPlainString());
+                counter += stepNumber;
+            } while (counter >= toNumber);
+        } else {
+            do {
+                results.add(counter.setScale(scale).toPlainString());
+                counter += stepNumber;
+            } while (counter <= toNumber);
+        }
+
+        return results;
+    }
+
     /**
      * @description Creates serial picklist values.
      * @param permutationPosition The definition position in permutations.
@@ -2176,13 +2205,17 @@ public with sharing class ForceeaGenerator {
             }
             when SERIAL_NUMBER {
                 Decimal fromArgm = Decimal.valueOf(getClusterArgument(PARAMETER_FROM));
-                Decimal stepArgm = Decimal.valueOf(getClusterArgument('step'));
+                Decimal stepArgm = Decimal.valueOf(getClusterArgument(PARAMETER_STEP));
                 Integer scaleArgm = Integer.valueOf(getClusterArgument(PARAMETER_SCALE));
                 results = getSerialNumbers(fromArgm, stepArgm, scaleArgm);
             }
+            when SERIAL_NUMBER_MODE {
+                List<String> values = getUniqueSerialValues();
+                results = getSerialListValues(values, this.def.positionForPermutations);
+            }
             when SERIAL_DATE {
                 Date fromArgm = Date.valueOf(getClusterArgument(PARAMETER_FROM));
-                Integer stepArgm = Integer.valueOf(getClusterArgument('step'));
+                Integer stepArgm = Integer.valueOf(getClusterArgument(PARAMETER_STEP));
                 results = getSerialDates(fromArgm, stepArgm);
             }
             when SERIAL_DATETIME {
@@ -2193,7 +2226,7 @@ public with sharing class ForceeaGenerator {
                     fromArgm = Datetime.newInstance(
                         Date.valueOf(getClusterArgument(PARAMETER_FROM)), Time.newInstance(0, 0, 0, 0));
                 }
-                Decimal stepArgm = Decimal.valueOf(getClusterArgument('step'));
+                Decimal stepArgm = Decimal.valueOf(getClusterArgument(PARAMETER_STEP));
                 results = getSerialDatetimes(fromArgm, stepArgm);
             }
             when SERIAL_LOOKUP {
@@ -2330,6 +2363,14 @@ public with sharing class ForceeaGenerator {
         }
 
         return results;
+    }
+
+    private List<String> getUniqueSerialValues() {
+        Decimal fromArgm = Decimal.valueOf(getClusterArgument(PARAMETER_FROM));
+        Decimal toArgm = Decimal.valueOf(getClusterArgument(PARAMETER_TO));
+        Decimal stepArgm = Decimal.valueOf(getClusterArgument(PARAMETER_STEP));
+        Integer scaleArgm = Integer.valueOf(getClusterArgument(PARAMETER_SCALE));
+        return getSerialNumbers(fromArgm, toArgm, stepArgm, scaleArgm);
     }
 
     /**

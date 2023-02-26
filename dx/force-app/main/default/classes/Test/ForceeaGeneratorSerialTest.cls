@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.5)
-  Copyright (C) 2022 Nikos Mitrakis
+  Forceea data factory (v2.8.0)
+  Copyright (C) 2023 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -759,23 +759,6 @@ public class ForceeaGeneratorSerialTest {
     }
 
     @IsTest
-    private static void serialNumber_positiveIntegerStep_expectSuccess() {
-        Integer numRecords = 201;
-        Decimal fromValue = 10;
-        Decimal stepValue = 2;
-
-        Test.startTest();
-        FObject obj = new FObject(Account.SObjectType) // should use the Account object
-            .setDefinition(Account.NumberOfEmployees, 'Serial Type(Number) From(10) Step(2) Scale(0)');
-        List<Account> records = (List<Account>) obj.getRecords();
-        Test.stopTest();
-
-        Decimal expectedResult = fromValue + (numRecords - 1) * stepValue;
-        Decimal actualResult = records[numRecords - 1].NumberOfEmployees;
-        System.assertEquals(expectedResult, actualResult, 'serial number - errors found');
-    }
-
-    @IsTest
     private static void serialNumberVirtualField_positiveIntegerStep_expectSuccess() {
         Integer numRecords = 201;
         Decimal fromValue = 10;
@@ -901,6 +884,143 @@ public class ForceeaGeneratorSerialTest {
 
         Boolean result = FObject.processIsValid() && String.isBlank(errorMessage);
         System.assert(result, 'serial number - errors found');
+    }
+
+    @IsTest
+    private static void serialNumber_positiveIntegerStep_expectSuccess() {
+        Integer numRecords = 201;
+        Decimal fromValue = 10;
+        Decimal stepValue = 2;
+
+        Test.startTest();
+        FObject obj = new FObject(Account.SObjectType) // should use the Account object
+            .setDefinition(Account.NumberOfEmployees, 'Serial Type(Number) From(10) Step(2) Scale(0)');
+        List<Account> records = (List<Account>) obj.getRecords();
+        Test.stopTest();
+
+        Decimal expectedResult = fromValue + (numRecords - 1) * stepValue;
+        Decimal actualResult = records[numRecords - 1].NumberOfEmployees;
+        System.assertEquals(expectedResult, actualResult, 'serial number - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_negativeIntegerStep1_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(10) to(100) step(-5) scale(2) mode(cyclical)');
+
+        Test.startTest();
+        List<Decimal> numbers = getDecimalNumbers(obj.getRecords());
+        Test.stopTest();
+
+        System.assert(numbers.isEmpty(), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_negativeIntegerStep2_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(100) to(10) step(-5) scale(2) mode(cyclical)');
+
+        Test.startTest();
+        List<Decimal> numbers = getDecimalNumbers(obj.getRecords());
+        Test.stopTest();
+
+        System.assert(serialNumbersAreCorrect(numbers, 100, 10, -5), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_positiveIntegerStep1_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(10) to(100) step(5) scale(2) mode(cyclical)');
+
+        Test.startTest();
+        List<Decimal> numbers = getDecimalNumbers(obj.getRecords());
+        Test.stopTest();
+
+        System.assert(serialNumbersAreCorrect(numbers, 10, 100, 5), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_positiveIntegerStep2_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(100) to(10) step(5) scale(2) mode(cyclical)');
+
+        Test.startTest();
+        List<Decimal> numbers = getDecimalNumbers(obj.getRecords());
+        Test.stopTest();
+
+        System.assert(numbers.isEmpty(), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_sameFromTo_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(10) to(10) step(-5) scale(2) mode(cyclical)');
+
+        Test.startTest();
+        Set<Decimal> numbers = getDecimalNumbersSet(obj.getRecords());
+        Test.stopTest();
+
+        System.assertEquals(1, numbers.size(), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_modePermutation_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setNumberOfRecords('auto')
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(10) to(20) step(2.5) scale(2) mode(permutation)');
+
+        Test.startTest();
+        List<Decimal> numbers = getDecimalNumbers(obj.getRecords());
+        Test.stopTest();
+
+        System.assertEquals(5, numbers.size(), 'serial number mode - errors found');
+        System.assertEquals(5, obj.getRecords().size(), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_modeFirst_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(10) to(20) step(2.5) scale(2) mode(first)');
+
+        Test.startTest();
+        Set<Decimal> numbers = getDecimalNumbersSet(obj.getRecords());
+        Test.stopTest();
+
+        System.assertEquals(5, numbers.size(), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_modeLast_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(10) to(20) step(2.5) scale(2) mode(last)');
+
+        Test.startTest();
+        Set<Decimal> numbers = getDecimalNumbersSet(obj.getRecords());
+        Test.stopTest();
+
+        System.assertEquals(5, numbers.size(), 'serial number mode - errors found');
+    }
+
+    @IsTest
+    private static void serialNumberMode_modeNull_expectSuccess() {
+        FObject obj = new FObject(FObjectOne__c.SObjectType, 100)
+            .setDefinition(FObjectOne__c.TestDecimal__c,
+                'serial type(number) from(10) to(20) step(2.5) scale(2) mode(null)');
+
+        Test.startTest();
+        List<Decimal> numbers = getDecimalNumbers(obj.getRecords());
+        Test.stopTest();
+
+        System.assert(serialNumbersAreCorrect(numbers, 10, 20, 2.5), 'serial number mode - errors found');
+        System.assertEquals(5, numbers.size(), 'serial number mode - errors found');
     }
 
     @IsTest
@@ -1668,6 +1788,42 @@ public class ForceeaGeneratorSerialTest {
             errors++;
         }
         System.assertEquals(0, errors, 'serial list - errors found');
+    }
+
+    /* UTILITY METHODS */
+
+    private static Set<Decimal> getDecimalNumbersSet(List<SObject> records) {
+        return new Set<Decimal>(getDecimalNumbers(records));
+    }
+
+    private static List<Decimal> getDecimalNumbers(List<SObject> records) {
+        List<Decimal> results = new List<Decimal>();
+
+        for (SObject record : records) {
+            if (record.get('TestDecimal__c') == null) {
+                continue;
+            }
+            Decimal dec = (Decimal) record.get('TestDecimal__c');
+            results.add(dec);
+        }
+
+        return results;
+    }
+
+    private static Boolean serialNumbersAreCorrect(List<Decimal> numbers,
+        Decimal startNumber, Decimal finishNumber, Decimal stepNumber) {
+        Boolean result = true;
+
+        Integer listCounter = 0;
+        for (Decimal serialNumber = startNumber; serialNumber <= finishNumber; serialNumber += stepNumber) {
+            if (numbers.get(listCounter) != serialNumber) {
+                result = false;
+                break;
+            }
+            listCounter++;
+        }
+
+        return result;
     }
 
 }

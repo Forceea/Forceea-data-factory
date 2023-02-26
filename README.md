@@ -1,7 +1,7 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
-# Forceea 2.7.0
+# Forceea 2.8.0
 
 ### What is Forceea?
 
@@ -9,25 +9,20 @@ Forceea (forsi:a) is the most advanced and sophisticated native open-source data
 
 ### Forceea Sponsors
 
-<a href="https://www.acmantix.com">Acmantix</a> |
-<a href="http://cloudjedi.com">Cloud Jedi</a> |
-<a href="https://www.netugroup.com/our-services/business-solutions/salesforce">NetU</a> |
-<a href="https://organizer.solutions/gopro.html">Organizer</a> |
-<a href="https://www.provartesting.com">Provar Testing</a> |
-<a href="https://robinconsulting.gr">Robin Consulting</a>
+<a href="https://www.acmantix.com">Acmantix</a>
+<a href="https://organizer.solutions/gopro.html">Organizer</a>
        
 ### How can you deploy it?
        
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
 
-<a href="https://rebrand.ly/Forceea270Production">
+<a href="https://rebrand.ly/Forceea28Production">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
-
 or this link for **Sandboxes**:
 
-<a href="https://rebrand.ly/Forceea270Sandbox">
+<a href="https://rebrand.ly/Forceea28Sandbox">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
