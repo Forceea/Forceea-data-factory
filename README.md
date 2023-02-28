@@ -32,7 +32,7 @@ or this link for **Sandboxes**:
                                                                                                                        
 You may also use the Salesforce CLI command (recommended):
 ```
-sfdx package install -w 10 -b 10 -p 04t4I0000011V6PQAU -r -o <UsernameOrOrgAlias>
+sfdx package install -w 10 -b 10 -p 04t4I0000011V6UQAU -r -o <UsernameOrOrgAlias>
 ```
 
 ### What can Forceea do?
