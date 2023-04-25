@@ -2,6 +2,7 @@
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
 > Read the [Forceea Success Guide](https://rebrand.ly/cgh14)
+> Read [Forceea articles](https://www.acmantix.com/forceea)
 
 # Forceea 2.8.0
 
