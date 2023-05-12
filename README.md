@@ -1,7 +1,7 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
-> Read the [Forceea Success Guide](https://rebrand.ly/cgh14)
+> Read the [Forceea Success Guide](https://link.acmantix.com/forceea-successguide)
 
 > Read [Forceea articles](https://www.acmantix.com/forceea)
 
@@ -20,14 +20,14 @@ Forceea (forsi:a) is the most advanced and sophisticated native open-source data
       
 You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
 
-<a href="https://rebrand.ly/Forceea28Production">
+<a href="https://link.acmantix.com/forceea-v28prod">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
 
 or this link for **Sandboxes**:
 
-<a href="https://rebrand.ly/Forceea28Sandbox">
+<a href="https://link.acmantix.com/forceea-v28sb">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
