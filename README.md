@@ -1,9 +1,11 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
-> Read the [Forceea Success Guide](https://link.acmantix.com/forceea-successguide)
-
-> Read [Forceea articles](https://www.acmantix.com/forceea)
+> To get started, download [Forceea Success Guide](https://link.acmantix.com/forceea-successguide)
+> 
+> It has everything you need to understand and apply Forceea for an Enterprise Data Factory project.
+ 
+Read [Forceea articles](https://www.acmantix.com/forceea)
 
 # Forceea 2.8.0
 
