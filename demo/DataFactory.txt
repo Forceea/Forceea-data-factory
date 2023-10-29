@@ -1,0 +1,515 @@
+/**
+ * @description A sample Data Factor class, with Templates for various SObjects.
+ */
+public with sharing class DataFactory {
+
+    /* IMPORTANT */
+
+    // The Product2 Templates create Price Book Entries.
+    // In order to work properly, you must activate a Standard Price Book.
+
+    /* CONSTANTS */
+
+    // Template keys
+
+    public static final String BUSINESS_ACCOUNTS = 'BusinessAccounts';
+    public static final String BUSINESS_ACCOUNT_CASES = 'BusinessAccountCases';
+    public static final String BUSINESS_ACCOUNT_CASE_EMAIL_MESSAGES = 'BusinessAccountCaseEmailMessages';
+    public static final String BUSINESS_CONTACTS = 'BusinessContacts';
+    public static final String BUSINESS_CONTACT_EVENTS = 'BusinessContactEvents';
+    public static final String BUSINESS_CONTACT_TASKS = 'BusinessContactTasks';
+    public static final String CASES = 'Cases';
+    public static final String CONTACTS = 'Contacts';
+    public static final String EMAIL_MESSAGES = 'EmailMessages';
+    public static final String EVENTS = 'Events';
+    public static final String LEADS = 'Leads';
+    public static final String MAJOR_DEAL_OPPORTUNITIES = 'MajorDealOpportunities';
+    public static final String MAJOR_DEAL_OPPORTUNITY_LINE_ITEMS = 'MajorDealOpportunityLineItems';
+    public static final String OPPORTUNITIES = 'Opportunities';
+    public static final String OPPORTUNITY_LINE_ITEMS = 'OpportunityLineItems';
+    public static final String PERSON_ACCOUNTS = 'PersonAccounts';
+    public static final String PERSON_ACCOUNT_CASES = 'PersonAccountCases';
+    public static final String PERSON_ACCOUNT_EVENTS = 'PersonAccountEvents';
+    public static final String PERSON_ACCOUNT_TASKS = 'PersonAccountTasks';
+    public static final String PRODUCTS = 'Products';
+    public static final String PRODUCT_PRODUCTS = 'ProductProducts';
+    public static final String SERVICE_PRODUCTS = 'ServiceProducts';
+    public static final String SMALL_DEAL_OPPORTUNITIES = 'SmallDealOpportunities';
+    public static final String SMALL_DEAL_OPPORTUNITY_LINE_ITEMS = 'SmallDealOpportunityLineItems';
+    public static final String TASKS = 'Tasks';
+
+    // Groups
+
+    public static final String GROUP_ADMIN_USERS = 'AdminUsers';
+    public static final String GROUP_BUSINESS_ACCOUNTS = 'GroupBusinessAccounts';
+    public static final String GROUP_BUSINESS_ACCOUNT_CASES = 'GroupBusinessAccountCases';
+    public static final String GROUP_BUSINESS_ACCOUNT_CASE_EMAIL_MESSAGES = 'GroupBusinessCaseEmailMessages';
+    public static final String GROUP_BUSINESS_CONTACTS = 'GroupBusinessContacts';
+    public static final String GROUP_BUSINESS_CONTACT_EVENTS = 'GroupBusinessContactEvents';
+    public static final String GROUP_BUSINESS_CONTACT_TASKS = 'GroupBusinessContactTasks';
+    public static final String GROUP_MAJOR_DEAL_OPPORTUNITIES = 'GroupMajorDealOpportunities';
+    public static final String GROUP_MAJOR_DEAL_OPPORTUNITY_LINE_ITEMS = 'GroupMajorDealOpportunityLineItems';
+    public static final String GROUP_PERSON_ACCOUNTS = 'GroupPersonAccounts';
+    public static final String GROUP_PERSON_ACCOUNT_CASES = 'GroupPersonAccountCases';
+    public static final String GROUP_PERSON_ACCOUNT_EVENTS = 'GroupPersonAccountEvents';
+    public static final String GROUP_PERSON_ACCOUNT_TASKS = 'GroupPersonAccountTasks';
+    public static final String GROUP_PRODUCT_PRODUCTS = 'GroupProductProducts';
+    public static final String GROUP_SERVICE_PRODUCTS = 'GroupServiceProducts';
+    public static final String GROUP_SMALL_DEAL_OPPORTUNITIES = 'GroupSmallDealOpportunities';
+    public static final String GROUP_SMALL_DEAL_OPPORTUNITY_LINE_ITEMS = 'GroupSmallDealOpportunityLineItems';
+
+    // Default number of records
+
+    public static final Integer DEFAULT_NUM_BUSINESS_ACCOUNTS = 10;
+    public static final Integer DEFAULT_NUM_CONTACTS = 10;
+    public static final Integer DEFAULT_NUM_EVENTS = 10;
+    public static final Integer DEFAULT_NUM_LEADS = 10;
+    public static final Integer DEFAULT_NUM_OPPORTUNITIES = 50;
+    public static final Integer DEFAULT_NUM_PERSON_ACCOUNTS = 10;
+    public static final Integer DEFAULT_NUM_PRODUCTS = 10;
+
+    /* ASYNC */
+
+    public static void deleteAllAsync() {
+        new FObjectAsync(templateAll())
+            .deleteRecords();
+    }
+
+    public static void insertAllAsync() {
+        FObject.setGlobalVerbose('debug');
+        FObject.setSeed(1); // use seed to get the same random values
+
+        // insert the Template
+        new FObjectAsync(templateAll())
+            .setNumberOfIterations(30)
+            // we set 1 job because we automatically set the Standard Price Book entries
+            // which creates UNABLE_TO_LOCK_ROW errors
+            .setNumberOfJobs(1)
+            .insertRecords();
+    }
+
+    /* TEMPLATES */
+
+    // Generic Templates
+
+    public static Forceea.Template templateAll() {
+        return new Forceea.Template()
+            .add(templateLeads())
+            .add(templateCasesWithPersonAccounts())
+            .add(templateCasesWithBusinessAccounts())
+            .add(templateMajorDealOpportunityLineItems())
+            .add(templateSmallDealOpportunityLineItems())
+            .add(templateEmailMessagesWithBusinessCases());
+    }
+
+    // Accounts
+    // Record Types: PersonAccount, BusinessAccount
+
+    public static Forceea.Template templateBusinessAccounts() {
+        return new Forceea.Template()
+            .add(BUSINESS_ACCOUNTS, new FObject(Account.SObjectType, DEFAULT_NUM_BUSINESS_ACCOUNTS)
+                .setGroupName(GROUP_BUSINESS_ACCOUNTS)
+                .setVariable('minAnnualRevenue', 100000) // use variables for clarity
+                .setVariable('maxAnnualRevenue', 1000000)
+                .setDefinition(Account.RecordTypeId, 'static value(BusinessAccount)')
+                .setDefinition(Account.AnnualRevenue,
+                    'random type(number) from({@minAnnualRevenue}) to({@maxAnnualRevenue}) scale(2)')
+                .setDefinition(Account.BillingStreet, 'random type(street) group(Billing)')
+                .setDefinition(Account.BillingPostalCode, 'random type(postalCode) group(Billing)')
+                .setDefinition(Account.BillingCity, 'random type(city) group(Billing)')
+                .setDefinition(Account.BillingState, 'random type(state) group(Billing)')
+                .setDefinition(Account.BillingCountry, 'random type(country) group(mailing)')
+                .setDefinition(Account.Industry, 'random type(picklist)')
+                .setDefinition(Account.Name, 'static value(Company-)')
+                .setDefinition(Account.Name, 'serial type(number) from(1) step(1) scale(0)')
+                // get shipping address from billing
+                .setDefinition(Account.ShippingStreet, 'copy field(BillingStreet)')
+                .setDefinition(Account.ShippingPostalCode, 'copy field(BillingPostalCode)')
+                .setDefinition(Account.ShippingCity, 'copy field(BillingCity)')
+                .setDefinition(Account.ShippingState, 'copy field(BillingState)')
+                .setDefinition(Account.ShippingCountry, 'copy field(BillingCountry)')
+                .setDefinition(Account.Website, 'random type(url)')
+            );
+    }
+
+    public static Forceea.Template templatePersonAccounts() {
+        return new Forceea.Template()
+            .add(PERSON_ACCOUNTS, new FObject(Account.SObjectType, DEFAULT_NUM_PERSON_ACCOUNTS)
+                .setGroupName(GROUP_PERSON_ACCOUNTS)
+                .setDefinition(Account.RecordTypeId, 'static value(PersonAccount)')
+                .setDefinition(Account.FirstName, 'random type(firstname) group(a)')
+                .setDefinition(Account.LastName, 'random type(lastname) group(a)')
+                .setDefinition(Account.Phone, 'random type(phone) format("(30) 210 dD-00-DD")')
+                .setDefinition(Account.PersonMailingStreet, 'random type(street) group(mailing)')
+                .setDefinition(Account.PersonMailingPostalCode, 'random type(postalCode) group(mailing)')
+                .setDefinition(Account.PersonMailingCity, 'random type(city) group(mailing)')
+                .setDefinition(Account.PersonMailingState, 'random type(state) group(mailing)')
+                .setDefinition(Account.PersonMailingCountry, 'random type(country) group(mailing)')
+                .setDefinition(Account.ShippingStreet, 'copy field(PersonMailingStreet)')
+                .setDefinition(Account.ShippingPostalCode, 'copy field(PersonMailingPostalCode)')
+                .setDefinition(Account.ShippingCity, 'copy field(PersonMailingCity)')
+                .setDefinition(Account.ShippingState, 'copy field(PersonMailingState)')
+                .setDefinition(Account.ShippingCountry, 'copy field(PersonMailingCountry)')
+            );
+    }
+
+    // Cases
+
+    public static Forceea.Template templateCases() {
+        return new Forceea.Template()
+            .add(CASES, new FObject(Case.SObjectType)
+                .setDefinition(Case.Description, 'random type(text) minLength(50) maxLength(200)')
+                .setDefinition(Case.Origin, 'random type(picklist)')
+                .setDefinition(Case.Reason, 'random type(picklist)')
+                .setDefinition(Case.Status, 'static value(Working)')
+                .setDefinition(Case.Subject, 'random type(text) minLength(50) maxLength(200)')
+                .setDefinition(Case.Type, 'random type(picklist)')
+            );
+    }
+
+    public static Forceea.Template templateCasesWithPersonAccounts() {
+        return new Forceea.Template()
+            .add(templatePersonAccounts())
+            .add(PERSON_ACCOUNT_CASES, templateCases().getFObject(CASES)
+                .setGroupName(GROUP_PERSON_ACCOUNT_CASES)
+                .setNumberOfRecords('auto')
+                .setVariable('groupName', GROUP_PERSON_ACCOUNTS)
+                .setDefinition(Case.AccountId,
+                    'serial lookup(Account) mode(permutation) source(forceea)')
+                .setDefinition(Case.ContactId, 'copy field(AccountId) from(Account.PersonContactId)')
+            );
+    }
+
+    public static Forceea.Template templateCasesWithBusinessAccounts() {
+        return new Forceea.Template()
+            .add(templateContactsWithBusinessAccounts())
+            .add(BUSINESS_ACCOUNT_CASES, templateCases().getFObject(CASES)
+                .setGroupName(GROUP_BUSINESS_ACCOUNT_CASES)
+                .setNumberOfRecords('auto')
+                .setVariable('groupName', GROUP_BUSINESS_CONTACTS)
+                .setDefinition(Case.ContactId,
+                    'serial lookup(Contact) mode(permutation) group({@groupName}) source(forceea)')
+                .setDefinition(Case.AccountId, 'copy field(ContactId) from(Contact.AccountId)')
+            );
+    }
+
+    // Contacts
+
+    private static Forceea.Template templateContacts() {
+        return new Forceea.Template()
+            .add(CONTACTS, new FObject(Contact.SObjectType, DEFAULT_NUM_CONTACTS)
+                .setDefinition(Contact.Birthdate, 'random type(date) from(1950-1-1) to(1982-12-31)')
+                .setDefinition(Contact.Email, 'random type(email)')
+                .setDefinition(Contact.FirstName, 'random type(firstName) group(mailing)')
+                .setDefinition(Contact.LastName, 'random type(lastName) group(mailing)')
+                .setDefinition(Contact.LeadSource, 'random type(picklist)')
+                .setDefinition(Contact.MailingStreet, 'random type(street) group(mailing)')
+                .setDefinition(Contact.MailingPostalCode, 'random type(postalCode) group(mailing)')
+                .setDefinition(Contact.MailingCity, 'random type(city) group(mailing)')
+                .setDefinition(Contact.MailingState, 'random type(state) group(mailing)')
+                .setDefinition(Contact.MailingCountry, 'random type(country) group(mailing)')
+            );
+    }
+
+    public static Forceea.Template templateContactsWithBusinessAccounts() {
+        return new Forceea.Template()
+            .add(templateBusinessAccounts())
+            .add(BUSINESS_CONTACTS, templateContacts().getFObject(CONTACTS)
+                .setGroupName(GROUP_BUSINESS_CONTACTS)
+                .setVariable('groupName', GROUP_BUSINESS_ACCOUNTS)
+                .setNumberOfRecords('auto')
+                .setDefinition(Contact.Department, 'random type(list) value(Sales, Marketing, Accounting, Management)')
+                .setDefinition('$counter', 'serial type(list) value(1,2,3) mode(permutation)')
+                .setDefinition(Contact.AccountId,
+                    'serial lookup(Account) mode(permutation) group({@groupName}) source(forceea)')
+                // get Account's phone
+                .setDefinition(Contact.Phone, 'copy field(AccountId) from(Account.Phone)')
+                .setDefinition(Contact.Title, 'random type(list) value(Developer, CFO, Account Manager, CEO, Logistics Manager)')
+            );
+    }
+
+    // Email Messages
+
+    /**
+     * @description The basic Template for Email Messages.
+     * @return A Forceea.Template object.
+     */
+    public static Forceea.Template templateEmailMessages() {
+        return new Forceea.Template()
+            .add(EMAIL_MESSAGES, new FObject(EmailMessage.SObjectType)
+                .setNumberOfRecords('auto')
+                .setDefinition(EmailMessage.Incoming, 'static value(true)')
+                .setDefinition(EmailMessage.Status, 'static value(0)')
+                .setDefinition(EmailMessage.Subject, 'static value(Email)')
+                .setDefinition(EmailMessage.Subject, 'random type(text) minLength(10) maxLength(20)')
+                .setDefinition(EmailMessage.TextBody, 'random type(text) minLength(20) maxLength(50)')
+            );
+    }
+
+    /**
+     * @description
+     * @return A Forceea.Template object.
+     */
+    public static Forceea.Template templateEmailMessagesWithBusinessCases() {
+        return new Forceea.Template()
+            .add(templateCasesWithBusinessAccounts())
+            .add(BUSINESS_ACCOUNT_CASE_EMAIL_MESSAGES, templateEmailMessages().getFObject(EMAIL_MESSAGES)
+                .setGroupName(GROUP_BUSINESS_ACCOUNT_CASE_EMAIL_MESSAGES)
+                .setVariable('groupName', GROUP_BUSINESS_ACCOUNT_CASES)
+                .setDefinition(EmailMessage.ParentId,
+                    'serial lookup(Case) mode(permutation) group({@groupName}) source(forceea)')
+                .setDefinition(EmailMessage.RelatedToId, 'copy field(ParentId) from(Case.AccountId)')
+            );
+    }
+
+    //  Events
+
+    public static Forceea.Template templateEvents() {
+        return new Forceea.Template()
+            .add(EVENTS, new FObject(Event.SObjectType, DEFAULT_NUM_EVENTS)
+                .setVariable('activityFrom', Date.today())
+                .setVariable('activityTo', Date.today().addDays(30))
+                .setVariable('maxDuration', 10)
+                .setDefinition(Event.ActivityDateTime, 'random type(datetime) from({@activityFrom}) to({@activityTo})')
+                .setDefinition(Event.DurationInMinutes, 'random type(number) from(1) to({@maxDuration}) scale(0)')
+                .setDefinition(Event.IsPrivate, 'static value(false)')
+                .setDefinition(Event.Type, 'random type(picklist)')
+                .setDefinition(Event.Subject, 'random type(picklist)')
+            );
+    }
+
+    public static Forceea.Template templateEventsWithBusinessContacts() {
+        return new Forceea.Template()
+            .add(templateContactsWithBusinessAccounts())
+            .add(BUSINESS_CONTACT_EVENTS, templateEvents().getFObject(EVENTS)
+                .setGroupName(GROUP_BUSINESS_CONTACT_EVENTS)
+                .setVariable('groupName', GROUP_BUSINESS_CONTACTS)
+                .setDefinition(Event.WhoId, 'random lookup(Contact) group({@groupName}) source(forceea)')
+            );
+    }
+
+    public static Forceea.Template templateEventsWithPersonAccounts() {
+        return new Forceea.Template()
+            .add(templatePersonAccounts())
+            .add(PERSON_ACCOUNT_EVENTS, templateEvents().getFObject(EVENTS)
+                .setGroupName(GROUP_PERSON_ACCOUNT_EVENTS)
+                .setVariable('groupName', GROUP_PERSON_ACCOUNTS)
+                .setDefinition('$Account',
+                    'serial lookup(Account) mode(cyclical) group({@groupName}) source(forceea)')
+                .setDefinition(Event.WhoId, 'copy field($Account) from(Account.PersonContactId)')
+            );
+    }
+
+    // Leads
+
+    public static Forceea.Template templateLeads() {
+        return new Forceea.Template()
+            .add(LEADS, new FObject(Lead.SObjectType, DEFAULT_NUM_LEADS)
+                .setDefinition(Lead.FirstName, 'random type(firstname) group(name)')
+                .setDefinition(Lead.LastName, 'random type(lastname) group(name)')
+                .setDefinition(Lead.Email, 'random type(email)')
+                .setDefinition(Lead.Title,
+                    'random type(list) value(Developer, CFO, Account Manager, CEO, Logistics Manager)')
+                .setDefinition(Lead.Company, 'static value(Company-)')
+                .setDefinition(Lead.Company, 'serial type(number) from(100) step(1) scale(0)')
+                .setDefinition(Lead.AnnualRevenue, 'random type(number) from(1000000) to(10000000) scale(-3)')
+                .setDefinition(Lead.NumberOfEmployees, 'random type(list) value(10,20,30)')
+                .setDefinition(Lead.Industry, 'random type(picklist)')
+                .setDefinition(Lead.Status, 'static value(Open)')
+                .setDefinition(Lead.Street, 'random type(street) group(other)')
+                .setDefinition(Lead.PostalCode, 'random type(postalCode) group(other)')
+                .setDefinition(Lead.City, 'random type(city) group(other)')
+                .setDefinition(Lead.State, 'random type(state) group(other)')
+                .setDefinition(Lead.Country, 'random type(country) group(other)')
+            );
+    }
+
+    // Opportunities
+    // Opportunity Record Types: MajorDeal, SmallDeal
+
+    public static Forceea.Template templateOpportunities() {
+        return new Forceea.Template()
+            .add(OPPORTUNITIES, new FObject(Opportunity.SObjectType, DEFAULT_NUM_OPPORTUNITIES)
+                .setVariable('today', Date.today())
+                .setDefinition(Opportunity.Amount, 'random type(number) from(10000) to(100000) scale(2)')
+                .setDefinition(Opportunity.StageName, 'random type(picklist) except(Closed Lost, Closed Won)')
+                .setDefinition(Opportunity.Type, 'random type(picklist)')
+                // a demo of function-add, which sets CloseDate = today + days
+                .setDefinition('$days', 'random type(number) from(30) to(120) scale(0)')
+                .setDefinition(Opportunity.CloseDate, 'static value({@today})')
+                .setDefinition(Opportunity.CloseDate, 'function-add field($days)')
+            );
+    }
+
+    public static Forceea.Template templateMajorDealOpportunities() {
+        return new Forceea.Template()
+            .add(templateBusinessAccounts())
+            .add(MAJOR_DEAL_OPPORTUNITIES, templateOpportunities().getFObject(OPPORTUNITIES)
+                .setGroupName(GROUP_MAJOR_DEAL_OPPORTUNITIES)
+                .setVariable('groupName', GROUP_BUSINESS_ACCOUNTS)
+                .setDefinition(Opportunity.RecordTypeId, 'static value(MajorDeal)')
+                .setDefinition(Opportunity.AccountId,
+                    'serial lookup(Account) mode(cyclical) group({@groupName}) source(forceea)')
+                .setDefinition(Opportunity.Name, 'copy field(AccountId) from(Account.Name)')
+                .setDefinition(Opportunity.Name, 'static value(" - ")')
+                .setDefinition(Opportunity.Name, 'random type(text) minLength(15) maxLength(20)')
+            );
+    }
+
+    public static Forceea.Template templateSmallDealOpportunities() {
+        return new Forceea.Template()
+            .add(templatePersonAccounts())
+            .add(SMALL_DEAL_OPPORTUNITIES, templateOpportunities().getFObject(OPPORTUNITIES)
+                .setGroupName(GROUP_SMALL_DEAL_OPPORTUNITIES)
+                .setVariable('groupName', GROUP_PERSON_ACCOUNTS)
+                .setDefinition(Opportunity.RecordTypeId, 'static value(SmallDeal)')
+                .setDefinition(Opportunity.AccountId,
+                    'serial lookup(Account) mode(cyclical) group({@groupName}) source(forceea)')
+                .setDefinition(Opportunity.Name, 'copy field(AccountId) from(Account.Name)')
+                .setDefinition(Opportunity.Name, 'static value(" - ")')
+                .setDefinition(Opportunity.Name, 'random type(text) minLength(15) maxLength(20)')
+            );
+    }
+
+    // Opportunity Line Items
+
+    public static Forceea.Template templateOpportunityLineItems() {
+        return new Forceea.Template()
+            .add(OPPORTUNITY_LINE_ITEMS, new FObject(OpportunityLineItem.SObjectType)
+                .setDefinition(OpportunityLineItem.PricebookEntryId,
+                    'random lookup(PricebookEntry) source(forceea)')
+                .setDefinition(OpportunityLineItem.Product2Id,
+                    'copy field(PricebookEntryId) from(PricebookEntry.Product2Id)')
+                .setDefinition(OpportunityLineItem.UnitPrice,
+                    'copy field(PricebookEntryId) from(PricebookEntry.UnitPrice)')
+                .setDefinition(OpportunityLineItem.Quantity,
+                    'random type(number) from(1) to(10) scale(0)')
+            );
+    }
+
+    public static Forceea.Template templateMajorDealOpportunityLineItems() {
+        return new Forceea.Template()
+            .add(templateMajorDealOpportunities())
+            .add(templateServiceProducts())
+            .add(templateProductProducts())
+            .add(MAJOR_DEAL_OPPORTUNITY_LINE_ITEMS, templateOpportunityLineItems().getFObject(OPPORTUNITY_LINE_ITEMS)
+                .setNumberOfRecords('auto')
+                .setGroupName(GROUP_MAJOR_DEAL_OPPORTUNITY_LINE_ITEMS)
+                .setVariable('groupName', GROUP_MAJOR_DEAL_OPPORTUNITIES)
+                .setDefinition('$count', 'serial type(list) value(1,2,3) mode(permutation)')
+                .setDefinition(OpportunityLineItem.OpportunityId,
+                    'serial lookup(Opportunity) mode(permutation) group({@groupName}) source(forceea)')
+            );
+    }
+
+    public static Forceea.Template templateSmallDealOpportunityLineItems() {
+        return new Forceea.Template()
+            .add(templateSmallDealOpportunities())
+            .add(templateServiceProducts())
+            .add(templateProductProducts())
+            .add(SMALL_DEAL_OPPORTUNITY_LINE_ITEMS, templateOpportunityLineItems().getFObject(OPPORTUNITY_LINE_ITEMS)
+                .setNumberOfRecords('auto')
+                .setGroupName(GROUP_SMALL_DEAL_OPPORTUNITY_LINE_ITEMS)
+                .setVariable('groupName', GROUP_SMALL_DEAL_OPPORTUNITIES)
+                .setDefinition('$count', 'serial type(list) value(1,2) mode(permutation)')
+                .setDefinition(OpportunityLineItem.OpportunityId,
+                    'serial lookup(Opportunity) mode(permutation) group({@groupName}) source(forceea)')
+            );
+    }
+
+    // Products
+    // Note: in a real implementation we should expect Services and Products to be a discrete Record Type
+
+    public static Forceea.Template templateProducts() {
+        return new Forceea.Template()
+            .add(PRODUCTS, new FObject(Product2.SObjectType, DEFAULT_NUM_PRODUCTS)
+                .setDefinition(Product2.IsActive, 'static value(true)')
+                .setDefinition(Product2.Description, 'random type(text) minLength(30) maxLength(50)')
+                .setDefinition('$StandardPrice', 'random type(number) from(100) to(1000) scale(2)')
+                .setStandardPricebookEntries('$StandardPrice')
+            );
+    }
+
+    public static Forceea.Template templateServiceProducts() {
+        return new Forceea.Template()
+            .add(SERVICE_PRODUCTS, templateProducts().getFObject(PRODUCTS)
+                .setGroupName(GROUP_SERVICE_PRODUCTS)
+                .setDefinition(Product2.Name, 'random type(text) minLength(10) maxLength(30)')
+                .setDefinition(Product2.ProductCode, 'static value(SRV-)')
+                .setDefinition(Product2.ProductCode, 'serial type(number) from(1) step(1) scale(0)')
+            );
+    }
+
+    public static Forceea.Template templateProductProducts() {
+        return new Forceea.Template()
+            .add(PRODUCT_PRODUCTS, templateProducts().getFObject(PRODUCTS)
+                .setGroupName(GROUP_PRODUCT_PRODUCTS)
+                .setNumberOfRecords('auto')
+                // demo of permutations; here we construct unique product names
+                .setDefinition(Product2.Name, 'serial type(list) value(PER,MON,LOT) mode(permutation)')
+                .setDefinition(Product2.Name, 'serial type(list) value(AR,ES,IN) mode(permutation)')
+                .setDefinition(Product2.Name, 'serial type(list) value(OL,IN,AL) mode(permutation)')
+                .setDefinition(Product2.Name, 'random type (list) value (" 10ml", " 20ml"," 30ml")')
+                .setDefinition(Product2.ProductCode, 'static value(PRD-)')
+                .setDefinition(Product2.ProductCode, 'serial type(number) from(1) step(1) scale(0)')
+            );
+    }
+
+    // Tasks
+
+    public static Forceea.Template templateTasks() {
+        return new Forceea.Template()
+            .add(TASKS, new FObject(Task.SObjectType, DEFAULT_NUM_EVENTS)
+                .setVariable('activityFrom', Date.today()) // a demo of variables
+                .setVariable('activityTo', Date.today().addDays(30))
+                .setVariable('minDuration', 30)
+                .setVariable('maxDuration', 120)
+                .setDefinition(Task.ActivityDate, 'random type(date) from({@activityFrom}) to({@activityTo})')
+                .setDefinition(Task.CallDurationInSeconds,
+                    'random type(number) from({@minDuration}) to({@maxDuration}) scale(0)')
+                .setDefinition(Task.CallType, 'random type(picklist)')
+                .setDefinition(Task.Description, 'random type(text) minLength(10) maxLength(30)')
+                .setDefinition(Task.Priority, 'random type(picklist) except(Low)')
+                .setDefinition(Task.Subject, 'random type(picklist)')
+            );
+    }
+
+    public static Forceea.Template templateTasksWithBusinessContacts() {
+        return new Forceea.Template()
+            .add(templateContactsWithBusinessAccounts())
+            .add(BUSINESS_CONTACT_TASKS, templateTasks().getFObject(TASKS)
+                .setGroupName(GROUP_BUSINESS_CONTACT_TASKS)
+                .setVariable('groupName', GROUP_BUSINESS_CONTACTS)
+                .setDefinition(Task.WhoId, 'random lookup(Contact) group({@groupName}) source(forceea)')
+            );
+    }
+
+    public static Forceea.Template templateTasksWithPersonAccounts() {
+        return new Forceea.Template()
+            .add(templatePersonAccounts())
+            .add(PERSON_ACCOUNT_TASKS, templateTasks().getFObject(TASKS)
+                .setGroupName(GROUP_PERSON_ACCOUNT_TASKS)
+                .setVariable('groupName', GROUP_PERSON_ACCOUNTS)
+                .setDefinition('$Account',
+                    'serial lookup(Account) mode(cyclical) group({@groupName}) source(forceea)')
+                .setDefinition(Task.WhoId, 'copy field($Account) from(Account.PersonContactId)')
+            );
+    }
+
+    // Users
+
+    public static Forceea.Template templateUsers() {
+        return new Forceea.Template()
+            .add('Users', new FObject(User.SObjectType, 1)
+                .setGroupName(GROUP_ADMIN_USERS)
+                .setRequiredFields(true)
+                .canInsertUsers(true) // required when not testing
+                .setDefinition(User.LastName, 'static value(User!$1234)')
+                .setDefinition(User.ProfileId,
+                    'static lookup(Profile) field(Name) value(System Administrator) source(salesforce)')
+                .setDefinition(User.UserRoleId,
+                    'static lookup(UserRole) field(Name) value(CEO) source(salesforce)')
+            );
+    }
+
+}

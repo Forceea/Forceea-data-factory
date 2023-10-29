@@ -7,37 +7,34 @@
  
 Read [Forceea articles](https://www.acmantix.com/forceea)
 
-# Forceea 2.8.0
+# Forceea 2.9.0 Winter 24
 
 ### What is Forceea?
 
 Forceea (forsi:a) is the most advanced and sophisticated native open-source data factory framework for Salesforce, powered by [Dadela](https://github.com/Forceea/Dadela) data generation language. The framework allows developers to easily create records for test methods and facilitates administrators or business users to populate any org with records for testing or demonstration purposes.
-
-### Forceea Sponsors
-
-<a href="https://www.acmantix.com">Acmantix</a> | 
-<a href="https://organizer.solutions/gopro.html">Organizer</a>
        
 ### How can you deploy it?
       
-You can deploy Forceea with an unlocked package using this link for **Production/Developer** orgs:
+Forceea can be deployed to any org using an unlocked package.
 
-<a href="https://link.acmantix.com/forceea-v28prod">
+The recommended deployment method is Salesforce CLI:
+```
+sf package install -w 10 -p 04t4I0000004EJHQA2 -r -o <UsernameOrOrgAlias>
+```
+
+You may deploy Forceea using this link for **Production/Developer** orgs:
+
+<a href="https://link.acmantix.com/forceea-v29prod">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
 
 or this link for **Sandboxes**:
 
-<a href="https://link.acmantix.com/forceea-v28sb">
+<a href="https://link.acmantix.com/forceea-v29sb">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
-                                                                                                                       
-You may also use the Salesforce CLI command (recommended):
-```
-sfdx package install -w 10 -b 10 -p 04t4I0000011V6UQAU -r -o <UsernameOrOrgAlias>
-```
 
 ### What can Forceea do?
 

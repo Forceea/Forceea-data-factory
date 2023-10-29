@@ -1,0 +1,349 @@
+@IsTest
+public class DataFactoryTest {
+
+    private static final String ERROR_MESSAGE = 'Error creating records';
+
+    // All
+
+    @IsTest
+    private static void itShouldCreateAll() {
+        // GIVEN the templateAll
+        Forceea.Template template = DataFactory.templateAll();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType), ERROR_MESSAGE + ' for Account');
+        Assert.isTrue(insertionIsValid(Case.SObjectType), ERROR_MESSAGE + ' for Case');
+        Assert.isTrue(insertionIsValid(EmailMessage.SObjectType), ERROR_MESSAGE + ' for EmailMessage');
+        Assert.isTrue(insertionIsValid(Event.SObjectType), ERROR_MESSAGE + ' for Event');
+        Assert.isTrue(insertionIsValid(Lead.SObjectType), ERROR_MESSAGE + ' for Lead');
+        Assert.isTrue(insertionIsValid(Opportunity.SObjectType), ERROR_MESSAGE + ' for Opportunity');
+        Assert.isTrue(insertionIsValid(OpportunityLineItem.SObjectType), ERROR_MESSAGE + ' for OpportunityLineItem');
+        Assert.isTrue(insertionIsValid(Product2.SObjectType), ERROR_MESSAGE + ' for Product2');
+    }
+
+    // Accounts
+
+    @IsTest
+    private static void itShouldCreateBusinessAccounts() {
+        // GIVEN the templateBusinessAccounts
+        Forceea.Template template = DataFactory.templateBusinessAccounts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreatePersonAccounts() {
+        // GIVEN the templatePersonAccounts
+        Forceea.Template template = DataFactory.templatePersonAccounts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType), ERROR_MESSAGE);
+    }
+
+    // Cases
+
+    @IsTest
+    private static void itShouldCreateCasesWithPersonAccounts() {
+        // GIVEN the templateCasesWithPersonAccounts
+        Forceea.Template template = DataFactory.templateCasesWithPersonAccounts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        System.assert(insertionIsValid(Account.SObjectType), ERROR_MESSAGE);
+        System.assert(insertionIsValid(Case.SObjectType), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreateCasesWithBusinessAccounts() {
+        // GIVEN the templateCasesWithBusinessAccounts
+        Forceea.Template template = DataFactory.templateCasesWithBusinessAccounts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Contact.SObjectType), ERROR_MESSAGE);
+    }
+
+    // Contacts
+
+    @IsTest
+    private static void itShouldCreateContactsWithBusinessAccounts() {
+        // GIVEN the templateContactsWithBusinessAccounts
+        Forceea.Template template = DataFactory.templateContactsWithBusinessAccounts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Contact.SObjectType), ERROR_MESSAGE);
+    }
+
+    // Email Messages
+
+    @IsTest
+    private static void itShouldCreateEmailMessagesWithBusinessCases() {
+        // GIVEN the templateEmailMessagesWithBusinessCases
+        Forceea.Template template = DataFactory.templateEmailMessagesWithBusinessCases();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(
+            Account.SObjectType, DataFactory.GROUP_BUSINESS_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(
+            Case.SObjectType, DataFactory.GROUP_BUSINESS_ACCOUNT_CASES), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(
+            EmailMessage.SObjectType, DataFactory.GROUP_BUSINESS_ACCOUNT_CASE_EMAIL_MESSAGES), ERROR_MESSAGE);
+    }
+
+    // Events
+
+    @IsTest
+    private static void itShouldCreateEventsWithBusinessContacts() {
+        // GIVEN the templateEventsWithBusinessContacts
+        Forceea.Template template = DataFactory.templateEventsWithBusinessContacts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_BUSINESS_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Event.SObjectType, DataFactory.GROUP_BUSINESS_CONTACT_EVENTS), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreateEventsWithPersonAccounts() {
+        // GIVEN the templateEventsWithPersonAccounts
+        Forceea.Template template = DataFactory.templateEventsWithPersonAccounts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_PERSON_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Event.SObjectType, DataFactory.GROUP_PERSON_ACCOUNT_EVENTS), ERROR_MESSAGE);
+    }
+
+    // Leads
+
+    @IsTest
+    private static void itShouldCreateLeads() {
+        // GIVEN the templateLeads
+        Forceea.Template template = DataFactory.templateLeads();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Lead.SObjectType), ERROR_MESSAGE);
+    }
+
+    // Opportunities
+
+    @IsTest
+    private static void itShouldCreateMajorDealOpportunities() {
+        // GIVEN the templateMajorDealOpportunities
+        Forceea.Template template = DataFactory.templateMajorDealOpportunities();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_BUSINESS_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(
+            Opportunity.SObjectType, DataFactory.GROUP_MAJOR_DEAL_OPPORTUNITIES), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreateSmallDealOpportunities() {
+        // GIVEN the templateSmallDealOpportunities
+        Forceea.Template template = DataFactory.templateSmallDealOpportunities();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_PERSON_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Opportunity.SObjectType, DataFactory.GROUP_SMALL_DEAL_OPPORTUNITIES), ERROR_MESSAGE);
+    }
+
+    // Opportunity Line Items
+
+    @IsTest
+    private static void itShouldCreateMajorDealOpportunityLineItems() {
+        // GIVEN the templateMajorDealOpportunityLineItems
+        Forceea.Template template = DataFactory.templateMajorDealOpportunityLineItems();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_BUSINESS_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(
+            Opportunity.SObjectType, DataFactory.GROUP_MAJOR_DEAL_OPPORTUNITIES), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(
+            OpportunityLineItem.SObjectType, DataFactory.GROUP_MAJOR_DEAL_OPPORTUNITY_LINE_ITEMS), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreateSmallDealOpportunityLineItems() {
+        // GIVEN the templateSmallDealOpportunityLineItems
+        Forceea.Template template = DataFactory.templateSmallDealOpportunityLineItems();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_PERSON_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(
+            Opportunity.SObjectType, DataFactory.GROUP_SMALL_DEAL_OPPORTUNITIES), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(
+            OpportunityLineItem.SObjectType, DataFactory.GROUP_SMALL_DEAL_OPPORTUNITY_LINE_ITEMS), ERROR_MESSAGE);
+    }
+
+    // Products
+
+    @IsTest
+    private static void itShouldCreateServiceProducts() {
+        // GIVEN the templateServiceProducts
+        Forceea.Template template = DataFactory.templateServiceProducts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Product2.SObjectType, DataFactory.GROUP_SERVICE_PRODUCTS), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreateProductProducts() {
+        // GIVEN the templateProductProducts
+        Forceea.Template template = DataFactory.templateProductProducts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Product2.SObjectType, DataFactory.GROUP_PRODUCT_PRODUCTS), ERROR_MESSAGE);
+    }
+
+    // Tasks
+
+    @IsTest
+    private static void itShouldCreateTasksWithBusinessContacts() {
+        // GIVEN the templateTasksWithBusinessContacts
+        Forceea.Template template = DataFactory.templateTasksWithBusinessContacts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_BUSINESS_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Task.SObjectType, DataFactory.GROUP_BUSINESS_CONTACT_TASKS), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreateTasksWithPersonAccounts() {
+        // GIVEN the templateTasksWithPersonAccounts
+        Forceea.Template template = DataFactory.templateTasksWithPersonAccounts();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.isTrue(insertionIsValid(Account.SObjectType, DataFactory.GROUP_PERSON_ACCOUNTS), ERROR_MESSAGE);
+        Assert.isTrue(insertionIsValid(Task.SObjectType, DataFactory.GROUP_PERSON_ACCOUNT_TASKS), ERROR_MESSAGE);
+    }
+
+    @IsTest
+    private static void itShouldCreateUsers() {
+        // GIVEN the templateUsers
+        Forceea.Template template = DataFactory.templateUsers();
+
+        // WHEN we create records from this template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN the records are inserted successfully
+        Assert.areEqual(
+            Database.query(getQueryStringForUser()).size(),
+            FObject.getInsertedGroupRecords(User.SObjectType, DataFactory.GROUP_ADMIN_USERS).size(),
+            ERROR_MESSAGE);
+    }
+
+    // HELPER METHODS
+
+    private static String getQueryString(SObjectType sObjType) {
+        return 'SELECT Id FROM ' + sObjType.getDescribe().name;
+    }
+
+    private static String getQueryStringForUser() {
+        return 'SELECT Id FROM User WHERE LastName = \'User!$1234\'';
+    }
+
+    private static Boolean insertionIsValid(SObjectType sObjType) {
+        return FObject.getInsertedRecords(sObjType).size() ==
+            Database.query(getQueryString(sObjType)).size();
+    }
+
+    private static Boolean insertionIsValid(SObjectType sObjType, String groupName) {
+        return FObject.getInsertedGroupRecords(sObjType, groupName).size() ==
+            Database.query(getQueryString(sObjType)).size();
+    }
+
+}
