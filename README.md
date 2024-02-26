@@ -1,7 +1,7 @@
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
-> To get started, download [Forceea Success Guide](https://rebrand.ly/tvg67qh)
+> To get started, download [Forceea Success Guide](https://link.mitrakisconsulting.gr/forceeaGuide)
 > 
 > It has everything you need to understand and apply Forceea for an Enterprise Data Factory project.
  
@@ -24,14 +24,14 @@ sf package install -w 10 -p 04t4I0000004EJHQA2 -r -o <UsernameOrOrgAlias>
 
 You may deploy Forceea using this link for **Production/Developer** orgs:
 
-<a href="https://rebrand.ly/mwg2mnf">
+<a href="https://link.mitrakisconsulting.gr/forceeaProd">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
 
 or this link for **Sandboxes**:
 
-<a href="https://rebrand.ly/8o69sk5">
+<a href="https://link.mitrakisconsulting.gr/forceeaSbx">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png">
 </a>
