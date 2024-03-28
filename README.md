@@ -1,3 +1,5 @@
+## The Forceea project is looking for Salesforce developers who want to contribute!
+
 <img alt="Forceea Logo"
        src="https://github.com/nmitrakis/Forceea/blob/master/Forceea-logo.PNG" width="400">
        
