@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.9.0)
-  Copyright (C) 2023 Nikos Mitrakis
+  Forceea data factory (v2.9.1)
+  Copyright (C) 2024 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -16,6 +16,9 @@
 @IsTest
 @SuppressWarnings('PMD.MethodNamingConventions')
 public class ForceeaUtilityTest {
+
+    public static final String FOBJECT1 = 'FObjectOne__c';
+    public static final String FOBJECT2 = 'FObjectTwo__c';
 
     /**
      * @description A set of female first names.
@@ -33,6 +36,37 @@ public class ForceeaUtilityTest {
      * @description A set of male last names.
      */
     public static Set<String> maleLastNames;
+
+    /* METHODS */
+
+    public static void checkIfRt1IsAnyValid(Forceea.Template template) {
+        String fObjApiName = ForceeaUtilityTest.FOBJECT1;
+        List<SObject> records = template.getFObject(fObjApiName).getInsertedRecords();
+        Boolean recordsAreCorrect = ForceeaUtilityTest.recordsContainAnyRt(records, fObjApiName);
+        Assert.isTrue(recordsAreCorrect, 'Records do not have the correct record type');
+    }
+
+    public static void checkIfRt1IsAnyValid(Forceea.Template template, Set<String> rtDevNames) {
+        String fObjApiName = ForceeaUtilityTest.FOBJECT1;
+        List<SObject> records = template.getFObject(fObjApiName).getInsertedRecords();
+        Boolean recordsAreCorrect = ForceeaUtilityTest.recordsContainAnyRt(records, fObjApiName, rtDevNames);
+        Assert.isTrue(recordsAreCorrect, 'Records do not have the correct record type');
+    }
+
+    public static void checkIfRtIsValid(Forceea.Template template, String rtDevName1, String rtDevName2) {
+        checkIfRecordsContainRt(template, ForceeaUtilityTest.FOBJECT1, rtDevName1);
+        checkIfRecordsContainRt(template, ForceeaUtilityTest.FOBJECT2, rtDevName2);
+    }
+
+    public static void checkIfRt2IsValid(Forceea.Template template, String rtDevName) {
+        checkIfRecordsContainRt(template, ForceeaUtilityTest.FOBJECT2, rtDevName);
+    }
+
+    private static void checkIfRecordsContainRt(Forceea.Template template, String fObjApiName, String rtDevName) {
+        List<SObject> records = template.getFObject(fObjApiName).getInsertedRecords();
+        Boolean recordsAreCorrect = ForceeaUtilityTest.recordsContainRt(records, fObjApiName, rtDevName);
+        Assert.isTrue(recordsAreCorrect, 'Records do not have the correct record type');
+    }
 
     /**
      * @description Validates the field definitions.
@@ -64,13 +98,6 @@ public class ForceeaUtilityTest {
         return (errors == 0) ? true : false;
     }
 
-    /**
-     * @description
-     * @param sObjType
-     * @param fieldApiName
-     * @param validByDefinition
-     * @return
-     */
     public static Boolean definitionsAreValid(
         SObjectType sObjType, String fieldApiName, Map<String, Boolean> validByDefinition) {
         Integer errors = 0;
@@ -106,11 +133,19 @@ public class ForceeaUtilityTest {
         return false;
     }
 
-    /**
-     * @description
-     * @param obj An FObject object.
-     * @return
-     */
+    private static Integer getErrors(List<SObject> records, Set<Id> rtIds) {
+        Integer result = 0;
+
+        for (SObject record : records) {
+            Id rtId = (Id) record.get('RecordTypeId');
+            if (!rtIds.contains(rtId)) {
+                result++;
+            }
+        }
+
+        return result;
+    }
+
     public static List<Id> getLookupIds(FObject obj) {
         List<Id> results = new List<Id>();
 
@@ -121,12 +156,6 @@ public class ForceeaUtilityTest {
         return results;
     }
 
-    /**
-     * @description
-     * @param obj
-     * @param valuesToInclude
-     * @return
-     */
     public static List<Id> getLookupIds(FObject obj, List<String> valuesToInclude) {
         List<Id> results = new List<Id>();
 
@@ -154,6 +183,47 @@ public class ForceeaUtilityTest {
         }
 
         return results;
+    }
+
+    private static Id getRtId(String sObjType, String devName) {
+        return [
+            SELECT Id
+            FROM RecordType
+            WHERE SobjectType = :sObjType AND DeveloperName = :devName
+        ].get(0).Id;
+    }
+
+    private static Set<Id> getRtIds(String sObjType) {
+        List<RecordType> records = [
+            SELECT Id
+            FROM RecordType
+            WHERE SobjectType = :sObjType
+        ];
+
+        return (new Map<Id, RecordType> (records)).keySet();
+    }
+
+    private static Set<Id> getRtIds(String sObjType, Set<String> rtDevNames) {
+        List<RecordType> records = [
+            SELECT Id
+            FROM RecordType
+            WHERE SobjectType = :sObjType AND DeveloperName IN :rtDevNames
+        ];
+
+        return (new Map<Id, RecordType> (records)).keySet();
+    }
+
+    public static Forceea.Template getTemplate(String rtDevName1, String rtDevName2) {
+        return new Forceea.Template()
+            .add(ForceeaUtilityTest.FOBJECT2, new FObject(FObjectTwo__c.SObjectType, 20)
+                .setRequiredFields(true)
+                .setVariable('rtDevName2', rtDevName2)
+            )
+            .add(ForceeaUtilityTest.FOBJECT1, new FObject(FObjectOne__c.SObjectType, 20)
+                .setRequiredFields(true)
+                .setVariable('rtDevName1', rtDevName1)
+                .setDefinition(FObjectOne__c.TestLookup__c, 'random lookup(FObjectTwo__c) source(forceea)')
+            );
     }
 
     /**
@@ -534,6 +604,29 @@ public class ForceeaUtilityTest {
             'Blake', 'Liam', 'Stephen', 'Thomas', 'Phil', 'Christopher', 'Lucas', 'Isaac'
         };
         maleLastNames = new Set<String>(femaleLastNames);
+    }
+
+    private static Boolean recordsContainAnyRt(List<SObject> records, String sObjType) {
+        Set<Id> rtIds = getRtIds(sObjType);
+        return getErrors(records, rtIds) == 0;
+    }
+
+    private static Boolean recordsContainAnyRt(List<SObject> records, String sObjType, Set<String> rtDevNames) {
+        Set<Id> rtIds = getRtIds(sObjType, rtDevNames);
+        return getErrors(records, rtIds) == 0;
+    }
+
+    private static Boolean recordsContainRt(List<SObject> records, String sObjType, String rtDevName) {
+        Id rtId = getRtId(sObjType, rtDevName);
+        Integer errors = 0;
+
+        for (SObject record : records) {
+            if (record.get('RecordTypeId') != rtId) {
+                errors++;
+            }
+        }
+
+        return errors == 0;
     }
 
     /**

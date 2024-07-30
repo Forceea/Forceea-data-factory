@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.9.0)
-  Copyright (C) 2023 Nikos Mitrakis
+  Forceea data factory (v2.9.1)
+  Copyright (C) 2024 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -1320,6 +1320,47 @@ public class ForceeaGeneratorStaticTest {
             }
         }
         System.assertEquals(0, errors, 'static value - errors found');
+    }
+
+    @IsTest
+    private static void itShouldInsertWithRecordTypeSameValue() {
+        // GIVEN A template with FObjectOne__c and FObjectTwo__c
+        String rtDevName1 = 'RecordTypeA';
+        String rtDevName2 = 'RecordTypeA';
+        Forceea.Template template = getTemplate(rtDevName1, rtDevName2);
+
+        // WHEN We insert the template
+        template.insertRecords(true);
+
+        // THEN The inserted records have the correct record type
+        ForceeaUtilityTest.checkIfRtIsValid(template, rtDevName1, rtDevName2);
+    }
+
+    @IsTest
+    private static void itShouldInsertWithRecordTypeDiffValue() {
+        // GIVEN A template with FObjectOne__c and FObjectTwo__c
+        String rtDevName1 = 'RecordTypeA';
+        String rtDevName2 = 'RecordTypeB';
+        Forceea.Template template = getTemplate(rtDevName1, rtDevName2);
+
+        // WHEN We insert the template
+        template.insertRecords(true);
+
+        // THEN The inserted records have the correct record type
+        ForceeaUtilityTest.checkIfRtIsValid(template, rtDevName1, rtDevName2);
+    }
+
+    /* HELPER METHODS */
+
+    private static Forceea.Template getTemplate(String rtDevName1, String rtDevName2) {
+        Forceea.Template result = ForceeaUtilityTest.getTemplate(rtDevName1, rtDevName2);
+
+        result.getFObject(ForceeaUtilityTest.FOBJECT1)
+            .setDefinition(FObjectOne__c.RecordTypeId, 'static value({@rtDevName1})');
+        result.getFObject(ForceeaUtilityTest.FOBJECT2)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value({@rtDevName2})');
+
+        return result;
     }
 
 }

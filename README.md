@@ -9,7 +9,7 @@
  
 Read [Forceea articles](https://www.mitrakisconsulting.gr/articles)
 
-# Forceea 2.9.0 Winter 24
+# Forceea 2.9.1 Winter 24
 
 ### What is Forceea?
 
@@ -21,7 +21,7 @@ Forceea can be deployed to any org using an unlocked package.
 
 The recommended deployment method is Salesforce CLI:
 ```
-sf package install -w 10 -p 04t4I0000004EJHQA2 -r -o <UsernameOrOrgAlias>
+sf package install -w 10 -p 04tJ8000000PbNdIAK -r -o <UsernameOrOrgAlias>
 ```
 
 You may deploy Forceea using this link for **Production/Developer** orgs:

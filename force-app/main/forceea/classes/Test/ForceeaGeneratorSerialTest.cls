@@ -1,6 +1,6 @@
 /*
-  Forceea data factory (v2.9.0)
-  Copyright (C) 2023 Nikos Mitrakis
+  Forceea data factory (v2.9.1)
+  Copyright (C) 2024 Nikos Mitrakis
 
   This program is free software: you can redistribute it and/or modify it under the terms
   of the GNU General Public License as published by the Free Software Foundation,
@@ -1828,6 +1828,62 @@ public class ForceeaGeneratorSerialTest {
             }
             listCounter++;
         }
+
+        return result;
+    }
+
+    @IsTest
+    private static void itShouldInsertRtWithoutExceptions() {
+        // GIVEN A template with FObjectOne__c and FObjectTwo__c
+        String rtDevName2 = 'RecordTypeA';
+        Forceea.Template template = getTemplateWithoutExceptions(rtDevName2);
+
+        // WHEN We insert the template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN The inserted records have the correct record type
+        ForceeaUtilityTest.checkIfRt1IsAnyValid(template);
+        ForceeaUtilityTest.checkIfRt2IsValid(template, rtDevName2);
+    }
+
+    @IsTest
+    private static void itShouldInsertRtWithExceptions() {
+        // GIVEN A template with FObjectOne__c and FObjectTwo__c
+        String rtDevName2 = 'RecordTypeA';
+        Forceea.Template template = getTemplateWithExceptions(rtDevName2);
+
+        // WHEN We insert the template
+        Test.startTest();
+        template.insertRecords(true);
+        Test.stopTest();
+
+        // THEN The inserted records have the correct record type
+        ForceeaUtilityTest.checkIfRt1IsAnyValid(template, new Set<String> { 'RecordTypeA', 'RecordTypeB' });
+        ForceeaUtilityTest.checkIfRt2IsValid(template, rtDevName2);
+    }
+
+    /* HELPER METHODS */
+
+    private static Forceea.Template getTemplateWithoutExceptions(String rtDevName2) {
+        Forceea.Template result = ForceeaUtilityTest.getTemplate('rtDevName1', rtDevName2);
+
+        result.getFObject(ForceeaUtilityTest.FOBJECT1)
+            .setDefinition(FObjectOne__c.RecordTypeId, 'serial type(picklist) mode(cyclical)');
+        result.getFObject(ForceeaUtilityTest.FOBJECT2)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value({@rtDevName2})');
+
+        return result;
+    }
+
+    private static Forceea.Template getTemplateWithExceptions(String rtDevName2) {
+        Forceea.Template result = ForceeaUtilityTest.getTemplate('rtDevName1', rtDevName2);
+
+        result.getFObject(ForceeaUtilityTest.FOBJECT1)
+            .setDefinition(FObjectOne__c.RecordTypeId, 'serial type(picklist) except(RecordTypeC) mode(cyclical)');
+        result.getFObject(ForceeaUtilityTest.FOBJECT2)
+            .setDefinition(FObjectTwo__c.RecordTypeId, 'static value({@rtDevName2})');
 
         return result;
     }
